@@ -6,8 +6,8 @@ import {
   FileText,
   type LucideIcon,
 } from "lucide-react";
-import { sectionByName, type SectionInfo, type SectionName } from "@/lib/content";
-import { cn } from "@/lib/utils";
+import { SECTIONS, type SectionInfo, type SectionName } from "@/src/lib/content";
+import { cn } from "@/src/lib/utils";
 
 const ACCENT_TEXT_CLASS: Record<SectionInfo["accent"], string> = {
   news: "text-section-news",
@@ -34,7 +34,7 @@ export function accentBgClass(accent: SectionInfo["accent"]) {
 }
 
 export function kickerClassForSection(section: SectionName) {
-  const info = sectionByName(section);
+  const info = SECTIONS.find((s) => s.name === section);
   return cn("tc-kicker", info ? ACCENT_TEXT_CLASS[info.accent] : "text-brand");
 }
 

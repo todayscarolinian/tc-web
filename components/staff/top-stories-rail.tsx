@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionDot } from "@/components/staff/section-dot";
-import type { TopStory } from "@/lib/staff-data";
+import type { TopStory } from "@/src/lib/staff-data";
 
 export function TopStoriesRail({ stories }: { stories: TopStory[] }) {
   return (

@@ -1,5 +1,5 @@
-import { SECTIONS } from "@/lib/content";
-import { accentBgClass } from "@/lib/section-style";
+import { SECTIONS } from "@/src/lib/content";
+import { accentBgClass } from "@/src/lib/section-style";
 
 export function SectionLegend() {
   return (

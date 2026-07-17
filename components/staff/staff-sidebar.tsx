@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { STAFF_NAV_ITEMS, CURRENT_STAFF_USER } from "@/lib/staff-data";
+import { STAFF_NAV_ITEMS, CURRENT_STAFF_USER } from "@/src/lib/staff-data";
 
 const ACTIVE_CLASS =
   "data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:hover:bg-sidebar-primary";

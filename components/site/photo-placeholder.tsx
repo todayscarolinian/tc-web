@@ -1,6 +1,6 @@
 import { Newspaper, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { PhotoVariant } from "@/lib/content";
+import { cn } from "@/src/lib/utils";
+import type { PhotoVariant } from "@/src/lib/content";
 
 const VARIANT_CLASS: Record<PhotoVariant, string> = {
   paper: "bg-muted text-muted-foreground",

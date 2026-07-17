@@ -15,7 +15,7 @@ import {
   UserSquare,
   type LucideIcon,
 } from "lucide-react";
-import type { PhotoVariant, SectionName } from "@/lib/content";
+import type { PhotoVariant, SectionName } from "@/src/lib/content";
 
 export const CURRENT_STAFF_USER = {
   name: "Maria Santos",
@@ -38,36 +38,10 @@ export const STAFF_NAV_ITEMS: StaffNavItem[] = [
   { id: "settings", label: "Settings", href: "/staff/settings", icon: Settings },
 ];
 
-export type ArticleStatus = "Published" | "Draft" | "Scheduled";
-
-export type StaffArticle = {
-  id: string;
-  title: string;
-  section: SectionName;
-  author: string;
-  status: ArticleStatus;
-  date: string;
-  views: number;
-};
-
-export const STAFF_ARTICLES: StaffArticle[] = [
-  { id: "tuition-hearing", title: "USC board defers tuition adjustment after three-hour hearing", section: "News", author: "Maria Santos", status: "Published", date: "Jun 24, 2026", views: 18420 },
-  { id: "engineering-complex", title: "Talamban campus unveils new engineering complex", section: "News", author: "Noah Lim", status: "Published", date: "Jun 23, 2026", views: 9120 },
-  { id: "warriors-overtime", title: "Warriors edge UV in overtime to clinch semifinal berth", section: "Sports", author: "Liam Reyes", status: "Published", date: "Jun 23, 2026", views: 14380 },
-  { id: "activity-fee-opinion", title: "The activity fee is broken. Here is how the SSC can fix it.", section: "Opinion", author: "Editorial Board", status: "Published", date: "Jun 23, 2026", views: 11260 },
-  { id: "thesis-crunch", title: "Inside the all-night thesis crunch at the LRC", section: "Campus Life", author: "Reina Villanueva", status: "Scheduled", date: "Jun 25, 2026", views: 0 },
-  { id: "zine-carbon", title: "Cebuano zinemakers revive campus print at Carbon", section: "Arts & Culture", author: "Aisha Cruz", status: "Draft", date: "Jun 22, 2026", views: 0 },
-  { id: "jeepney-modernization", title: "Jeepney modernization leaves commuters scrambling", section: "News", author: "Joshua Mendoza", status: "Published", date: "Jun 21, 2026", views: 7640 },
-  { id: "cheap-eats-guide", title: "A field guide to the best cheap eats around USC Main", section: "Arts & Culture", author: "Aisha Cruz", status: "Published", date: "Jun 20, 2026", views: 21030 },
-  { id: "shuttle-loop", title: "New shuttle loop to connect Main and South dorms", section: "Campus Life", author: "Patricia Gallardo", status: "Draft", date: "Jun 20, 2026", views: 0 },
-  { id: "swim-relay-golds", title: "Carolinian swimmers sweep relay golds at CESAFI", section: "Sports", author: "Liam Reyes", status: "Scheduled", date: "Jun 26, 2026", views: 0 },
-  { id: "mentorship-program", title: "SSC opens applications for the 2026 mentorship program", section: "Campus Life", author: "Patricia Gallardo", status: "Published", date: "Jun 19, 2026", views: 5210 },
-  { id: "library-hours-opinion", title: "Why the new library hours still are not enough", section: "Opinion", author: "Miguel Tan", status: "Draft", date: "Jun 18, 2026", views: 0 },
-];
-
-export function staffArticleById(id: string) {
-  return STAFF_ARTICLES.find((a) => a.id === id);
-}
+// Article/status types and mock article rows used to live here as
+// StaffArticle/STAFF_ARTICLES — superseded by the unified Article entity
+// in domain/article/ and the merged dataset in lib/articles.ts. See
+// docs/architecture.md ("staff-article merge") for why.
 
 export type TopStory = {
   rank: number;
@@ -78,11 +52,11 @@ export type TopStory = {
 };
 
 export const TOP_STORIES: TopStory[] = [
-  { rank: 1, id: "cheap-eats-guide", title: "A field guide to the best cheap eats around USC Main", section: "Arts & Culture", views: 21030 },
-  { rank: 2, id: "tuition-hearing", title: "USC board defers tuition adjustment after hearing", section: "News", views: 18420 },
-  { rank: 3, id: "warriors-overtime", title: "Warriors edge UV in overtime thriller", section: "Sports", views: 14380 },
-  { rank: 4, id: "activity-fee-opinion", title: "The activity fee is broken. Here is how to fix it.", section: "Opinion", views: 11260 },
-  { rank: 5, id: "engineering-complex", title: "Talamban unveils new engineering complex", section: "News", views: 9120 },
+  { rank: 1, id: "eats", title: "A field guide to the best cheap eats around USC Main", section: "Arts & Culture", views: 21030 },
+  { rank: 2, id: "tuition", title: "USC board defers tuition adjustment after hearing", section: "News", views: 18420 },
+  { rank: 3, id: "warriors-ot", title: "Warriors edge UV in overtime thriller", section: "Sports", views: 14380 },
+  { rank: 4, id: "activity-fee", title: "The activity fee is broken. Here is how to fix it.", section: "Opinion", views: 11260 },
+  { rank: 5, id: "engr-complex", title: "Talamban unveils new engineering complex", section: "News", views: 9120 },
 ];
 
 export type DashboardStat = {

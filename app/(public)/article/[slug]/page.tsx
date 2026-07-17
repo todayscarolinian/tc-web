@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { ALL_STORIES, ARTICLE_BODY, sectionByName, storyBySlug } from "@/lib/content";
-import { accentTextClass, sectionIcon } from "@/lib/section-style";
+import { articleService } from "@/src/infrastructure/article/article.composition";
+import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
@@ -9,10 +9,11 @@ import { ShareRow } from "@/components/site/share-row";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
-import { ENABLE_SUBSCRIPTION } from "@/lib/flags";
+import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
-export function generateStaticParams() {
-  return ALL_STORIES.map((s) => ({ slug: s.slug }));
+export async function generateStaticParams() {
+  const articles = await articleService.listPublished();
+  return articles.map((a) => ({ slug: a.slug }));
 }
 
 // The story list is exhaustively known at build time — an unlisted slug
@@ -25,54 +26,56 @@ export default async function ArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const story = storyBySlug(slug);
-  if (!story) notFound();
+  const article = await articleService.getBySlug(slug);
+  if (!article) notFound();
 
-  const sectionInfo = sectionByName(story.section);
-  const related = ALL_STORIES.filter((s) => s.slug !== story.slug).slice(0, 3);
+  const sectionInfo = await articleService.findSectionByName(article.section);
+  const related = (await articleService.listPublished())
+    .filter((a) => a.slug !== article.slug)
+    .slice(0, 3);
 
   return (
     <>
-      <PhotoPlaceholder variant={story.variant === "paper" ? "dark" : story.variant} icon={sectionIcon(story.section)} ratio="21 / 9" iconSize={56} />
+      <PhotoPlaceholder variant={article.variant === "paper" ? "dark" : article.variant} icon={sectionIcon(article.section)} ratio="21 / 9" iconSize={56} />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        {story.caption && (
-          <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{story.caption}</p>
+        {article.caption && (
+          <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{article.caption}</p>
         )}
 
         {sectionInfo && (
-          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>{story.section}</span>
+          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>{article.section}</span>
         )}
         <h1 className="font-display mt-2 text-4xl leading-[44px] font-extrabold text-balance text-foreground">
-          {story.title}
+          {article.title}
         </h1>
-        <p className="mt-3 text-lg leading-7 text-text-secondary">{story.dek}</p>
+        <p className="mt-3 text-lg leading-7 text-text-secondary">{article.dek}</p>
 
         <div className="mt-6 flex items-center gap-3 border-y border-border py-4">
           <Avatar size="lg">
-            <AvatarFallback className="bg-brand text-white">{story.initials}</AvatarFallback>
+            <AvatarFallback className="bg-brand text-white">{article.initials}</AvatarFallback>
           </Avatar>
           <div className="grow">
-            <p className="font-ui text-sm font-bold text-foreground">By {story.author}</p>
+            <p className="font-ui text-sm font-bold text-foreground">By {article.author}</p>
             <span className="font-utility text-xs text-muted-foreground">
-              {story.role ? story.role + " · " : ""}
-              {story.date} · {story.read}
+              {article.role ? article.role + " · " : ""}
+              {article.date} · {article.read}
             </span>
           </div>
-          <ArticleToolbar />
+          {/* <ArticleToolbar /> */}
         </div>
 
         <div className="prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground">
           <p
             className="font-display text-xl leading-8 font-medium first-letter:float-left first-letter:pr-3 first-letter:pt-1 first-letter:font-display first-letter:text-6xl first-letter:leading-13 first-letter:font-extrabold first-letter:text-brand-strong"
           >
-            {ARTICLE_BODY[0]}
+            {article.body[0]}
           </p>
-          <p className="font-display">{ARTICLE_BODY[1]}</p>
+          <p className="font-display">{article.body[1]}</p>
           <blockquote className="font-display border-l-4 border-brand py-1 pl-5 text-2xl leading-8 font-semibold text-foreground italic">
             &quot;We heard you. We owe it to this community to get the number right, not just to get
             it done.&quot;
           </blockquote>
-          <p className="font-display">{ARTICLE_BODY[2]}</p>
+          <p className="font-display">{article.body[2]}</p>
           <figure>
             <PhotoPlaceholder variant="duotone" icon={Users} ratio="16 / 9" iconSize={40} />
             <figcaption className="font-utility mt-2 text-xs text-muted-foreground">
@@ -80,8 +83,8 @@ export default async function ArticlePage({
               hearing · Photo by Aisha Cruz / TC
             </figcaption>
           </figure>
-          <p className="font-display">{ARTICLE_BODY[3]}</p>
-          <p className="font-display">{ARTICLE_BODY[4]}</p>
+          <p className="font-display">{article.body[3]}</p>
+          <p className="font-display">{article.body[4]}</p>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-2">

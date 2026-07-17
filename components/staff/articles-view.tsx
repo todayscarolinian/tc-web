@@ -26,12 +26,13 @@ import {
 import { ArticlesTable, type ArticleSort, type ArticleSortKey } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
 import { PageHeader } from "@/components/staff/page-header";
-import { SECTIONS } from "@/lib/content";
-import type { ArticleStatus, StaffArticle } from "@/lib/staff-data";
+import { SECTIONS } from "@/src/lib/content";
+import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { Article } from "@/src/domain/article/article.entity";
 
 const STATUS_OPTIONS: ("All" | ArticleStatus)[] = ["All", "Published", "Draft", "Scheduled"];
 
-export function ArticlesView({ initialArticles }: { initialArticles: StaffArticle[] }) {
+export function ArticlesView({ initialArticles }: { initialArticles: Article[] }) {
   const [articles, setArticles] = useState(initialArticles);
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("All");
@@ -66,30 +67,30 @@ export function ArticlesView({ initialArticles }: { initialArticles: StaffArticl
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
   }
 
-  function toggleOne(id: string) {
+  function toggleOne(slug: string) {
     setSelected((s) => {
       const next = new Set(s);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
       return next;
     });
   }
 
   function toggleAll() {
     setSelected((s) => {
-      const allSelected = filtered.length > 0 && filtered.every((a) => s.has(a.id));
+      const allSelected = filtered.length > 0 && filtered.every((a) => s.has(a.slug));
       if (allSelected) return new Set();
-      return new Set(filtered.map((a) => a.id));
+      return new Set(filtered.map((a) => a.slug));
     });
   }
 
   function bulkPublish() {
-    setArticles((rows) => rows.map((r) => (selected.has(r.id) ? { ...r, status: "Published" } : r)));
+    setArticles((rows) => rows.map((r) => (selected.has(r.slug) ? { ...r, status: "Published" } : r)));
     setSelected(new Set());
   }
 
   function bulkDelete() {
-    setArticles((rows) => rows.filter((r) => !selected.has(r.id)));
+    setArticles((rows) => rows.filter((r) => !selected.has(r.slug)));
     setSelected(new Set());
   }
 

@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { SECTIONS } from "@/lib/content";
-import { cn } from "@/lib/utils";
+import { SECTIONS } from "@/src/lib/content";
+import { cn } from "@/src/lib/utils";
 import {
   Sheet,
   SheetClose,

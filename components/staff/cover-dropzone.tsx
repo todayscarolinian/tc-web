@@ -1,7 +1,7 @@
 "use client";
 
 import { UploadCloud } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 // No upload wiring — matches this repo's existing convention of stubbed forms
 // (e.g. components/site/subscribe-strip.tsx), since there's no backend anywhere yet.

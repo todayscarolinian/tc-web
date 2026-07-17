@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
-import { ALL_STORIES, SECTIONS, sectionBySlug } from "@/lib/content";
-import { accentTextClass, sectionIcon } from "@/lib/section-style";
+import { articleService } from "@/src/infrastructure/article/article.composition";
+import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { Pager } from "@/components/site/pager";
 import { EmptyState } from "@/components/site/empty-state";
 import { Badge } from "@/components/ui/badge";
 
-export function generateStaticParams() {
-  return SECTIONS.map((s) => ({ section: s.slug }));
+export async function generateStaticParams() {
+  const sections = await articleService.listSections();
+  return sections.map((s) => ({ section: s.slug }));
 }
 export const dynamicParams = false;
 
@@ -20,10 +21,11 @@ export default async function SectionPage({
   params: Promise<{ section: string }>;
 }) {
   const { section: slug } = await params;
-  const section = sectionBySlug(slug);
+  const section = await articleService.findSectionBySlug(slug);
   if (!section) notFound();
 
-  const inSection = ALL_STORIES.filter((s) => s.section === section.name);
+  const articles = await articleService.listPublished();
+  const inSection = articles.filter((a) => a.section === section.name);
   const [lead, ...grid] = inSection;
 
   return (

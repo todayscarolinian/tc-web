@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/staff/page-header";
-import { CURRENT_STAFF_USER } from "@/lib/staff-data";
+import { CURRENT_STAFF_USER } from "@/src/lib/staff-data";
 
 export function SettingsView() {
   const [name, setName] = useState(CURRENT_STAFF_USER.name);

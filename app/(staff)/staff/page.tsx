@@ -9,9 +9,12 @@ import { TrendChart } from "@/components/staff/trend-chart";
 import { SectionLegend } from "@/components/staff/section-legend";
 import { DashboardArticlesPanel } from "@/components/staff/dashboard-articles-panel";
 import { TopStoriesRail } from "@/components/staff/top-stories-rail";
-import { DASHBOARD_STATS, PAGEVIEWS_30D, STAFF_ARTICLES, TOP_STORIES } from "@/lib/staff-data";
+import { DASHBOARD_STATS, PAGEVIEWS_30D, TOP_STORIES } from "@/src/lib/staff-data";
+import { articleService } from "@/src/infrastructure/article/article.composition";
 
-export default function StaffDashboardPage() {
+export default async function StaffDashboardPage() {
+  const articles = await articleService.staff.listAll();
+
   return (
     <>
       <PageHeader
@@ -54,7 +57,7 @@ export default function StaffDashboardPage() {
         </ChartPanel>
 
         <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-          <DashboardArticlesPanel articles={STAFF_ARTICLES} />
+          <DashboardArticlesPanel articles={articles} />
           <TopStoriesRail stories={TOP_STORIES} />
         </div>
       </div>

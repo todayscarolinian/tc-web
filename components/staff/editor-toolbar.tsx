@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Bold, Italic, Underline, Link2, Quote, List, Image as ImageIcon, Undo2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 const TOGGLES = [
   { key: "h", label: "H", icon: null, title: "Heading" },

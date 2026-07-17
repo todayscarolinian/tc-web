@@ -1,6 +1,6 @@
-import { sectionByName, type SectionName } from "@/lib/content";
-import { accentBgClass } from "@/lib/section-style";
-import { cn } from "@/lib/utils";
+import { sectionByName, type SectionName } from "@/src/lib/content";
+import { accentBgClass } from "@/src/lib/section-style";
+import { cn } from "@/src/lib/utils";
 
 export function SectionDot({ section, className }: { section: SectionName; className?: string }) {
   const info = sectionByName(section);

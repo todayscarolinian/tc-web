@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { CURRENT_STAFF_USER } from "@/lib/staff-data";
+import { CURRENT_STAFF_USER } from "@/src/lib/staff-data";
 
 export function PageHeader({
   title,

@@ -1,5 +1,5 @@
 import { MediaCard } from "@/components/staff/media-card";
-import type { StaffMediaItem } from "@/lib/staff-data";
+import type { StaffMediaItem } from "@/src/lib/staff-data";
 
 export function MediaGrid({
   items,

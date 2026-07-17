@@ -7,7 +7,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import type { PageviewPoint } from "@/lib/staff-data";
+import type { PageviewPoint } from "@/src/lib/staff-data";
 
 const chartConfig = {
   views: {

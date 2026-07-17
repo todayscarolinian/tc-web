@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
-import { LEAD, RAIL, STORIES, storyBySlug } from "@/lib/content";
-import { kickerClassForSection, sectionIcon } from "@/lib/section-style";
+import { articleService } from "@/src/infrastructure/article/article.composition";
+import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { EmptyState } from "@/components/site/empty-state";
 import { Button } from "@/components/ui/button";
-import { ENABLE_SUBSCRIPTION } from "@/lib/flags";
+import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
-export default function HomePage() {
-  const campusMix = STORIES.filter((s) =>
+export default async function HomePage() {
+  const [lead, ...stories] = await articleService.listPublished();
+  const trending = await articleService.listTrending(4);
+
+  const campusMix = stories.filter((s) =>
     ["Campus Life", "Arts & Culture", "Sports", "Opinion"].includes(s.section)
   ).slice(0, 4);
 
@@ -18,24 +21,24 @@ export default function HomePage() {
     <>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
-          <Link href={`/article/${LEAD.slug}`} className="group block">
+          <Link href={`/article/${lead.slug}`} className="group block">
             <PhotoPlaceholder
-              variant={LEAD.variant}
-              icon={sectionIcon(LEAD.section)}
+              variant={lead.variant}
+              icon={sectionIcon(lead.section)}
               ratio="16 / 9"
               iconSize={48}
             />
-            {LEAD.caption && (
-              <p className="font-utility mt-2 text-xs text-muted-foreground">{LEAD.caption}</p>
+            {lead.caption && (
+              <p className="font-utility mt-2 text-xs text-muted-foreground">{lead.caption}</p>
             )}
             <div className="mt-4">
-              <span className="tc-kicker text-brand">{LEAD.kickerText}</span>
+              <span className="tc-kicker text-brand">{lead.kickerText}</span>
               <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
-                {LEAD.title}
+                {lead.title}
               </h1>
-              <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{LEAD.dek}</p>
+              <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{lead.dek}</p>
               <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
-                By {LEAD.author} · {LEAD.date} · {LEAD.read}
+                By {lead.author} · {lead.date} · {lead.read}
               </span>
             </div>
           </Link>
@@ -44,33 +47,29 @@ export default function HomePage() {
             <h2 className="font-utility border-b border-border pb-2 text-xs font-bold tracking-wide text-foreground uppercase">
               Most read
             </h2>
-            {RAIL.length === 0 ? (
+            {trending.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">Nothing trending yet.</p>
             ) : (
               <div className="flex flex-col">
-                {RAIL.map((r, i) => {
-                  const story = storyBySlug(r.slug);
-                  if (!story) return null;
-                  return (
-                    <Link
-                      key={r.slug}
-                      href={`/article/${r.slug}`}
-                      className="group flex gap-3 border-b border-border py-4"
-                    >
-                      <span className="font-display text-2xl leading-none font-extrabold text-muted-foreground">
-                        {i + 1}
+                {trending.map((t, i) => (
+                  <Link
+                    key={t.slug}
+                    href={`/article/${t.slug}`}
+                    className="group flex gap-3 border-b border-border py-4"
+                  >
+                    <span className="font-display text-2xl leading-none font-extrabold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <span className={kickerClassForSection(t.section)} style={{ fontSize: 11 }}>
+                        {t.section}
                       </span>
-                      <div>
-                        <span className={kickerClassForSection(r.section)} style={{ fontSize: 11 }}>
-                          {r.section}
-                        </span>
-                        <h4 className="font-display mt-1 text-sm leading-5 font-bold text-foreground group-hover:underline">
-                          {r.title}
-                        </h4>
-                      </div>
-                    </Link>
-                  );
-                })}
+                      <h4 className="font-display mt-1 text-sm leading-5 font-bold text-foreground group-hover:underline">
+                        {t.title}
+                      </h4>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </aside>
@@ -79,7 +78,7 @@ export default function HomePage() {
         <div className="mt-12 flex items-center gap-4 border-b border-border pb-3">
           <h2 className="font-display text-2xl font-bold text-foreground">Latest stories</h2>
         </div>
-        {STORIES.length === 0 ? (
+        {stories.length === 0 ? (
           <EmptyState
             icon={Newspaper}
             title="No stories yet"
@@ -87,7 +86,7 @@ export default function HomePage() {
           />
         ) : (
           <div className="mt-6 grid auto-rows-fr gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {STORIES.slice(0, 6).map((s) => (
+            {stories.slice(0, 6).map((s) => (
               <StoryCard key={s.slug} story={s} />
             ))}
           </div>

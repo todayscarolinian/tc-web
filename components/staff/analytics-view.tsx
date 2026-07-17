@@ -8,7 +8,7 @@ import { StatCard } from "@/components/staff/stat-card";
 import { ChartPanel } from "@/components/staff/chart-panel";
 import { TrendChart } from "@/components/staff/trend-chart";
 import { SectionLegend } from "@/components/staff/section-legend";
-import { PAGEVIEWS_7D, PAGEVIEWS_30D, PAGEVIEWS_90D } from "@/lib/staff-data";
+import { PAGEVIEWS_7D, PAGEVIEWS_30D, PAGEVIEWS_90D } from "@/src/lib/staff-data";
 
 const RANGES = [
   { value: "7", label: "7d", data: PAGEVIEWS_7D },

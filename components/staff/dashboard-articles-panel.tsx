@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticlesTable } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
-import type { ArticleStatus, StaffArticle } from "@/lib/staff-data";
+import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { Article } from "@/src/domain/article/article.entity";
 
 const FILTERS = ["All", "Published", "Draft", "Scheduled"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -18,7 +19,7 @@ const FILTER_LABEL: Record<Filter, string> = {
   Scheduled: "Scheduled",
 };
 
-export function DashboardArticlesPanel({ articles }: { articles: StaffArticle[] }) {
+export function DashboardArticlesPanel({ articles }: { articles: Article[] }) {
   const [filter, setFilter] = useState<Filter>("All");
   const rows =
     filter === "All" ? articles : articles.filter((a) => a.status === (filter as ArticleStatus));

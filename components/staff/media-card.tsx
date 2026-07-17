@@ -3,8 +3,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
-import type { StaffMediaItem } from "@/lib/staff-data";
-import { cn } from "@/lib/utils";
+import type { StaffMediaItem } from "@/src/lib/staff-data";
+import { cn } from "@/src/lib/utils";
 
 export function MediaCard({
   item,

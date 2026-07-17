@@ -7,8 +7,8 @@ import { PageHeader } from "@/components/staff/page-header";
 import { MediaGrid } from "@/components/staff/media-grid";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
 import { EmptyState } from "@/components/site/empty-state";
-import { MEDIA_FOLDERS, MEDIA_TAGS, STAFF_MEDIA } from "@/lib/staff-data";
-import { cn } from "@/lib/utils";
+import { MEDIA_FOLDERS, MEDIA_TAGS, STAFF_MEDIA } from "@/src/lib/staff-data";
+import { cn } from "@/src/lib/utils";
 
 // STAFF_MEDIA is imported directly (rather than passed as a prop from the server
 // page) because its items carry lucide icon components, which can't cross the

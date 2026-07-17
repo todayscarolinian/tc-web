@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Link2, Check } from "lucide-react";
 import { FacebookIcon, XIcon } from "@/components/site/social-icons";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 export function ShareRow() {
   const [copied, setCopied] = useState(false);

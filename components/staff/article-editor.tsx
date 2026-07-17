@@ -24,9 +24,11 @@ import { EditorToolbar } from "@/components/staff/editor-toolbar";
 import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
-import { ARTICLE_BODY, SECTIONS, type SectionName } from "@/lib/content";
-import type { ArticleStatus, StaffArticle } from "@/lib/staff-data";
-import { cn } from "@/lib/utils";
+import { SECTIONS, type SectionName } from "@/src/lib/content";
+import { ARTICLE_BODY } from "@/src/lib/articles";
+import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { Article } from "@/src/domain/article/article.entity";
+import { cn } from "@/src/lib/utils";
 
 const AUTHORS = [
   "Maria Santos",
@@ -39,7 +41,7 @@ const AUTHORS = [
   "Editorial Board",
 ];
 
-export function ArticleEditor({ article }: { article?: StaffArticle }) {
+export function ArticleEditor({ article }: { article?: Article }) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [section, setSection] = useState<SectionName>(article?.section ?? "News");
   const [author, setAuthor] = useState(article?.author ?? "Maria Santos");

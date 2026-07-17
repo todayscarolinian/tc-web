@@ -1,5 +1,5 @@
 import { Inbox, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 export function EmptyState({
   icon: Icon = Inbox,

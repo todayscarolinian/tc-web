@@ -1,6 +1,7 @@
 import { ArticlesView } from "@/components/staff/articles-view";
-import { STAFF_ARTICLES } from "@/lib/staff-data";
+import { articleService } from "@/src/infrastructure/article/article.composition";
 
-export default function StaffArticlesPage() {
-  return <ArticlesView initialArticles={STAFF_ARTICLES} />;
+export default async function StaffArticlesPage() {
+  const articles = await articleService.staff.listAll();
+  return <ArticlesView initialArticles={articles} />;
 }

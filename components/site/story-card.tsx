@@ -1,10 +1,10 @@
 import Link from "next/link";
-import type { Story } from "@/lib/content";
-import { kickerClassForSection, sectionIcon } from "@/lib/section-style";
+import type { Article } from "@/src/domain/article/article.entity";
+import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
-export function StoryCard({ story, small = false }: { story: Story; small?: boolean }) {
+export function StoryCard({ story, small = false }: { story: Article; small?: boolean }) {
   return (
     <Link href={`/article/${story.slug}`} className="group flex h-full flex-col">
       <PhotoPlaceholder

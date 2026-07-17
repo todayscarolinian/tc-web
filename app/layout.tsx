@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Open_Sans, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-import { PUBLICATION } from "@/lib/publication";
+import { cn } from "@/src/lib/utils";
+import { PUBLICATION } from "@/src/infrastructure/publication/publication.composition";
 
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-display" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-ui" });

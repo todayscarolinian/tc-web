@@ -1,5 +1,5 @@
-import type { ArticleStatus } from "@/lib/staff-data";
-import { cn } from "@/lib/utils";
+import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import { cn } from "@/src/lib/utils";
 
 const PILL_CLASS: Record<ArticleStatus, string> = {
   Published: "bg-success/15 text-success-strong",

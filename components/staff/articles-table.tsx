@@ -13,8 +13,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionDot } from "@/components/staff/section-dot";
 import { StatusPill } from "@/components/staff/status-pill";
-import type { StaffArticle } from "@/lib/staff-data";
-import { cn } from "@/lib/utils";
+import type { Article } from "@/src/domain/article/article.entity";
+import { cn } from "@/src/lib/utils";
 
 export type ArticleSortKey = "title" | "section" | "author" | "status" | "date" | "views";
 export type ArticleSort = { key: ArticleSortKey; dir: "asc" | "desc" };
@@ -37,15 +37,15 @@ export function ArticlesTable({
   sort,
   onSortChange,
 }: {
-  articles: StaffArticle[];
+  articles: Article[];
   selectable?: boolean;
   selectedIds?: Set<string>;
-  onToggleSelect?: (id: string) => void;
+  onToggleSelect?: (slug: string) => void;
   onToggleSelectAll?: () => void;
   sort?: ArticleSort;
   onSortChange?: (key: ArticleSortKey) => void;
 }) {
-  const allChecked = selectable && articles.length > 0 && articles.every((a) => selectedIds?.has(a.id));
+  const allChecked = selectable && articles.length > 0 && articles.every((a) => selectedIds?.has(a.slug));
 
   return (
     <Table>
@@ -73,19 +73,19 @@ export function ArticlesTable({
       </TableHeader>
       <TableBody>
         {articles.map((a) => (
-          <TableRow key={a.id} data-state={selectedIds?.has(a.id) ? "selected" : undefined}>
+          <TableRow key={a.slug} data-state={selectedIds?.has(a.slug) ? "selected" : undefined}>
             {selectable && (
               <TableCell>
                 <Checkbox
-                  checked={selectedIds?.has(a.id) ?? false}
-                  onCheckedChange={() => onToggleSelect?.(a.id)}
+                  checked={selectedIds?.has(a.slug) ?? false}
+                  onCheckedChange={() => onToggleSelect?.(a.slug)}
                   aria-label={`Select ${a.title}`}
                 />
               </TableCell>
             )}
             <TableCell className="max-w-xs whitespace-normal">
               <Link
-                href={`/staff/articles/${a.id}`}
+                href={`/staff/articles/${a.slug}`}
                 className="font-display font-bold text-foreground hover:text-brand-strong"
               >
                 {a.title}

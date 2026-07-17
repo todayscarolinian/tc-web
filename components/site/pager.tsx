@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 export function Pager({ pageCount = 9 }: { pageCount?: number }) {
   const [page, setPage] = useState(1);
