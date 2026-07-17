@@ -1,26 +1,194 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-display);
+  --font-heading: var(--font-display);
+  --font-ui: var(--font-ui);
+  --font-utility: var(--font-utility);
+  --color-brand: var(--color-brand);
+  --color-brand-strong: var(--color-brand-strong);
+  --color-brand-ink: var(--color-brand-ink);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-text-secondary: var(--text-secondary);
+  --color-section-news: var(--section-news);
+  --color-section-campus: var(--section-campus);
+  --color-section-sports: var(--section-sports);
+  --color-section-culture: var(--section-culture);
+  --color-section-opinion: var(--section-opinion);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: rgb(255,255,255);
+  --foreground: rgb(8,8,8);
+  --card: rgb(255,255,255);
+  --card-foreground: rgb(8,8,8);
+  --popover: rgb(255,255,255);
+  --popover-foreground: rgb(8,8,8);
+  --primary: rgb(155,38,38);
+  --primary-foreground: rgb(255,255,255);
+  --secondary: rgb(253,242,231);
+  --secondary-foreground: rgb(21,21,21);
+  --muted: rgb(247,247,247);
+  --muted-foreground: rgb(128,128,128);
+  --accent: rgb(253,242,231);
+  --accent-foreground: rgb(21,21,21);
+  --destructive: rgb(188,57,57);
+  --border: rgb(211,211,211);
+  --input: rgb(211,211,211);
+  --ring: rgb(192,45,45);
+
+  /* Today's Carolinian brand — semantic aliases (design_system/tokens/colors.css) */
+  --color-brand: rgb(192,45,45);
+  --color-brand-strong: rgb(155,38,38);
+  --color-brand-ink: rgb(85,20,20);
+  --surface-cream: rgb(253,242,231);
+  --surface-inverse: rgb(21,21,21);
+  --text-secondary: rgb(58,58,58);
+  --section-news: rgb(192,45,45);
+  --section-campus: rgb(244,150,86);
+  --section-sports: rgb(6,23,94);
+  --section-culture: rgb(0,148,68);
+  --section-opinion: rgb(145,136,121);
+  --success: rgb(0,148,68);
+  --success-strong: rgb(0,89,41);
+  --warning: rgb(255,147,30);
+  --warning-strong: rgb(153,88,18);
+
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0px;
+
+  /* Staff sidebar — always the TC-black newsroom rail, fixed regardless of
+     light/dark theme (matches design_system .cms-side, which has no
+     [data-theme="dark"] override). Repeated verbatim in .dark below. */
+  --sidebar: rgb(21,21,21);
+  --sidebar-foreground: rgb(247,246,246);
+  --sidebar-primary: rgb(155,38,38);
+  --sidebar-primary-foreground: rgb(255,255,255);
+  --sidebar-accent: rgba(255,255,255,0.08);
+  --sidebar-accent-foreground: rgb(255,255,255);
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: rgb(192,45,45);
+}
+
+.dark {
+  --background: rgb(21,21,21);
+  --foreground: rgb(247,246,246);
+  --card: rgb(28,28,28);
+  --card-foreground: rgb(247,246,246);
+  --popover: rgb(28,28,28);
+  --popover-foreground: rgb(247,246,246);
+  --primary: rgb(215,51,51);
+  --primary-foreground: rgb(255,255,255);
+  --secondary: rgb(49,49,49);
+  --secondary-foreground: rgb(247,246,246);
+  --muted: rgb(49,49,49);
+  --muted-foreground: rgb(196,196,196);
+  --accent: rgb(49,49,49);
+  --accent-foreground: rgb(247,246,246);
+  --destructive: rgb(228,176,176);
+  --border: rgb(58,58,58);
+  --input: rgb(58,58,58);
+  --ring: rgb(215,51,51);
+
+  --color-brand: rgb(215,51,51);
+  --color-brand-strong: rgb(255,89,89);
+  --color-brand-ink: rgb(254,185,185);
+  --surface-cream: rgb(28,28,28);
+  --surface-inverse: rgb(21,21,21);
+  --text-secondary: rgb(211,211,211);
+  --success: rgb(113,212,159);
+  --success-strong: rgb(170,244,204);
+  --warning: rgb(255,212,165);
+  --warning-strong: rgb(255,244,232);
+
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+
+  /* Staff sidebar stays fixed — see the .root definition above. */
+  --sidebar: rgb(21,21,21);
+  --sidebar-foreground: rgb(247,246,246);
+  --sidebar-primary: rgb(155,38,38);
+  --sidebar-primary-foreground: rgb(255,255,255);
+  --sidebar-accent: rgba(255,255,255,0.08);
+  --sidebar-accent-foreground: rgb(255,255,255);
+  --sidebar-border: rgba(255,255,255,0.1);
+  --sidebar-ring: rgb(192,45,45);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Kicker / section label — Rajdhani, uppercase, tracked out */
+  .tc-kicker {
+    font-family: var(--font-utility);
+    font-weight: 700;
+    font-size: 0.8125rem;
+    line-height: 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
 }
