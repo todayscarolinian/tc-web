@@ -10,7 +10,7 @@ import { getStaffArticleBySlug } from "@/src/application/article/staff/get-staff
 
 // Composition root for the article slice — the only place that knows the
 // concrete adapter. Swapping to a real DB later means changing the line
-// below (e.g. to `new PrismaArticleRepository(prisma)`); nothing in
+// below (e.g. to `new FirestoreArticleRepository(prisma)`); nothing in
 // application/ or app/ needs to change.
 export const articleRepository: ArticleRepository = new InMemoryArticleRepository();
 

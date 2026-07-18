@@ -5,9 +5,20 @@
 Today's Carolinian is currently a UI-only prototype: every page reads
 hardcoded mock arrays directly from `lib/*.ts`. This document describes a
 light Domain-Driven-Design-inspired layering, introduced to create seams
-for a future real database, real auth (BetterAuth), and real backend logic
-(Route Handlers / Server Actions) — without heavy DDD ceremony (no
-aggregate roots, no domain events, no CQRS).
+for a real database (**Firestore**), real auth (**TC Herald**, TC's IdP/SSO
+for all TC properties — integrated via `src/lib/herald/`), and real
+backend logic (Route Handlers / Server Actions) — without heavy DDD
+ceremony (no aggregate roots, no domain events, no CQRS).
+
+## Related ADRs
+
+- [ADR-002 — Tiptap as the CMS Rich Text Editor](adr/adr-002-tiptap-as-cms-rich-text-editor.md) — article `body` is stored as ProseMirror JSON on the article's Firestore document
+- [ADR-003 — First-Party Analytics (Firestore Counters)](adr/adr-003-first-party-analytics) — view counts live on the article doc, incremented via `FieldValue.increment()`
+- [ADR-004 — ISR as the Primary Rendering Strategy for Reader Routes](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md) — publish actions write to Firestore then call `revalidatePath()`
+- [ADR-007 — Firestore Over Supabase as the Application Database](adr/adr-007.md) — cost-driven choice given budget constraints; full-text search deferred post-MVP as a result
+
+Firebase Storage (cover images and other media) is the binary-asset
+counterpart to Firestore, which holds the structured records.
 
 ## Layers & the dependency rule
 
@@ -28,10 +39,10 @@ a `*.composition.ts` file — the poor-man's-DI pattern used here instead of
 a DI container, appropriate for a project this size.
 
 `lib/` is not being deleted. It stays as the current source of mock data;
-`infrastructure/` adapters wrap it. When a real database is chosen, a new
-adapter (e.g. `prisma-article.repository.ts`) replaces the in-memory one in
-the composition root, and `lib/articles.ts`/`lib/content.ts` retire
-naturally as their wrapped data moves into the database.
+`infrastructure/` adapters wrap it. Now that Firestore is the chosen
+backend, a new adapter (`firestore-article.repository.ts`) replaces the
+in-memory one in the composition root, and `lib/articles.ts`/`lib/content.ts`
+retire naturally as their wrapped data moves into Firestore.
 
 ## Naming conventions
 
@@ -41,7 +52,7 @@ naturally as their wrapped data moves into the database.
 | `*.value-object.ts` | domain | immutable, identity-less type |
 | `*.repository.ts` | domain | repository port (interface only) |
 | `*.port.ts` | domain | non-persistence capability interface (e.g. auth/session) |
-| `in-memory-<name>.repository.ts` | infrastructure | concrete adapter; the prefix leaves room for a future `prisma-<name>.repository.ts` beside it |
+| `in-memory-<name>.repository.ts` | infrastructure | concrete adapter; the prefix leaves room for a future `firestore-<name>.repository.ts` beside it |
 | `*.use-case.ts` | application | one exported function per file, verb-first |
 | `*.composition.ts` | infrastructure | composition root — instantiates the concrete adapter and pre-binds use-cases for pages/route handlers to import |
 
@@ -141,18 +152,28 @@ context — add repository methods and a use-case subfolder instead, per
 `application/`, and `infrastructure/` describing their intended shape —
 follow the checklist above to fill them in.
 
-## Where BetterAuth and a real database plug in later
+## Where Herald and Firestore plug in later
 
 - **Database**: each `domain/<context>/*.repository.ts` port gets a new
-  adapter (e.g. `prisma-article.repository.ts`) alongside the
+  Firestore adapter (e.g. `firestore-article.repository.ts`) alongside the
   `in-memory-*` one. Swap which one is instantiated in the relevant
   `*.composition.ts` — nothing in `application/` or `app/` changes.
+  `mediaAssets` records (metadata) live in Firestore the same way; the
+  underlying files live in Firebase Storage, referenced from the doc by
+  URL.
 - **Auth**: `domain/auth/session.port.ts` (`SessionPort`) is implemented
   today only by `infrastructure/auth/in-memory-session.adapter.ts` (always
-  returns the mock `CURRENT_STAFF_USER`). Once a database is chosen,
-  implement `SessionPort` against BetterAuth's session API and swap the
-  instantiation in `infrastructure/auth/auth.composition.ts`. That session
-  service would then be consumed from:
+  returns the mock `CURRENT_STAFF_USER`). The real implementation is
+  **TC Herald** — TC's IdP/SSO shared across all TC properties — via
+  `src/lib/herald/`: `verify-session.ts` (`verifySessionFromCookie`) and
+  `authorize.ts` (`isAuthorized`) do the server-side session/domain checks,
+  combined in `require-access.ts` (`requireHeraldAccess`); `auth-client.ts`
+  wraps the BetterAuth client pointed at Herald's auth server for
+  client-side use, consumed via `use-has-domain-access.ts`
+  (`useHasHeraldDomainAccess`). `SessionPort` should be implemented against
+  `requireHeraldAccess`, swapping the instantiation in
+  `infrastructure/auth/auth.composition.ts`. That session service would
+  then be consumed from:
   - a future `app/(staff)/layout.tsx` guard (gate rendering of the CMS), and
   - a future root **`proxy.ts`** (Next.js 16 renamed `middleware.ts` to
     `proxy.ts` — use the new convention) to redirect unauthenticated
