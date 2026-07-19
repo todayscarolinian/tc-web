@@ -30,6 +30,20 @@ import { SECTIONS } from "@/src/lib/content";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 import type { Article } from "@/src/domain/article/article.entity";
 
+// ArticleSortKey's "author"/"date" don't map 1:1 onto Article's field names
+// (authorName/publishedAt) — this resolves a sortable value for each key
+// instead of indexing the article directly.
+function sortValue(article: Article, key: ArticleSortKey): string | number {
+  switch (key) {
+    case "author":
+      return article.authorName;
+    case "date":
+      return article.publishedAt?.getTime() ?? 0;
+    default:
+      return article[key];
+  }
+}
+
 const STATUS_OPTIONS: ("All" | ArticleStatus)[] = ["All", "Published", "Draft", "Scheduled"];
 
 export function ArticlesView({ initialArticles }: { initialArticles: Article[] }) {
@@ -42,7 +56,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const authors = useMemo(
-    () => ["All", ...Array.from(new Set(initialArticles.map((a) => a.author)))],
+    () => ["All", ...Array.from(new Set(initialArticles.map((a) => a.authorName)))],
     [initialArticles]
   );
 
@@ -50,13 +64,13 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
     let rows = articles.filter((a) => {
       if (section !== "All" && a.section !== section) return false;
       if (status !== "All" && a.status !== status) return false;
-      if (author !== "All" && a.author !== author) return false;
+      if (author !== "All" && a.authorName !== author) return false;
       if (query.trim() && !a.title.toLowerCase().includes(query.trim().toLowerCase())) return false;
       return true;
     });
     rows = [...rows].sort((a, b) => {
-      const av = a[sort.key];
-      const bv = b[sort.key];
+      const av = sortValue(a, sort.key);
+      const bv = sortValue(b, sort.key);
       const cmp = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv));
       return sort.dir === "asc" ? cmp : -cmp;
     });

@@ -74,8 +74,8 @@ A Firestore read only happens when a page is *regenerated* — on the fallback w
 **Mitigations:**
 
 - The `ArticleRepository` port isolates the persistence choice; a future migration (e.g. to Postgres) is a contained adapter swap, not a rewrite of `domain/`, `application/`, or `app/`
-- FK-equivalent integrity is enforced in the Firestore repository adapter and covered by tests, per the sprint plan (`mvp-sprint-plan.md`, S1-01)
-- Composite indexes for every planned query shape are defined upfront during schema design (S1-01), not discovered ad hoc in production
+- FK-equivalent integrity is enforced in the Firestore repository adapter and covered by tests, per the sprint plan (S1-01) — the invariants to enforce are enumerated in [`firestore-schema.md`](../firestore-schema.md)
+- Composite indexes for every planned query shape are defined upfront during schema design (S1-01), not discovered ad hoc in production — see [`firestore-schema.md`](../firestore-schema.md) and [`firestore.indexes.json`](../../firestore.indexes.json)
 - Full-text search is deliberately descoped for MVP rather than solved with an expensive workaround: MVP ships basic substring search over title/dek/author/section (mirrors the existing `InMemoryArticleRepository.search()` behavior), with a documented upgrade path (below) once budget/traffic justifies it
 
 ---

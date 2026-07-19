@@ -10,12 +10,13 @@ for all TC properties — integrated via `src/lib/herald/`), and real
 backend logic (Route Handlers / Server Actions) — without heavy DDD
 ceremony (no aggregate roots, no domain events, no CQRS).
 
-## Related ADRs
+## Related ADRs &amp; Design Docs
 
 - [ADR-002 — Tiptap as the CMS Rich Text Editor](adr/adr-002-tiptap-as-cms-rich-text-editor.md) — article `body` is stored as ProseMirror JSON on the article's Firestore document
 - [ADR-003 — First-Party Analytics (Firestore Counters)](adr/adr-003-first-party-analytics) — view counts live on the article doc, incremented via `FieldValue.increment()`
 - [ADR-004 — ISR as the Primary Rendering Strategy for Reader Routes](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md) — publish actions write to Firestore then call `revalidatePath()`
 - [ADR-007 — Firestore Over Supabase as the Application Database](adr/adr-007.md) — cost-driven choice given budget constraints; full-text search deferred post-MVP as a result
+- [Firestore Schema (S1-01)](firestore-schema.md) — the full collection/field schema, composite indexes, and FK-equivalent invariants for all five collections (`articles`, `sections`, `tags`, `authors`, `mediaAssets`)
 
 Firebase Storage (cover images and other media) is the binary-asset
 counterpart to Firestore, which holds the structured records.
@@ -160,7 +161,7 @@ follow the checklist above to fill them in.
   `*.composition.ts` — nothing in `application/` or `app/` changes.
   `mediaAssets` records (metadata) live in Firestore the same way; the
   underlying files live in Firebase Storage, referenced from the doc by
-  URL.
+  URL. See [`firestore-schema.md`](firestore-schema.md) for the full schema.
 - **Auth**: `domain/auth/session.port.ts` (`SessionPort`) is implemented
   today only by `infrastructure/auth/in-memory-session.adapter.ts` (always
   returns the mock `CURRENT_STAFF_USER`). The real implementation is
@@ -208,3 +209,10 @@ follow the checklist above to fill them in.
    application layer (`getArticleBySlug` calls the filtered method), not by
    the data source itself. A future DB adapter should still filter at the
    query level for defense in depth, not rely solely on the use-case.
+9. `Article.body` (`domain/article/article.entity.ts`) is typed as Tiptap's
+   own `JSONContent` (from `@tiptap/core`), a deliberate exception to this
+   doc's "domain has zero dependency on infrastructure/frameworks" rule —
+   justified because [ADR-002](adr/adr-002-tiptap-as-cms-rich-text-editor.md)
+   already commits the storage format to being literally "whatever Tiptap
+   emits." See [`firestore-schema.md`](firestore-schema.md)'s "Domain-type
+   mapping" section for the full rationale.

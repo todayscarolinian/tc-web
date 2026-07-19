@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
+import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
@@ -38,7 +39,8 @@ export default async function HomePage() {
               </h1>
               <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{lead.dek}</p>
               <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
-                By {lead.author} · {lead.date} · {lead.read}
+                By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
+                {formatReadTime(lead.readTimeMinutes)}
               </span>
             </div>
           </Link>

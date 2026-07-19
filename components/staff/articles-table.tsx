@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SectionDot } from "@/components/staff/section-dot";
 import { StatusPill } from "@/components/staff/status-pill";
 import type { Article } from "@/src/domain/article/article.entity";
+import { formatDisplayDate } from "@/src/lib/article-format";
 import { cn } from "@/src/lib/utils";
 
 export type ArticleSortKey = "title" | "section" | "author" | "status" | "date" | "views";
@@ -94,11 +95,11 @@ export function ArticlesTable({
             <TableCell>
               <SectionDot section={a.section} />
             </TableCell>
-            <TableCell className="text-text-secondary">{a.author}</TableCell>
+            <TableCell className="text-text-secondary">{a.authorName}</TableCell>
             <TableCell>
               <StatusPill status={a.status} />
             </TableCell>
-            <TableCell className="text-muted-foreground">{a.date}</TableCell>
+            <TableCell className="text-muted-foreground">{formatDisplayDate(a.publishedAt)}</TableCell>
             <TableCell className="text-right font-ui font-bold tabular-nums text-foreground">
               {a.views ? a.views.toLocaleString("en-US") : "—"}
             </TableCell>

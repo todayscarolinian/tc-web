@@ -5,12 +5,14 @@ const PILL_CLASS: Record<ArticleStatus, string> = {
   Published: "bg-success/15 text-success-strong",
   Draft: "bg-muted text-muted-foreground",
   Scheduled: "bg-warning/20 text-warning-strong",
+  Archived: "bg-muted text-muted-foreground",
 };
 
 const DOT_CLASS: Record<ArticleStatus, string> = {
   Published: "bg-success",
   Draft: "bg-muted-foreground",
   Scheduled: "bg-warning",
+  Archived: "bg-muted-foreground",
 };
 
 export function StatusPill({ status }: { status: ArticleStatus }) {

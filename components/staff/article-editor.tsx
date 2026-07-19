@@ -44,7 +44,7 @@ const AUTHORS = [
 export function ArticleEditor({ article }: { article?: Article }) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [section, setSection] = useState<SectionName>(article?.section ?? "News");
-  const [author, setAuthor] = useState(article?.author ?? "Maria Santos");
+  const [author, setAuthor] = useState(article?.authorName ?? "Maria Santos");
   const [status, setStatus] = useState<ArticleStatus>(article?.status ?? "Draft");
   const [tags, setTags] = useState<string[]>(article ? ["tuition", "board of trustees"] : []);
   const [hasCover, setHasCover] = useState(Boolean(article));

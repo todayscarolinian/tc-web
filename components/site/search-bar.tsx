@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/site/empty-state";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
+import { formatDisplayDate } from "@/src/lib/article-format";
 import { useDebouncedValue } from "@/hooks/use-debounce";
 import type { Article } from "@/src/domain/article/article.entity";
 
@@ -121,7 +122,7 @@ export function SearchBar() {
                           {article.title}
                         </span>
                         <span className="font-utility text-xs font-medium text-muted-foreground">
-                          By {article.author} · {article.date}
+                          By {article.authorName} · {formatDisplayDate(article.publishedAt)}
                         </span>
                       </div>
                     </Link>

@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// All reads and writes in this app go through Next.js server code via the
+// firebase-admin SDK (see the ADR-003/ADR-004 code examples in docs/adr/),
+// which authenticates as a service account and bypasses these rules
+// entirely. There is no client-side Firestore SDK usage anywhere in the
+// design (see docs/firestore-schema.md) — Herald owns auth, not Firebase
+// Auth, so there's no client identity these rules could check against
+// today. Deny all direct client access by default; revisit only if a
+// future feature adds client-side Firestore reads (e.g. real-time
+// listeners, called out as "not currently planned" in ADR-007).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
+import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { Pager } from "@/components/site/pager";
@@ -59,7 +60,8 @@ export default async function SectionPage({
               </h2>
               <p className="mt-2 text-base leading-6 text-text-secondary">{lead.dek}</p>
               <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
-                By {lead.author} · {lead.date} · {lead.read}
+                By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
+                {formatReadTime(lead.readTimeMinutes)}
               </span>
             </div>
           </Link>

@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
+import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
-import { ArticleToolbar } from "@/components/site/article-toolbar";
 import { ShareRow } from "@/components/site/share-row";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
 import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
 export async function generateStaticParams() {
@@ -33,6 +32,7 @@ export default async function ArticlePage({
   const related = (await articleService.listPublished())
     .filter((a) => a.slug !== article.slug)
     .slice(0, 3);
+  const bodyHtml = renderArticleBodyHTML(article.body);
 
   return (
     <>
@@ -52,40 +52,21 @@ export default async function ArticlePage({
 
         <div className="mt-6 flex items-center gap-3 border-y border-border py-4">
           <Avatar size="lg">
-            <AvatarFallback className="bg-brand text-white">{article.initials}</AvatarFallback>
+            <AvatarFallback className="bg-brand text-white">{article.authorInitials}</AvatarFallback>
           </Avatar>
           <div className="grow">
-            <p className="font-ui text-sm font-bold text-foreground">By {article.author}</p>
+            <p className="font-ui text-sm font-bold text-foreground">By {article.authorName}</p>
             <span className="font-utility text-xs text-muted-foreground">
-              {article.role ? article.role + " · " : ""}
-              {article.date} · {article.read}
+              {article.authorRole ? article.authorRole + " · " : ""}
+              {formatDisplayDate(article.publishedAt)} · {formatReadTime(article.readTimeMinutes)}
             </span>
           </div>
-          {/* <ArticleToolbar /> */}
         </div>
 
-        <div className="prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground">
-          <p
-            className="font-display text-xl leading-8 font-medium first-letter:float-left first-letter:pr-3 first-letter:pt-1 first-letter:font-display first-letter:text-6xl first-letter:leading-13 first-letter:font-extrabold first-letter:text-brand-strong"
-          >
-            {article.body[0]}
-          </p>
-          <p className="font-display">{article.body[1]}</p>
-          <blockquote className="font-display border-l-4 border-brand py-1 pl-5 text-2xl leading-8 font-semibold text-foreground italic">
-            &quot;We heard you. We owe it to this community to get the number right, not just to get
-            it done.&quot;
-          </blockquote>
-          <p className="font-display">{article.body[2]}</p>
-          <figure>
-            <PhotoPlaceholder variant="duotone" icon={Users} ratio="16 / 9" iconSize={40} />
-            <figcaption className="font-utility mt-2 text-xs text-muted-foreground">
-              SSC president Reina Villanueva addresses students outside Buttenbruch Hall after the
-              hearing · Photo by Aisha Cruz / TC
-            </figcaption>
-          </figure>
-          <p className="font-display">{article.body[3]}</p>
-          <p className="font-display">{article.body[4]}</p>
-        </div>
+        <div
+          className="prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground [&>blockquote]:font-display [&>blockquote]:border-l-4 [&>blockquote]:border-brand [&>blockquote]:py-1 [&>blockquote]:pl-5 [&>blockquote]:text-2xl [&>blockquote]:leading-8 [&>blockquote]:font-semibold [&>blockquote]:italic [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:pr-3 [&>p:first-of-type]:first-letter:pt-1 [&>p:first-of-type]:first-letter:font-display [&>p:first-of-type]:first-letter:text-6xl [&>p:first-of-type]:first-letter:leading-13 [&>p:first-of-type]:first-letter:font-extrabold [&>p:first-of-type]:first-letter:text-brand-strong"
+          dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        />
 
         <div className="mt-8 flex flex-wrap gap-2">
           <Badge className="rounded-full bg-brand text-white">tuition</Badge>

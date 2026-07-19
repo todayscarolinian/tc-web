@@ -6,7 +6,7 @@ import path from "node:path";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["domain/**/*.test.ts", "application/**/*.test.ts"],
+    include: ["src/domain/**/*.test.ts", "src/application/**/*.test.ts"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, ".") },

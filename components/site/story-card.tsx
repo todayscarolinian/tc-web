@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Article } from "@/src/domain/article/article.entity";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
+import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { cn } from "@/src/lib/utils";
 
@@ -26,7 +27,8 @@ export function StoryCard({ story, small = false }: { story: Article; small?: bo
           <p className="line-clamp-2 text-sm leading-5 text-text-secondary">{story.dek}</p>
         )}
         <span className="font-utility mt-auto pt-1 text-xs font-medium text-muted-foreground">
-          By {story.author} · {story.date} · {story.read}
+          By {story.authorName} · {formatDisplayDate(story.publishedAt)} ·{" "}
+          {formatReadTime(story.readTimeMinutes)}
         </span>
       </div>
     </Link>
