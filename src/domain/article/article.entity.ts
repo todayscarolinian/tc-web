@@ -1,7 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { SectionName } from "./section.value-object";
 import type { ArticleStatus } from "./article-status.value-object";
-
+import type { Tag } from "../tag/tag.entity";
 export type PhotoVariant = "paper" | "dark" | "duotone";
 
 export type Article = {
@@ -39,7 +39,8 @@ export type Article = {
   // has no native full-text index) — see docs/firestore-schema.md.
   body: JSONContent;
   bodyText: string;
-  tagIds: string[];
+  tagIds: Tag[];
+  // allow the article document to store tag data to prevent extra reads on tag documents
   status: ArticleStatus;
   views: number;
   featured?: boolean;
