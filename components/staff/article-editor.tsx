@@ -24,7 +24,7 @@ import { EditorToolbar } from "@/components/staff/editor-toolbar";
 import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
-import { SECTIONS, type SectionName } from "@/src/lib/content";
+import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { ARTICLE_BODY } from "@/src/lib/articles";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 import type { Article } from "@/src/domain/article/article.entity";
@@ -43,7 +43,9 @@ const AUTHORS = [
 
 export function ArticleEditor({ article }: { article?: Article }) {
   const [title, setTitle] = useState(article?.title ?? "");
-  const [section, setSection] = useState<SectionName>(article?.section ?? "News");
+  const [section, setSection] = useState<SectionName>(
+    article ? getSectionName(article.sectionSlug) : "News"
+  );
   const [author, setAuthor] = useState(article?.authorName ?? "Maria Santos");
   const [status, setStatus] = useState<ArticleStatus>(article?.status ?? "Draft");
   const [tags, setTags] = useState<string[]>(article ? ["tuition", "board of trustees"] : []);
@@ -111,7 +113,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
             </blockquote>
 
             <figure className="my-7">
-              <PhotoPlaceholder variant="duotone" ratio="16 / 9" iconSize={36} />
+              <PhotoPlaceholder ratio="16 / 9" iconSize={36} />
               <figcaption
                 contentEditable
                 suppressContentEditableWarning
@@ -195,7 +197,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
             </span>
             {hasCover ? (
               <div className="overflow-hidden rounded-sm ring-1 ring-border">
-                <PhotoPlaceholder variant="dark" ratio="16 / 10" iconSize={28} />
+                <PhotoPlaceholder ratio="16 / 10" iconSize={28} />
                 <div className="flex gap-2 p-2.5">
                   <Button type="button" size="sm" variant="outline" className="flex-1">
                     <Upload /> Replace

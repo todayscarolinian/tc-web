@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { articleService } from "@/src/infrastructure/article/article.composition";
+import { getSectionName } from "@/src/lib/content";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
@@ -28,7 +29,7 @@ export default async function ArticlePage({
   const article = await articleService.getBySlug(slug);
   if (!article) notFound();
 
-  const sectionInfo = await articleService.findSectionByName(article.section);
+  const sectionInfo = await articleService.findSectionBySlug(article.sectionSlug);
   const related = (await articleService.listPublished())
     .filter((a) => a.slug !== article.slug)
     .slice(0, 3);
@@ -36,14 +37,14 @@ export default async function ArticlePage({
 
   return (
     <>
-      <PhotoPlaceholder variant={article.variant === "paper" ? "dark" : article.variant} icon={sectionIcon(article.section)} ratio="21 / 9" iconSize={56} />
+      <PhotoPlaceholder icon={sectionIcon(getSectionName(article.sectionSlug))} ratio="21 / 9" iconSize={56} />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         {article.caption && (
           <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{article.caption}</p>
         )}
 
         {sectionInfo && (
-          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>{article.section}</span>
+          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>{sectionInfo.name}</span>
         )}
         <h1 className="font-display mt-2 text-4xl leading-[44px] font-extrabold text-balance text-foreground">
           {article.title}

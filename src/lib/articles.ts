@@ -1,9 +1,8 @@
-import type { PhotoVariant, SectionName } from "./content";
+import type { SectionName } from "./content";
 
 export type ArticleRecord = {
   slug: string;
   section: SectionName;
-  kickerText?: string;
   title: string;
   dek: string;
   author: string;
@@ -11,7 +10,6 @@ export type ArticleRecord = {
   role?: string;
   date: string;
   read: string;
-  variant: PhotoVariant;
   caption?: string;
   status: "Published" | "Draft" | "Scheduled";
   views: number;
@@ -24,7 +22,6 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "tuition",
     section: "News",
-    kickerText: "News · Breaking",
     title: "USC board defers tuition adjustment after three-hour student hearing",
     dek: "Students packed the Buttenbruch gym as trustees heard testimony on the proposed 9.5% increase. A final vote is now expected before the August term opens.",
     author: "Maria Santos",
@@ -32,7 +29,6 @@ export const ARTICLES: ArticleRecord[] = [
     role: "News Editor",
     date: "Jun 24, 2026",
     read: "4 min read",
-    variant: "dark",
     caption:
       "Students fill the Buttenbruch Hall gymnasium during Tuesday's public hearing · Photo by Joshua Mendoza / TC",
     status: "Published",
@@ -47,7 +43,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "NL",
     date: "Jun 23, 2026",
     read: "3 min",
-    variant: "paper",
     status: "Published",
     views: 9120,
   },
@@ -60,7 +55,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "EB",
     date: "Jun 23, 2026",
     read: "6 min",
-    variant: "paper",
     status: "Published",
     views: 11260,
   },
@@ -73,7 +67,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "LR",
     date: "Jun 23, 2026",
     read: "3 min",
-    variant: "duotone",
     status: "Published",
     views: 14380,
   },
@@ -86,7 +79,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "AC",
     date: "Jun 22, 2026",
     read: "5 min",
-    variant: "paper",
     status: "Published",
     views: 0,
   },
@@ -99,7 +91,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "PG",
     date: "Jun 22, 2026",
     read: "2 min",
-    variant: "paper",
     status: "Published",
     views: 0,
   },
@@ -112,7 +103,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "RV",
     date: "Jun 21, 2026",
     read: "5 min",
-    variant: "dark",
     status: "Published",
     views: 0,
   },
@@ -125,7 +115,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "JM",
     date: "Jun 21, 2026",
     read: "4 min",
-    variant: "paper",
     status: "Published",
     views: 7640,
   },
@@ -138,7 +127,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "AC",
     date: "Jun 20, 2026",
     read: "7 min",
-    variant: "paper",
     status: "Published",
     views: 21030,
   },
@@ -151,7 +139,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "LR",
     date: "Jun 19, 2026",
     read: "3 min",
-    variant: "duotone",
     status: "Published",
     views: 0,
   },
@@ -164,7 +151,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "PG",
     date: "Jun 19, 2026",
     read: "2 min",
-    variant: "paper",
     status: "Published",
     views: 5210,
   },
@@ -177,7 +163,6 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "MT",
     date: "Jun 18, 2026",
     read: "4 min",
-    variant: "paper",
     status: "Draft",
     views: 0,
   },

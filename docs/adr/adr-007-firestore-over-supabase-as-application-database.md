@@ -67,7 +67,7 @@ A Firestore read only happens when a page is *regenerated* — on the fallback w
 **Negative:**
 
 - No native full-text search (no `tsvector` equivalent) — see Alternatives and Future Considerations
-- No relational integrity (foreign keys) — tag/section/author references are denormalized IDs (`tagIds: string[]`, etc.) enforced only at the application layer, not by the database
+- No relational integrity (foreign keys) — tag/author references are denormalized IDs (`tagSlugs: string[]`, `authorId`, etc.) enforced only at the application layer, not by the database. `sections` is not a Firestore collection at all — `SectionName` is a fixed 5-value union already load-bearing in code (icons, accent colors, routing), so the taxonomy stays a static array in `src/lib/content.ts`; see `firestore-schema.md`.
 - Compound queries require pre-defined composite indexes; ad hoc analytical queries are harder than with SQL
 - Proprietary, GCP-only — no self-hosting path if we ever wanted to leave the vendor, unlike Supabase's open-source Postgres core
 

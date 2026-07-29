@@ -14,6 +14,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/site/empty-state";
+import { getSectionName } from "@/src/lib/content";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate } from "@/src/lib/article-format";
 import { useDebouncedValue } from "@/hooks/use-debounce";
@@ -102,7 +103,8 @@ export function SearchBar() {
           {!loading && trimmedQuery && results.length > 0 && (
             <ul className="divide-y divide-border">
               {results.map((article) => {
-                const Icon = sectionIcon(article.section);
+                const sectionName = getSectionName(article.sectionSlug);
+                const Icon = sectionIcon(sectionName);
                 return (
                   <li key={article.slug}>
                     <Link
@@ -115,8 +117,8 @@ export function SearchBar() {
                         strokeWidth={1.5}
                       />
                       <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className={kickerClassForSection(article.section)}>
-                          {article.section}
+                        <span className={kickerClassForSection(sectionName)}>
+                          {sectionName}
                         </span>
                         <span className="font-display line-clamp-1 font-bold text-foreground group-hover:underline">
                           {article.title}

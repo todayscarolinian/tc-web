@@ -15,7 +15,7 @@ import {
   UserSquare,
   type LucideIcon,
 } from "lucide-react";
-import type { PhotoVariant, SectionName } from "@/src/lib/content";
+import type { SectionName } from "@/src/lib/content";
 
 export const CURRENT_STAFF_USER = {
   name: "Maria Santos",
@@ -131,21 +131,20 @@ export type StaffMediaItem = {
   size: string;
   dims: string;
   uploaded: string;
-  variant: PhotoVariant;
   icon: LucideIcon;
 };
 
 export const STAFF_MEDIA: StaffMediaItem[] = [
-  { id: "hearing-gym-wide", name: "hearing-gym-wide.jpg", folder: "Covers", tags: ["tuition", "hearing"], size: "4.1 MB", dims: "4032×2688", uploaded: "Jun 24, 2026", variant: "dark", icon: Newspaper },
-  { id: "villanueva-podium", name: "villanueva-podium.jpg", folder: "Photos", tags: ["tuition", "portrait"], size: "2.8 MB", dims: "3600×2400", uploaded: "Jun 24, 2026", variant: "paper", icon: UserSquare },
-  { id: "engr-complex-facade", name: "engr-complex-facade.jpg", folder: "Photos", tags: ["engineering"], size: "3.6 MB", dims: "4000×2667", uploaded: "Jun 23, 2026", variant: "duotone", icon: Newspaper },
-  { id: "warriors-buzzer", name: "warriors-buzzer.jpg", folder: "Sports", tags: ["warriors", "cesafi"], size: "3.1 MB", dims: "3840×2560", uploaded: "Jun 23, 2026", variant: "duotone", icon: TrendingUp },
-  { id: "zine-table-carbon", name: "zine-table-carbon.jpg", folder: "Photos", tags: ["zine"], size: "2.2 MB", dims: "3200×2133", uploaded: "Jun 22, 2026", variant: "paper", icon: ImageIcon },
-  { id: "shuttle-loop-map", name: "shuttle-loop-map.png", folder: "Illustrations", tags: ["shuttle"], size: "620 KB", dims: "2400×1600", uploaded: "Jun 22, 2026", variant: "paper", icon: MapPin },
-  { id: "lrc-latenight", name: "lrc-latenight.jpg", folder: "Campus", tags: ["portrait"], size: "2.9 MB", dims: "3600×2400", uploaded: "Jun 21, 2026", variant: "dark", icon: Clock3 },
-  { id: "jeepney-queue", name: "jeepney-queue.jpg", folder: "Campus", tags: ["shuttle"], size: "2.4 MB", dims: "3000×2000", uploaded: "Jun 21, 2026", variant: "paper", icon: MapPin },
-  { id: "cheap-eats-stall-01", name: "cheap-eats-stall-01.jpg", folder: "Photos", tags: ["portrait"], size: "2.1 MB", dims: "3000×2000", uploaded: "Jun 20, 2026", variant: "paper", icon: Flame },
-  { id: "swim-relay-podium", name: "swim-relay-podium.jpg", folder: "Sports", tags: ["cesafi"], size: "3.3 MB", dims: "3840×2560", uploaded: "Jun 19, 2026", variant: "duotone", icon: TrendingUp },
-  { id: "mentorship-orientation", name: "mentorship-orientation.jpg", folder: "Campus", tags: ["portrait"], size: "2.6 MB", dims: "3600×2400", uploaded: "Jun 19, 2026", variant: "paper", icon: Users },
-  { id: "tc-masthead-icon", name: "tc-masthead-icon.png", folder: "Illustrations", tags: [], size: "340 KB", dims: "1200×1200", uploaded: "Jun 12, 2026", variant: "dark", icon: FileText },
+  { id: "hearing-gym-wide", name: "hearing-gym-wide.jpg", folder: "Covers", tags: ["tuition", "hearing"], size: "4.1 MB", dims: "4032×2688", uploaded: "Jun 24, 2026", icon: Newspaper },
+  { id: "villanueva-podium", name: "villanueva-podium.jpg", folder: "Photos", tags: ["tuition", "portrait"], size: "2.8 MB", dims: "3600×2400", uploaded: "Jun 24, 2026", icon: UserSquare },
+  { id: "engr-complex-facade", name: "engr-complex-facade.jpg", folder: "Photos", tags: ["engineering"], size: "3.6 MB", dims: "4000×2667", uploaded: "Jun 23, 2026", icon: Newspaper },
+  { id: "warriors-buzzer", name: "warriors-buzzer.jpg", folder: "Sports", tags: ["warriors", "cesafi"], size: "3.1 MB", dims: "3840×2560", uploaded: "Jun 23, 2026", icon: TrendingUp },
+  { id: "zine-table-carbon", name: "zine-table-carbon.jpg", folder: "Photos", tags: ["zine"], size: "2.2 MB", dims: "3200×2133", uploaded: "Jun 22, 2026", icon: ImageIcon },
+  { id: "shuttle-loop-map", name: "shuttle-loop-map.png", folder: "Illustrations", tags: ["shuttle"], size: "620 KB", dims: "2400×1600", uploaded: "Jun 22, 2026", icon: MapPin },
+  { id: "lrc-latenight", name: "lrc-latenight.jpg", folder: "Campus", tags: ["portrait"], size: "2.9 MB", dims: "3600×2400", uploaded: "Jun 21, 2026", icon: Clock3 },
+  { id: "jeepney-queue", name: "jeepney-queue.jpg", folder: "Campus", tags: ["shuttle"], size: "2.4 MB", dims: "3000×2000", uploaded: "Jun 21, 2026", icon: MapPin },
+  { id: "cheap-eats-stall-01", name: "cheap-eats-stall-01.jpg", folder: "Photos", tags: ["portrait"], size: "2.1 MB", dims: "3000×2000", uploaded: "Jun 20, 2026", icon: Flame },
+  { id: "swim-relay-podium", name: "swim-relay-podium.jpg", folder: "Sports", tags: ["cesafi"], size: "3.3 MB", dims: "3840×2560", uploaded: "Jun 19, 2026", icon: TrendingUp },
+  { id: "mentorship-orientation", name: "mentorship-orientation.jpg", folder: "Campus", tags: ["portrait"], size: "2.6 MB", dims: "3600×2400", uploaded: "Jun 19, 2026", icon: Users },
+  { id: "tc-masthead-icon", name: "tc-masthead-icon.png", folder: "Illustrations", tags: [], size: "340 KB", dims: "1200×1200", uploaded: "Jun 12, 2026", icon: FileText },
 ];

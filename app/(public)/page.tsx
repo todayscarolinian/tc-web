@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
 import { articleService } from "@/src/infrastructure/article/article.composition";
+import { getSectionName } from "@/src/lib/content";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
@@ -15,7 +16,7 @@ export default async function HomePage() {
   const trending = await articleService.listTrending(4);
 
   const campusMix = stories.filter((s) =>
-    ["Campus Life", "Arts & Culture", "Sports", "Opinion"].includes(s.section)
+    ["campus-life", "arts-culture", "sports", "opinion"].includes(s.sectionSlug)
   ).slice(0, 4);
 
   return (
@@ -24,8 +25,7 @@ export default async function HomePage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
           <Link href={`/article/${lead.slug}`} className="group block">
             <PhotoPlaceholder
-              variant={lead.variant}
-              icon={sectionIcon(lead.section)}
+              icon={sectionIcon(getSectionName(lead.sectionSlug))}
               ratio="16 / 9"
               iconSize={48}
             />
@@ -33,7 +33,7 @@ export default async function HomePage() {
               <p className="font-utility mt-2 text-xs text-muted-foreground">{lead.caption}</p>
             )}
             <div className="mt-4">
-              <span className="tc-kicker text-brand">{lead.kickerText}</span>
+              <span className="tc-kicker text-brand">{getSectionName(lead.sectionSlug)}</span>
               <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
                 {lead.title}
               </h1>
@@ -63,8 +63,8 @@ export default async function HomePage() {
                       {i + 1}
                     </span>
                     <div>
-                      <span className={kickerClassForSection(t.section)} style={{ fontSize: 11 }}>
-                        {t.section}
+                      <span className={kickerClassForSection(getSectionName(t.sectionSlug))} style={{ fontSize: 11 }}>
+                        {getSectionName(t.sectionSlug)}
                       </span>
                       <h4 className="font-display mt-1 text-sm leading-5 font-bold text-foreground group-hover:underline">
                         {t.title}

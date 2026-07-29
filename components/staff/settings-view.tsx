@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +15,6 @@ import { CURRENT_STAFF_USER } from "@/src/lib/staff-data";
 export function SettingsView() {
   const [name, setName] = useState(CURRENT_STAFF_USER.name);
   const [email, setEmail] = useState("maria.santos@usc.edu.ph");
-  const [bio, setBio] = useState(
-    "News editor covering university governance, tuition, and student government at USC Talamban and Main."
-  );
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -88,12 +84,6 @@ export function SettingsView() {
               </span>
               <Badge className="bg-brand text-primary-foreground">{CURRENT_STAFF_USER.role}</Badge>
               <span className="text-xs text-muted-foreground">Contact an administrator to change your role.</span>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="settings-bio">Bio</Label>
-              <Textarea id="settings-bio" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Shown on your author byline page.</p>
             </div>
           </CardContent>
         </Card>

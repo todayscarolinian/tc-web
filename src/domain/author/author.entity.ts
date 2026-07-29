@@ -4,7 +4,6 @@ export type Author = {
   slug: string;
   initials: string;
   role: string;
-  bio: string;
   avatarUrl: string;
   active: boolean;
   updatedAt: Date;

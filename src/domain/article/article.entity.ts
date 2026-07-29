@@ -1,17 +1,11 @@
 import type { JSONContent } from "@tiptap/core";
-import type { SectionName } from "./section.value-object";
 import type { ArticleStatus } from "./article-status.value-object";
-import type { Tag } from "../tag/tag.entity";
-export type PhotoVariant = "paper" | "dark" | "duotone";
 
 export type Article = {
   slug: string;
-  section: SectionName;
-  // Denormalized alongside `section` so revalidation/query code never needs
-  // a second lookup just to get the URL-safe form. See docs/firestore-schema.md.
   sectionSlug: string;
-  kickerText?: string;
   title: string;
+  titleLower: string;
   dek: string;
   // Herald `user.id` — server-set only, never client-supplied (IDOR guard).
   // See src/lib/herald/README.md §7.
@@ -26,7 +20,6 @@ export type Article = {
   publishedAt: Date | null;
   publishAt?: Date | null;
   readTimeMinutes: number;
-  variant: PhotoVariant;
   caption?: string;
   coverImageUrl?: string;
   coverImageAssetId?: string;
@@ -39,8 +32,9 @@ export type Article = {
   // has no native full-text index) — see docs/firestore-schema.md.
   body: JSONContent;
   bodyText: string;
-  tagIds: Tag[];
-  // allow the article document to store tag data to prevent extra reads on tag documents
+  // Tag.slug values, not embedded Tag objects — resolved against a cached
+  // read of the whole `tags` collection at render time. See firestore-schema.md.
+  tagSlugs: string[];
   status: ArticleStatus;
   views: number;
   featured?: boolean;

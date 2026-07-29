@@ -1,20 +1,21 @@
 import Link from "next/link";
 import type { Article } from "@/src/domain/article/article.entity";
+import { getSectionName } from "@/src/lib/content";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { cn } from "@/src/lib/utils";
 
 export function StoryCard({ story, small = false }: { story: Article; small?: boolean }) {
+  const sectionName = getSectionName(story.sectionSlug);
   return (
     <Link href={`/article/${story.slug}`} className="group flex h-full flex-col">
       <PhotoPlaceholder
-        variant={story.variant}
-        icon={sectionIcon(story.section)}
+        icon={sectionIcon(sectionName)}
         className="rounded-t-[4px]"
       />
       <div className="flex flex-1 flex-col gap-1.5 border-x border-b border-border p-4">
-        <span className={kickerClassForSection(story.section)}>{story.section}</span>
+        <span className={kickerClassForSection(sectionName)}>{sectionName}</span>
         <h3
           className={cn(
             "font-display line-clamp-2 font-bold text-foreground group-hover:underline",

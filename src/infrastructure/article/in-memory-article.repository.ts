@@ -24,11 +24,13 @@ const SHARED_BODY_TEXT = ARTICLE_BODY.join("\n\n");
 // timestamps, tags, cover image, etc.) are synthesized here as a mapping
 // shim — the real per-field mapping is S1-02's job once Firestore docs exist.
 function toArticle(record: ArticleRecord): Article {
-  const sectionSlug = SECTIONS.find((section) => section.name === record.section)?.slug ?? "";
+  const { section, ...rest } = record;
+  const sectionSlug = SECTIONS.find((s) => s.name === section)?.slug ?? "";
   const publishedAt = record.status === "Published" ? new Date(record.date) : null;
   return {
-    ...record,
+    ...rest,
     sectionSlug,
+    titleLower: record.title.toLowerCase(),
     authorId: record.author,
     authorName: record.author,
     authorInitials: record.initials,
@@ -40,7 +42,7 @@ function toArticle(record: ArticleRecord): Article {
     // prototype limitation, not new debt introduced by this adapter.
     body: SHARED_BODY,
     bodyText: SHARED_BODY_TEXT,
-    tagIds: [],
+    tagSlugs: [],
     createdAt: publishedAt ?? new Date(record.date),
     updatedAt: publishedAt ?? new Date(record.date),
   };

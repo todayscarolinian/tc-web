@@ -21,7 +21,7 @@
       "collectionGroup": "articles",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "tagIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "tagSlugs", "arrayConfig": "CONTAINS" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "publishedAt", "order": "DESCENDING" }
       ]
@@ -72,7 +72,7 @@
       "collectionGroup": "mediaAssets",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "tags", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "tagSlugs", "arrayConfig": "CONTAINS" },
         { "fieldPath": "uploadedAt", "order": "DESCENDING" }
       ]
     }

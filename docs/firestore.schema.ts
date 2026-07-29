@@ -1,16 +1,11 @@
-import { SectionName } from "@/src/lib/content";
-import { PhotoVariant } from "@/src/lib/content";
 import { JSONContent } from "@tiptap/core";
 import { ArticleStatus } from "@/src/domain/article/article-status.value-object";
-import { MediaVariant } from "@/src/domain/media/media-variant.value-object";
-import { SectionAccent } from "@/src/domain/article/section.value-object";
 
 type Article = {
   slug: string;
-  section: SectionName; // "News" | "Campus Life" | "Sports" | "Arts & Culture" | "Opinion"
   sectionSlug: string;
-  kickerText?: string;
   title: string;
+  titleLower: string; // lowercased mirror of title, for case-insensitive prefix-range type-ahead — see firestore-schema.md
   dek: string;
   authorId: string;
   authorName: string;
@@ -19,14 +14,13 @@ type Article = {
   publishedAt: Date | null;
   publishAt?: Date | null;
   readTimeMinutes: number;
-  variant: PhotoVariant; // "paper" | "dark" | "duotone"
   caption?: string;
   coverImageUrl?: string;
   coverImageAssetId?: string;
   coverImageAlt?: string;
   body: JSONContent;
   bodyText: string;
-  tags: Tag[];
+  tagSlugs: string[]; // Tag.slug values — not embedded Tag objects, see firestore-schema.md
   status: ArticleStatus; // "Published" | "Draft" | "Scheduled" | "Archived"
   views: number;
   featured?: boolean;
@@ -40,7 +34,6 @@ type Author = {
   slug: string;
   initials: string;
   role: string;
-  bio: string;
   avatarUrl: string;
   active: boolean;
   updatedAt: Date;
@@ -49,14 +42,13 @@ type Author = {
 type Media = {
   name: string;
   folder: string;
-  tags: string[];
+  tagSlugs: string[]; // Tag.slug values, same convention as Article.tagSlugs
   storagePath: string;
   url: string;
   contentType: string;
   sizeBytes: number;
   width: number;
   height: number;
-  variant: MediaVariant; // "paper" | "dark" | "duotone"
   altText: string;
   uploadedBy: string;
   uploadedByName: string;
@@ -71,9 +63,7 @@ type Tag = {
   createdAt: Date;
 };
 
-type Section = {
-  name: SectionName; // "News" | "Campus Life" | "Sports" | "Arts & Culture" | "Opinion"
-  slug: string;
-  blurb: string;
-  accent: SectionAccent; // "news" | "campus" | "sports" | "culture" | "opinion"
-};
+// No `sections` collection: SectionName is a fixed 5-value union already
+// load-bearing in code (icons, accent colors, routing) — adding a section
+// requires a deploy regardless of where the data lives. `SECTIONS` stays a
+// static array in src/lib/content.ts. See firestore-schema.md.

@@ -8,7 +8,15 @@ schema is S1-02.
 
 ## Overview
 
-Five collections: `articles`, `sections`, `tags`, `authors`, `mediaAssets`.
+Four collections: `articles`, `tags`, `authors`, `mediaAssets`. **`sections`
+is not a Firestore collection** — `SectionName` is a fixed 5-value union
+already load-bearing in code (icons, accent colors, routing), so adding a
+section requires a deploy regardless of where the data lives. The taxonomy
+stays the static `SECTIONS` array in `src/lib/content.ts`. This supersedes
+an earlier version of this document that specified a `sections` collection;
+see the note at the end of the `articles/{slug}` section below for what that
+means for `sectionSlug`.
+
 No join tables — per [ADR-007](adr/adr-007-firestore-over-supabase-as-application-database.md),
 references between them are denormalized IDs, integrity-checked at the
 application layer (S1-02), not by the database.
@@ -16,7 +24,6 @@ application layer (S1-02), not by the database.
 | Collection | Doc ID | Why |
 |---|---|---|
 | `articles` | `slug` | O(1) `.doc(slug).get()` on the hottest read path (`findBySlug`/`findPublishedBySlug`, hit on every article-page ISR regen); free uniqueness enforcement |
-| `sections` | slug (`"news"`, …) | 5 static docs, equality-only lookups |
 | `tags` | kebab-case slug | O(1) existence check for FK validation and a CMS "resolve-or-create by name" flow |
 | `authors` | Herald `user.id` | matches the external identity key; see the collection's own section below for why this is a cache, not a source of truth |
 | `mediaAssets` | autoId | filenames collide too easily to use as a natural key; uploads are a low-frequency write path where a pre-write collision check isn't worth avoiding one autoId call |
@@ -27,6 +34,12 @@ Governing ADRs, referenced throughout: [ADR-002](adr/adr-002-tiptap-as-cms-rich-
 (ISR + revalidation), [ADR-007](adr/adr-007-firestore-over-supabase-as-application-database.md)
 (why Firestore, cost model, denormalization).
 
+**Field shapes below are kept in sync with [`firestore.schema.ts`](firestore.schema.ts)
+by hand** — the `.ts` file is the type-checked source of truth for *shape*;
+this document exists for the *why* (rationale, invariants, index mapping)
+that a type file structurally can't carry. If the two ever disagree, the
+`.ts` file wins and this document is stale.
+
 ---
 
 ## Collection schemas
@@ -36,9 +49,7 @@ Governing ADRs, referenced throughout: [ADR-002](adr/adr-002-tiptap-as-cms-rich-
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `slug` | string | yes | duplicates the doc ID; kept as a field for exports/portability |
-| `section` | string (`SectionName`) | yes | denormalized display name |
-| `sectionSlug` | string | yes | **FK → `sections/{sectionSlug}`**. Needed un-joined — [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)'s publish flow reads it straight off the doc to call `revalidatePath()` without a second lookup |
-| `kickerText` | string | no | |
+| `sectionSlug` | string | yes | Not an FK — `sections` isn't a Firestore collection (see Overview). Validity is a compile-time check (`SectionName` is a literal union), not a runtime doc lookup. The only section-related field stored on the doc — no separate `section` (display-name) field. Firestore can only filter/`orderBy` on a stored field (IDX2 filters on `sectionSlug`), so `sectionSlug` is the one that must be persisted; the display name is derived from it wherever needed via `getSectionName(sectionSlug)` (`src/lib/content.ts`), a static, zero-cost array lookup over the 5 fixed sections — not a Firestore join, so denormalizing a second `section` field to "save a lookup" buys nothing. Also needed un-joined for [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)'s publish flow to call `revalidatePath()` straight off the doc |
 | `title` | string | yes | |
 | `titleLower` | string | yes | lowercased mirror of `title`, for a prefix-range type-ahead query (see "Queries Firestore can't do efficiently" below) |
 | `dek` | string | yes | |
@@ -49,39 +60,40 @@ Governing ADRs, referenced throughout: [ADR-002](adr/adr-002-tiptap-as-cms-rich-
 | `publishedAt` | Timestamp \| null | yes | `FieldValue.serverTimestamp()`, set once on first publish; null for Draft |
 | `publishAt` | Timestamp \| null | no | future scheduled publish time (S3-02) |
 | `readTimeMinutes` | number | yes | replaces the mock's free-text `read` (`"4 min read"` / `"3 min"` — inconsistent even today); derive the display string at render time |
-| `variant` | `"paper" \| "dark" \| "duotone"` | yes | unchanged from the domain type |
 | `coverImageUrl` | string | no | denormalized Storage URL, see `mediaAssets` |
 | `coverImageAssetId` | string | no | **FK → `mediaAssets/{assetId}`** |
 | `coverImageAlt` | string | no → required before publish | S5-04 enforces this at publish time, not stored-required here |
 | `caption` | string | no | cover image caption/credit |
 | `body` | object (ProseMirror JSON, typed as Tiptap's `JSONContent` from `@tiptap/core`) | yes | per [ADR-002](adr/adr-002-tiptap-as-cms-rich-text-editor.md) — stored inline, not a separate collection/blob |
 | `bodyText` | string | yes | plain-text mirror of `body`, extracted server-side at save time. Exists for a *future* full-body search extension — **S3-04's MVP search does not scan this field**, see below |
-| `tagIds` | string[] | yes, default `[]` | **FK[] → `tags/{tagId}`**, denormalized array per the sprint plan, no join table |
+| `tagSlugs` | string[] | yes, default `[]` | **FK[] → `tags/{slug}`**, denormalized array per the sprint plan, no join table. Holds `Tag.slug` values, not embedded `Tag` objects — an array-contains index against embedded objects can't do membership queries, since Firestore's `array-contains` requires an exact match on the whole element. Same convention on `mediaAssets.tagSlugs`, resolved against one cached read of the whole `tags` collection at render time (see the `tags` section below) |
 | `status` | `"Draft" \| "Scheduled" \| "Published" \| "Archived"` | yes | adds `Archived` (missing from the pre-existing `ArticleStatus` type; needed for S3-01, fixed as part of this pass regardless of backend) |
 | `views` | number | yes, default 0 | `FieldValue.increment()` only, per [ADR-003](adr/adr-003-first-party-analytics) — never a direct `set`/`update` with a literal number |
 | `featured` | boolean | no, default false | S4-05 |
 | `createdAt` | Timestamp | yes | set once |
 | `updatedAt` | Timestamp | yes | set on every write |
 
-**Not carried forward:** the mock's `date: string` display field is dropped.
-Derive the human date from `publishedAt` at render time (`Intl.DateTimeFormat`)
-so it can never drift out of sync with the real timestamp — the mock data's
-`date` was already free text with no guaranteed format.
+### `sections` — not a Firestore collection
 
-### `sections/{slug}`
+See Overview above. `SECTIONS` stays a static array in `src/lib/content.ts`,
+unchanged from the pre-existing `SectionInfo`/`Section` value object shape
+(`name`, `slug`, `blurb`, `accent`). No collection, no index, no reads.
 
-5 static documents, 1:1 with the existing `Section` value object — no domain
-change needed here.
-
-| Field | Type | Required |
-|---|---|---|
-| `name` | string (`SectionName`) | yes |
-| `slug` | string | yes (duplicates doc ID) |
-| `blurb` | string | yes |
-| `accent` | `"news" \| "campus" \| "sports" \| "culture" \| "opinion"` | yes |
-
-No composite index needed — equality-only lookups, automatically covered by
-Firestore's single-field indexes.
+**Known accepted gap:** seven UI consumers (`nav.tsx`, `footer.tsx`,
+`section-legend.tsx`, `section-dot.tsx`, `section-style.ts`, and the staff
+`articles-view.tsx`/`article-editor.tsx`) import `SECTIONS` directly rather
+than going through `ArticleRepository.listSections()`/`findSectionBySlug()`/
+`findSectionByName()` (only the section-detail page and article page do,
+both via `findSectionBySlug()` — the article page switched from
+`findSectionByName()` once `Article` stopped storing a `section` display
+name to look up by).
+Routing them through the port would make a future move to dynamic sections a
+contained adapter swap, but three of those consumers are client components
+and `section-style.ts` is a synchronous utility used across many render
+sites — doing it properly means prop-drilling section data through the tree
+and rewriting `section-style.ts`'s function signatures, a real refactor with
+no near-term payoff given sections have no plan to go dynamic. Accepted as
+a trade-off rather than fixed. Revisit if that assumption ever changes.
 
 ### `tags/{tagSlug}`
 
@@ -96,12 +108,18 @@ domain model.
 | `createdAt` | Timestamp | yes |
 
 No composite index needed (small collection, equality/array-contains only —
-see `articles` indexes for the `tagIds` array-contains queries that actually
-need indexes, which live on `articles`, not here).
+see `articles`/`mediaAssets` indexes for the `tagSlugs` array-contains
+queries that actually need indexes, which live on those collections, not
+here).
 
-**Not the same thing as `mediaAssets.tags`** — media tags are freeform
-labels; article tags are FK references to this collection. Don't conflate
-them when implementing S1-02 or S3-03.
+**Shared by both `articles.tagSlugs` and `mediaAssets.tagSlugs`** — both
+collections reference this one `tags` collection via the same `Tag.slug`
+convention, resolved through one whole-collection cache (via `unstable_cache`,
+invalidated with `revalidateTag` on tag create/update — Cache Components
+`use cache` is a separate, deferred decision, not adopted here). This
+supersedes an earlier version of this document (and `src/domain/tag/README.md`)
+that treated media tags as unrelated freeform labels — that's no longer the
+design.
 
 ### `authors/{authorId}`
 
@@ -115,8 +133,9 @@ identity cache, not the source of truth.** Herald owns real identity
   derived view over article snapshots.
 - A CMS author-picker (S2-04) shouldn't round-trip to Herald on every editor
   page load.
-- Richer bio/avatar data belongs here rather than duplicated onto every
-  article snapshot.
+- Avatar data belongs here rather than duplicated onto every article
+  snapshot (`bio` was considered for the same reason but cut for MVP — see
+  "Not carried forward" below).
 
 Upsert strategy: **lazily upserted as a side effect of the publish
 flow**, piggybacking the same write that sets `Article.authorId`/`authorName`
@@ -130,10 +149,15 @@ MVP.
 | `slug` | string | yes — Herald's `user.id` likely isn't URL-friendly; single-field index serves `/authors/[slug]` |
 | `initials` | string | yes |
 | `role` | string | no |
-| `bio` | string | no |
 | `avatarUrl` | string | no |
 | `active` | boolean | yes |
 | `updatedAt` | Timestamp | yes |
+
+**Not carried forward:** `bio` — **deliberately cut for MVP**, not an
+oversight. An author bio isn't a necessity to show on TC Web; the Bio field
+was also removed from the staff settings UI (`components/staff/settings-view.tsx`)
+in the same pass so there's no dangling UI editing a field that's never
+persisted.
 
 ### `mediaAssets/{autoId}`
 
@@ -141,14 +165,13 @@ MVP.
 |---|---|---|---|
 | `name` | string | yes | filename |
 | `folder` | string | yes | keep `MEDIA_FOLDERS` as an app-level constant (same "singleton config" pattern `docs/architecture.md` already uses for `Publication`), not a 6th collection |
-| `tags` | string[] | yes, default `[]` | freeform labels — **not** `tagIds` FK references, see the `tags` section above |
+| `tagSlugs` | string[] | yes, default `[]` | **FK[] → `tags/{slug}`**, same convention as `articles.tagSlugs` — see the `tags` section above |
 | `storagePath` | string | yes | Firebase Storage object path |
 | `url` | string | yes | Storage download URL — per `docs/architecture.md`, "the underlying files live in Firebase Storage, referenced from the doc by URL" |
 | `contentType` | string | yes | e.g. `image/jpeg` |
 | `sizeBytes` | number | yes | replaces the mock's `"4.1 MB"` string; derive the display string at render time |
 | `width` | number | yes | replaces the mock's `"4032×2688"` string; needed for `next/image` CLS-safe sizing |
 | `height` | number | yes | |
-| `variant` | `"paper" \| "dark" \| "duotone"` | yes | unchanged |
 | `altText` | string | no → required before use on a published article | S5-04 |
 | `uploadedBy` | string | yes | Herald `authorId` of the uploader |
 | `uploadedAt` | Timestamp | yes | replaces the mock's display-string `uploaded` |
@@ -168,17 +191,17 @@ form of this table.
 |---|---|---|---|
 | IDX1 | `articles` | `status ASC, publishedAt DESC` | `listPublished()`, homepage feed, S4-06 latest-stories sidebar |
 | IDX2 | `articles` | `sectionSlug ASC, status ASC, publishedAt DESC` | S2-07 section-page pagination, S4-03 related-by-section |
-| IDX3 | `articles` | `tagIds ARRAY_CONTAINS, status ASC, publishedAt DESC` | S3-05 topic pages, S4-03 related-by-tag |
+| IDX3 | `articles` | `tagSlugs ARRAY_CONTAINS, status ASC, publishedAt DESC` | S3-05 topic pages, S4-03 related-by-tag |
 | IDX4 | `articles` | `status ASC, updatedAt DESC` | staff article list filtered by status tab (S3-01) |
 | IDX5 | `articles` | `authorId ASC, status ASC, publishedAt DESC` | `/authors/[slug]` ([ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md) gives this route an ISR window, but no repository method exists yet — see "Known gaps" below) |
 | IDX6 | `articles` | `featured ASC, status ASC, publishedAt DESC` | S4-05 banner — fallback only; prefer the config-doc approach below |
 | IDX7 | `articles` | `status ASC, publishAt ASC` | S3-02 scheduled-publish sweep |
 | IDX8 | `mediaAssets` | `folder ASC, uploadedAt DESC` | S3-03 browse-by-folder |
-| IDX9 | `mediaAssets` | `tags ARRAY_CONTAINS, uploadedAt DESC` | S3-03 filter-by-tag |
+| IDX9 | `mediaAssets` | `tagSlugs ARRAY_CONTAINS, uploadedAt DESC` | S3-03 filter-by-tag |
 
-`sections`, `tags`, and `authors` need no composite indexes — small
-collections, equality-only lookups, covered by Firestore's automatic
-single-field indexes.
+`tags` and `authors` need no composite indexes — small collections,
+equality-only lookups, covered by Firestore's automatic single-field
+indexes. (`sections` isn't a Firestore collection at all — see Overview.)
 
 ### Queries Firestore can't do efficiently — design around these, don't hit them at implementation time
 
@@ -214,7 +237,7 @@ single-field indexes.
 ## Efficiency recommendations
 
 - **Doc-ID-as-natural-key wherever it's cheap** (`articles/{slug}`,
-  `sections/{slug}`, `tags/{tagSlug}`, `authors/{authorId}`) turns the
+  `tags/{tagSlug}`, `authors/{authorId}`) turns the
   highest-traffic lookups into direct `.get()`s instead of queries — no
   index, lowest latency, free uniqueness enforcement. `mediaAssets` is the
   one exception (autoId), since no natural collision-free key exists cheaply
@@ -224,11 +247,15 @@ single-field indexes.
   section-feed cards, related-articles blocks, sitemap/OG tags, and the
   detail page (many read sites), for one write site (upload/save); storing
   only `coverImageAssetId` would force a second read at every one of those
-  render sites. `sectionSlug` and the `authorName`/`authorInitials`/
-  `authorRole` snapshot fields are the next tier — a few extra fields that
-  save a join-read on every article render, and (for author) match the
-  Herald README's explicit "no runtime Herald dependency for already-published
-  content" rationale.
+  render sites. The `authorName`/`authorInitials`/`authorRole` snapshot
+  fields are the next tier — a few extra fields that save a real async
+  Herald lookup on every article render, matching the Herald README's
+  explicit "no runtime Herald dependency for already-published content"
+  rationale. `sectionSlug` isn't in this tier for the same reason — it's not
+  a cache of an otherwise-expensive lookup, it's the one section-related
+  value Firestore can actually query on (see the `sectionSlug` field note
+  above); the display name it'd otherwise "save" a lookup for is a free
+  static array scan, not a join.
 - **`views` increments are already the accepted, non-negotiable design.**
   [ADR-003](adr/adr-003-first-party-analytics) already decided fire-and-forget
   `FieldValue.increment()` per pageview and rejected the added infrastructure
@@ -258,10 +285,13 @@ single-field indexes.
   method signature should accept an optional `{ limit, cursor }` now so
   pagination is a non-breaking addition later rather than a signature change.
 - **S1-02 FK-validation note** (for whoever implements the adapter, not this
-  ticket's job): validate `tagIds` via a single
-  `where(documentId(), "in", tagIds)` query (Firestore supports up to 30 IDs
-  per `in` clause) instead of N sequential awaited `.get()` calls — same
-  total read count, much lower latency.
+  ticket's job): validate `tagSlugs` via a single
+  `where(documentId(), "in", tagSlugs)` query (Firestore supports up to 30
+  IDs per `in` clause) instead of N sequential awaited `.get()` calls — same
+  total read count, much lower latency. In practice this is likely subsumed
+  by the whole-`tags`-collection cache (see the `tags` section above): if
+  the cache is already warm, validation is a lookup against it, not a
+  separate query.
 
 ---
 
@@ -273,8 +303,13 @@ Firestore has no foreign keys. These are documented here per
 covered by tests" mitigation — **enforcement is S1-02's job, not this
 ticket's**.
 
-1. `articles.sectionSlug` must reference an existing `sections/{sectionSlug}` doc.
-2. Every entry in `articles.tagIds[]` must reference an existing `tags/{tagId}` doc.
+1. `articles.sectionSlug` must be one of the slugs in the static `SECTIONS`
+   array (`src/lib/content.ts`). Not a runtime FK check — `sections` isn't a
+   Firestore collection (see Overview) — this is enforceable at compile time
+   since `SectionName` is a literal union; TypeScript, not the repository
+   adapter, is the enforcement mechanism here.
+2. Every entry in `articles.tagSlugs[]` and `mediaAssets.tagSlugs[]` must
+   reference an existing `tags/{slug}` doc.
 3. `articles.authorId` — a different kind of check than 1–2: the true FK
    target is Herald (external), not the local `authors/{authorId}` cache
    doc. Validity comes from the value only ever being server-set from a
@@ -308,15 +343,17 @@ Applied in this pass (`src/domain/article/article.entity.ts`,
 | `date: string` | `publishedAt: Date \| null` | replaced (display string → real timestamp); `publishAt?: Date \| null` added net-new for S3-02 |
 | `read: string` | `readTimeMinutes: number` | replaced (free text → number; derive display string at render) |
 | `body: string[]` | `body: JSONContent` (from `@tiptap/core`), `bodyText: string` | replaced per ADR-002; `bodyText` net new |
+| `section: SectionName` | *(dropped)* | not carried into the domain `Article` type either — display name is derived via `getSectionName(sectionSlug)` (`src/lib/content.ts`) at the few render sites that need it |
 | — | `sectionSlug: string` | net new |
-| — | `tagIds: string[]` | net new |
+| — | `tagSlugs: string[]` | net new |
 | — | `coverImageUrl?`, `coverImageAssetId?`, `coverImageAlt?` | net new |
 | — | `featured?: boolean` | net new (S4-05) |
 | — | `createdAt: Date`, `updatedAt: Date` | net new |
 | `status: "Published" \| "Draft" \| "Scheduled"` | adds `"Archived"` | S3-01 gap, fixed regardless of backend |
 
-`Section` (`section.value-object.ts`) is unchanged — already 1:1 with the
-`sections` schema. `Tag` and `Author` don't exist as domain types yet;
+`Section` (`section.value-object.ts`) is unchanged and stays compile-time
+only — there is no Firestore-backed `sections` schema for it to be 1:1 with
+(see Overview). `Tag` and `Author` don't exist as domain types yet;
 placeholder READMEs added at `src/domain/tag/README.md` and
 `src/domain/author/README.md` (mirroring the existing `domain/media`,
 `domain/analytics` pattern) point back to this document.

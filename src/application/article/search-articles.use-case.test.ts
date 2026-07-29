@@ -18,7 +18,7 @@ describe("searchArticles", () => {
 
   it("matches on section", async () => {
     const results = await searchArticles(repo, "sports");
-    expect(results.every((a) => a.section === "Sports")).toBe(true);
+    expect(results.every((a) => a.sectionSlug === "sports")).toBe(true);
   });
 
   it("resolves to [] for no matches", async () => {

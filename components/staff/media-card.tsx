@@ -27,7 +27,7 @@ export function MediaCard({
       )}
     >
       <div className="relative">
-        <PhotoPlaceholder variant={item.variant} icon={item.icon} ratio="4 / 3" iconSize={28} />
+        <PhotoPlaceholder icon={item.icon} ratio="4 / 3" iconSize={28} />
         <span className="absolute top-2 left-2 rounded-xs bg-black/55 p-0.5">
           <Checkbox
             checked={selected}

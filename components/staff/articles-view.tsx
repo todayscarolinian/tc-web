@@ -26,7 +26,7 @@ import {
 import { ArticlesTable, type ArticleSort, type ArticleSortKey } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
 import { PageHeader } from "@/components/staff/page-header";
-import { SECTIONS } from "@/src/lib/content";
+import { SECTIONS, getSectionName } from "@/src/lib/content";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 import type { Article } from "@/src/domain/article/article.entity";
 
@@ -39,6 +39,8 @@ function sortValue(article: Article, key: ArticleSortKey): string | number {
       return article.authorName;
     case "date":
       return article.publishedAt?.getTime() ?? 0;
+    case "section":
+      return getSectionName(article.sectionSlug);
     default:
       return article[key];
   }
@@ -62,7 +64,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
 
   const filtered = useMemo(() => {
     let rows = articles.filter((a) => {
-      if (section !== "All" && a.section !== section) return false;
+      if (section !== "All" && a.sectionSlug !== section) return false;
       if (status !== "All" && a.status !== status) return false;
       if (author !== "All" && a.authorName !== author) return false;
       if (query.trim() && !a.title.toLowerCase().includes(query.trim().toLowerCase())) return false;
@@ -140,7 +142,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
             <SelectContent>
               <SelectItem value="All">All sections</SelectItem>
               {SECTIONS.map((s) => (
-                <SelectItem key={s.slug} value={s.name}>
+                <SelectItem key={s.slug} value={s.slug}>
                   {s.name}
                 </SelectItem>
               ))}

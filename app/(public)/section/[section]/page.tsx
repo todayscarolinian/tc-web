@@ -26,7 +26,7 @@ export default async function SectionPage({
   if (!section) notFound();
 
   const articles = await articleService.listPublished();
-  const inSection = articles.filter((a) => a.section === section.name);
+  const inSection = articles.filter((a) => a.sectionSlug === section.slug);
   const [lead, ...grid] = inSection;
 
   return (
@@ -52,9 +52,9 @@ export default async function SectionPage({
       ) : (
         <>
           <Link href={`/article/${lead.slug}`} className="group grid gap-6 border-b border-border py-8 sm:grid-cols-2">
-            <PhotoPlaceholder variant={lead.variant} icon={sectionIcon(lead.section)} ratio="16 / 9" iconSize={40} />
+            <PhotoPlaceholder icon={sectionIcon(section.name)} ratio="16 / 9" iconSize={40} />
             <div>
-              <span className={`tc-kicker ${accentTextClass(section.accent)}`}>{lead.section}</span>
+              <span className={`tc-kicker ${accentTextClass(section.accent)}`}>{section.name}</span>
               <h2 className="font-display mt-2 text-2xl leading-8 font-bold text-foreground group-hover:underline">
                 {lead.title}
               </h2>

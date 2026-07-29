@@ -12,6 +12,15 @@ export type SectionInfo = {
   accent: "news" | "campus" | "sports" | "culture" | "opinion";
 };
 
+// The `name`<->`slug` mapping is a static, in-memory lookup over 5 fixed
+// entries — not a Firestore join — so Article stores only `sectionSlug` and
+// derives the display name here wherever it's needed. See firestore-schema.md.
+export function getSectionName(slug: string): SectionName {
+  const section = SECTIONS.find((s) => s.slug === slug);
+  if (!section) throw new Error(`Unknown section slug: ${slug}`);
+  return section.name;
+}
+
 export const SECTIONS: SectionInfo[] = [
   {
     name: "News",
@@ -48,5 +57,3 @@ export const SECTIONS: SectionInfo[] = [
     accent: "opinion",
   },
 ];
-
-export type PhotoVariant = "paper" | "dark" | "duotone";
