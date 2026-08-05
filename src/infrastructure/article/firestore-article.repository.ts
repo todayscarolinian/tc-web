@@ -4,7 +4,7 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore"; 
 import { db } from "@/src/infrastructure/firebase/admin"; 
-import { SECTIONS, type SectionInfo } from "@/src/lib/content";
+import { getSectionName, SECTIONS, type SectionInfo } from "@/src/lib/content";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { Article } from "@/src/domain/article/article.entity";
@@ -70,13 +70,16 @@ export class FirestoreArticleRepository implements ArticleRepository {
     // full-text search. Firestore can't do `LIKE`, so pull published docs
     // and filter in application code, same fields in-memory checks.
     const published = await this.listPublished();
-    return published.filter(
-      (article) =>
-        article.titleLower.includes(q) ||
-        article.dek.toLowerCase().includes(q) ||
-        article.authorName.toLowerCase().includes(q) ||
-        article.sectionSlug.toLowerCase().includes(q) // confirm: in-memory checks `section` name, not sectionSlug — see note below
+    return published.filter((article) => {
+    const sectionName = getSectionName(article.sectionSlug).toLowerCase();
+
+    return (
+      article.titleLower.includes(q) ||
+      article.dek.toLowerCase().includes(q) ||
+      article.authorName.toLowerCase().includes(q) ||
+      sectionName.includes(q)
     );
+  });
   }
 
   async listAll(): Promise<Article[]> {
