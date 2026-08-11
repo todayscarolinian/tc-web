@@ -1,10 +1,7 @@
 import type { SessionPort } from "@/src/domain/auth/session.port";
-import { InMemorySessionAdapter } from "./in-memory-session.adapter";
+import { HeraldSessionAdapter } from "./herald-session.adapter";
 
-// Not yet consumed by app/(staff)/layout.tsx or a proxy.ts — see
-// docs/architecture.md for where staff-route guarding plugs in once
-// BetterAuth + a database are chosen.
-const sessionPort: SessionPort = new InMemorySessionAdapter();
+const sessionPort: SessionPort = new HeraldSessionAdapter();
 
 export const sessionService = {
   getCurrentStaffSession: () => sessionPort.getCurrentStaffSession(),
