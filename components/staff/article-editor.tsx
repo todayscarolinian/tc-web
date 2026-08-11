@@ -28,7 +28,6 @@ import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { ARTICLE_BODY } from "@/src/lib/articles";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 import type { Article } from "@/src/domain/article/article.entity";
-import { cn } from "@/src/lib/utils";
 
 const AUTHORS = [
   "Maria Santos",
@@ -48,9 +47,10 @@ export function ArticleEditor({ article }: { article?: Article }) {
   );
   const [author, setAuthor] = useState(article?.authorName ?? "Maria Santos");
   const [status, setStatus] = useState<ArticleStatus>(article?.status ?? "Draft");
+  const [dek, setDek] = useState(article?.dek ?? "");
   const [tags, setTags] = useState<string[]>(article ? ["tuition", "board of trustees"] : []);
   const [hasCover, setHasCover] = useState(Boolean(article));
-  const [visibility, setVisibility] = useState<"public" | "members">("public");
+  const [coverImageAlt, setCoverImageAlt] = useState(article?.coverImageAlt ?? "");
 
   return (
     <div className="flex flex-1 flex-col">
@@ -91,6 +91,14 @@ export function ArticleEditor({ article }: { article?: Article }) {
             >
               {title || "USC board defers tuition adjustment after three-hour hearing"}
             </h1>
+
+            <textarea
+              value={dek}
+              onChange={(e) => setDek(e.target.value)}
+              placeholder="Write a one- or two-sentence excerpt…"
+              rows={2}
+              className="mb-5 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
+            />
 
             {ARTICLE_BODY.slice(0, 2).map((p, i) => (
               <p
@@ -213,6 +221,16 @@ export function ArticleEditor({ article }: { article?: Article }) {
                     <Trash2 />
                   </Button>
                 </div>
+                <div className="flex flex-col gap-1 p-2.5 pt-0">
+                  <span className="font-utility text-xs font-semibold text-muted-foreground">
+                    Alt text <span className="text-destructive">*</span>
+                  </span>
+                  <Input
+                    value={coverImageAlt}
+                    onChange={(e) => setCoverImageAlt(e.target.value)}
+                    placeholder="Describe the image for accessibility"
+                  />
+                </div>
               </div>
             ) : (
               <CoverDropzone compact onClick={() => setHasCover(true)} />
@@ -229,29 +247,6 @@ export function ArticleEditor({ article }: { article?: Article }) {
                 className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
                 size={15}
               />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
-              Visibility
-            </span>
-            <div className="flex gap-1.5">
-              {(["public", "members"] as const).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setVisibility(v)}
-                  className={cn(
-                    "rounded-full px-3 py-1 font-ui text-xs font-bold",
-                    visibility === v
-                      ? "bg-brand text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {v === "public" ? "Public" : "Members only"}
-                </button>
-              ))}
             </div>
           </div>
         </aside>

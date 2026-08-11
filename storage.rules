@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Mirrors firestore.rules's posture: all writes go through Next.js server
+// code via the firebase-admin SDK (signed upload URLs issued by
+// actions/media.actions.ts after a Herald staff check — see
+// src/infrastructure/media/firebase-storage.adapter.ts), which bypasses
+// these rules entirely. There is no client-side Firebase Storage SDK usage
+// anywhere in the design — Herald owns auth, not Firebase Auth, so there's
+// no client identity these rules could check "staff-only" against. Public
+// read is intentional: cover/inline images are meant to be publicly
+// viewable once attached to content.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /media/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
