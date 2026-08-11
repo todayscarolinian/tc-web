@@ -1,18 +1,18 @@
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { SectionName } from "@/src/domain/article/section.value-object";
+import { InMemoryArticleRepository } from "./in-memory-article.repository";
 import { listPublishedArticles } from "@/src/application/article/list-published-articles.use-case";
 import { getArticleBySlug } from "@/src/application/article/get-article-by-slug.use-case";
 import { listTrendingArticles } from "@/src/application/article/list-trending-articles.use-case";
 import { searchArticles } from "@/src/application/article/search-articles.use-case";
 import { listStaffArticles } from "@/src/application/article/staff/list-staff-articles.use-case";
 import { getStaffArticleBySlug } from "@/src/application/article/staff/get-staff-article-by-slug.use-case";
-import { FirestoreArticleRepository } from "@/src/infrastructure/article/firestore-article.repository";
 
 // Composition root for the article slice — the only place that knows the
 // concrete adapter. Swapping to a real DB later means changing the line
 // below (e.g. to `new FirestoreArticleRepository(prisma)`); nothing in
 // application/ or app/ needs to change.
-export const articleRepository: ArticleRepository = new FirestoreArticleRepository();
+export const articleRepository: ArticleRepository = new InMemoryArticleRepository();
 
 export const articleService = {
   listPublished: () => listPublishedArticles(articleRepository),

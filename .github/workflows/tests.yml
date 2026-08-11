@@ -21,11 +21,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        env:
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
-          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
 
       # On PRs: only run tests affected by files changed vs the target branch (fast feedback).
       - name: Run Unit Tests (changed only)

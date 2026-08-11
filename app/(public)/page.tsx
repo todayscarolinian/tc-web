@@ -23,35 +23,27 @@ export default async function HomePage() {
     <>
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
-          {lead ? (
-            <Link href={`/article/${lead.slug}`} className="group block">
-              <PhotoPlaceholder
-                icon={sectionIcon(getSectionName(lead.sectionSlug))}
-                ratio="16 / 9"
-                iconSize={48}
-              />
-              {lead.caption && (
-                <p className="font-utility mt-2 text-xs text-muted-foreground">{lead.caption}</p>
-              )}
-              <div className="mt-4">
-                <span className="tc-kicker text-brand">{getSectionName(lead.sectionSlug)}</span>
-                <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
-                  {lead.title}
-                </h1>
-                <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{lead.dek}</p>
-                <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
-                  By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
-                  {formatReadTime(lead.readTimeMinutes)}
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <EmptyState
-              icon={Newspaper}
-              title="No stories yet"
-              description="Published stories will appear here once they go live."
+          <Link href={`/article/${lead.slug}`} className="group block">
+            <PhotoPlaceholder
+              icon={sectionIcon(getSectionName(lead.sectionSlug))}
+              ratio="16 / 9"
+              iconSize={48}
             />
-          )}
+            {lead.caption && (
+              <p className="font-utility mt-2 text-xs text-muted-foreground">{lead.caption}</p>
+            )}
+            <div className="mt-4">
+              <span className="tc-kicker text-brand">{getSectionName(lead.sectionSlug)}</span>
+              <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
+                {lead.title}
+              </h1>
+              <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{lead.dek}</p>
+              <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
+                By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
+                {formatReadTime(lead.readTimeMinutes)}
+              </span>
+            </div>
+          </Link>
 
           <aside>
             <h2 className="font-utility border-b border-border pb-2 text-xs font-bold tracking-wide text-foreground uppercase">

@@ -1,15 +1,8 @@
 # domain/media
 
-**Implemented (S1-05)** — `storage.port.ts` defines `StoragePort`, a
-non-persistence capability port (same convention as
-`domain/auth/session.port.ts`) for issuing signed Storage upload URLs.
-`createSignedUploadUrl({ storagePath, contentType })` → `{ uploadUrl,
-publicUrl }`. Implemented by
-`infrastructure/media/firebase-storage.adapter.ts`; consumed (behind a Herald
-staff check) by `actions/media.actions.ts`. This port has no concept of
-`MediaAsset`/Firestore persistence — it only knows how to talk to Storage.
+Not yet implemented — folder scaffolded as a placeholder.
 
-**Implemented (S1-05)** — `MediaAsset` entity (`media.entity.ts`). Field shapes are decided in
+**Future entity** — `MediaAsset`. Field shapes are decided in
 [`docs/firestore-schema.md`](../../../docs/firestore-schema.md) (`mediaAssets`
 collection, autoId doc ID): `{ id, name, folder, tags, storagePath, url,
 contentType, sizeBytes, width, height, variant, altText?, uploadedBy,
@@ -18,9 +11,9 @@ uploadedAt, iconKey? }` — this supersedes the earlier sketch that mirrored
 replaced with real numbers/timestamps; `storagePath`/`url`/`contentType` are
 added per architecture.md's "referenced from the doc by URL").
 
-**Not yet implemented** — `MediaFolder`, `MediaTag` value objects, and the
-`MediaRepository` port for persisting/querying `mediaAssets` Firestore docs
-(depends on S1-01/S1-02 landing first):
+**Future value objects** — `MediaFolder`, `MediaTag`.
+
+**Future repository port** — `MediaRepository`:
 - `list(filter?: { folder?: string; tag?: string }): Promise<MediaAsset[]>`
 - `findById(id: string): Promise<MediaAsset | null>`
 
