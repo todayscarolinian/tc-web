@@ -11,13 +11,5 @@ export async function publishStaffArticle(
 
   const published = publishArticle(article);
 
-  console.log(
-    "MISSING: ",
-    JSON.stringify(
-      published,
-      (key, value) => (value === undefined ? "UNDEFINED_FOUND" : value),
-      2,
-    ),
-  );
   return articleRepo.saveArticle(published);
 }

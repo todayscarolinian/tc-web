@@ -18,8 +18,6 @@ export async function POST(request: NextRequest) {
   const body = (await request.json()) as ArticleInput;
   const input = { ...body, authorId: session.userId };
 
-  console.log("INPUT: ", input);
-
   const article = await articleService.staff.save(input);
   return NextResponse.json({ article }, { status: 201 });
 }
