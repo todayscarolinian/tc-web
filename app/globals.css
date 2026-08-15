@@ -65,41 +65,41 @@
 }
 
 :root {
-  --background: rgb(255,255,255);
-  --foreground: rgb(8,8,8);
-  --card: rgb(255,255,255);
-  --card-foreground: rgb(8,8,8);
-  --popover: rgb(255,255,255);
-  --popover-foreground: rgb(8,8,8);
-  --primary: rgb(155,38,38);
-  --primary-foreground: rgb(255,255,255);
-  --secondary: rgb(253,242,231);
-  --secondary-foreground: rgb(21,21,21);
-  --muted: rgb(247,247,247);
-  --muted-foreground: rgb(128,128,128);
-  --accent: rgb(253,242,231);
-  --accent-foreground: rgb(21,21,21);
-  --destructive: rgb(188,57,57);
-  --border: rgb(211,211,211);
-  --input: rgb(211,211,211);
-  --ring: rgb(192,45,45);
+  --background: rgb(255, 255, 255);
+  --foreground: rgb(8, 8, 8);
+  --card: rgb(255, 255, 255);
+  --card-foreground: rgb(8, 8, 8);
+  --popover: rgb(255, 255, 255);
+  --popover-foreground: rgb(8, 8, 8);
+  --primary: rgb(155, 38, 38);
+  --primary-foreground: rgb(255, 255, 255);
+  --secondary: rgb(253, 242, 231);
+  --secondary-foreground: rgb(21, 21, 21);
+  --muted: rgb(247, 247, 247);
+  --muted-foreground: rgb(128, 128, 128);
+  --accent: rgb(253, 242, 231);
+  --accent-foreground: rgb(21, 21, 21);
+  --destructive: rgb(188, 57, 57);
+  --border: rgb(211, 211, 211);
+  --input: rgb(211, 211, 211);
+  --ring: rgb(192, 45, 45);
 
   /* Today's Carolinian brand — semantic aliases (design_system/tokens/colors.css) */
-  --color-brand: rgb(192,45,45);
-  --color-brand-strong: rgb(155,38,38);
-  --color-brand-ink: rgb(85,20,20);
-  --surface-cream: rgb(253,242,231);
-  --surface-inverse: rgb(21,21,21);
-  --text-secondary: rgb(58,58,58);
-  --section-news: rgb(192,45,45);
-  --section-campus: rgb(244,150,86);
-  --section-sports: rgb(6,23,94);
-  --section-culture: rgb(0,148,68);
-  --section-opinion: rgb(145,136,121);
-  --success: rgb(0,148,68);
-  --success-strong: rgb(0,89,41);
-  --warning: rgb(255,147,30);
-  --warning-strong: rgb(153,88,18);
+  --color-brand: rgb(192, 45, 45);
+  --color-brand-strong: rgb(155, 38, 38);
+  --color-brand-ink: rgb(85, 20, 20);
+  --surface-cream: rgb(253, 242, 231);
+  --surface-inverse: rgb(21, 21, 21);
+  --text-secondary: rgb(58, 58, 58);
+  --section-news: rgb(192, 45, 45);
+  --section-campus: rgb(244, 150, 86);
+  --section-sports: rgb(6, 23, 94);
+  --section-culture: rgb(0, 148, 68);
+  --section-opinion: rgb(145, 136, 121);
+  --success: rgb(0, 148, 68);
+  --success-strong: rgb(0, 89, 41);
+  --warning: rgb(255, 147, 30);
+  --warning-strong: rgb(153, 88, 18);
 
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -111,46 +111,46 @@
   /* Staff sidebar — always the TC-black newsroom rail, fixed regardless of
      light/dark theme (matches design_system .cms-side, which has no
      [data-theme="dark"] override). Repeated verbatim in .dark below. */
-  --sidebar: rgb(21,21,21);
-  --sidebar-foreground: rgb(247,246,246);
-  --sidebar-primary: rgb(155,38,38);
-  --sidebar-primary-foreground: rgb(255,255,255);
-  --sidebar-accent: rgba(255,255,255,0.08);
-  --sidebar-accent-foreground: rgb(255,255,255);
-  --sidebar-border: rgba(255,255,255,0.1);
-  --sidebar-ring: rgb(192,45,45);
+  --sidebar: rgb(21, 21, 21);
+  --sidebar-foreground: rgb(247, 246, 246);
+  --sidebar-primary: rgb(155, 38, 38);
+  --sidebar-primary-foreground: rgb(255, 255, 255);
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: rgb(255, 255, 255);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgb(192, 45, 45);
 }
 
 .dark {
-  --background: rgb(21,21,21);
-  --foreground: rgb(247,246,246);
-  --card: rgb(28,28,28);
-  --card-foreground: rgb(247,246,246);
-  --popover: rgb(28,28,28);
-  --popover-foreground: rgb(247,246,246);
-  --primary: rgb(215,51,51);
-  --primary-foreground: rgb(255,255,255);
-  --secondary: rgb(49,49,49);
-  --secondary-foreground: rgb(247,246,246);
-  --muted: rgb(49,49,49);
-  --muted-foreground: rgb(196,196,196);
-  --accent: rgb(49,49,49);
-  --accent-foreground: rgb(247,246,246);
-  --destructive: rgb(228,176,176);
-  --border: rgb(58,58,58);
-  --input: rgb(58,58,58);
-  --ring: rgb(215,51,51);
+  --background: rgb(21, 21, 21);
+  --foreground: rgb(247, 246, 246);
+  --card: rgb(28, 28, 28);
+  --card-foreground: rgb(247, 246, 246);
+  --popover: rgb(28, 28, 28);
+  --popover-foreground: rgb(247, 246, 246);
+  --primary: rgb(215, 51, 51);
+  --primary-foreground: rgb(255, 255, 255);
+  --secondary: rgb(49, 49, 49);
+  --secondary-foreground: rgb(247, 246, 246);
+  --muted: rgb(49, 49, 49);
+  --muted-foreground: rgb(196, 196, 196);
+  --accent: rgb(49, 49, 49);
+  --accent-foreground: rgb(247, 246, 246);
+  --destructive: rgb(228, 176, 176);
+  --border: rgb(58, 58, 58);
+  --input: rgb(58, 58, 58);
+  --ring: rgb(215, 51, 51);
 
-  --color-brand: rgb(215,51,51);
-  --color-brand-strong: rgb(255,89,89);
-  --color-brand-ink: rgb(254,185,185);
-  --surface-cream: rgb(28,28,28);
-  --surface-inverse: rgb(21,21,21);
-  --text-secondary: rgb(211,211,211);
-  --success: rgb(113,212,159);
-  --success-strong: rgb(170,244,204);
-  --warning: rgb(255,212,165);
-  --warning-strong: rgb(255,244,232);
+  --color-brand: rgb(215, 51, 51);
+  --color-brand-strong: rgb(255, 89, 89);
+  --color-brand-ink: rgb(254, 185, 185);
+  --surface-cream: rgb(28, 28, 28);
+  --surface-inverse: rgb(21, 21, 21);
+  --text-secondary: rgb(211, 211, 211);
+  --success: rgb(113, 212, 159);
+  --success-strong: rgb(170, 244, 204);
+  --warning: rgb(255, 212, 165);
+  --warning-strong: rgb(255, 244, 232);
 
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -159,14 +159,14 @@
   --chart-5: oklch(0.269 0 0);
 
   /* Staff sidebar stays fixed — see the .root definition above. */
-  --sidebar: rgb(21,21,21);
-  --sidebar-foreground: rgb(247,246,246);
-  --sidebar-primary: rgb(155,38,38);
-  --sidebar-primary-foreground: rgb(255,255,255);
-  --sidebar-accent: rgba(255,255,255,0.08);
-  --sidebar-accent-foreground: rgb(255,255,255);
-  --sidebar-border: rgba(255,255,255,0.1);
-  --sidebar-ring: rgb(192,45,45);
+  --sidebar: rgb(21, 21, 21);
+  --sidebar-foreground: rgb(247, 246, 246);
+  --sidebar-primary: rgb(155, 38, 38);
+  --sidebar-primary-foreground: rgb(255, 255, 255);
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: rgb(255, 255, 255);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgb(192, 45, 45);
 }
 
 @layer base {

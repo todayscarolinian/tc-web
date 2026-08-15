@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import "../../src/lib/tiptap-styles.css";
 import Link from "next/link";
+import react from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
-import { EditorToolbar } from "@/components/staff/editor-toolbar";
 import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
@@ -28,35 +29,150 @@ import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { ARTICLE_BODY } from "@/src/lib/articles";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 import type { Article } from "@/src/domain/article/article.entity";
+import { TextStyleKit } from "@tiptap/extension-text-style";
+import { toDatetimeLocalValue } from "@/src/lib/utils";
 
 const AUTHORS = [
-  "Maria Santos",
-  "Noah Lim",
-  "Liam Reyes",
-  "Aisha Cruz",
-  "Patricia Gallardo",
-  "Joshua Mendoza",
-  "Reina Villanueva",
-  "Editorial Board",
+  { name: "Maria Santos", initials: "MS", position: "Editor-in-Chief" },
+  { name: "Noah Lim", initials: "NL", position: "Staff Writer" },
+  { name: "Liam Reyes", initials: "LR", position: "Staff Writer" },
+  { name: "Aisha Cruz", initials: "AC", position: "Sports Editor" },
+  { name: "Patricia Gallardo", initials: "PG", position: "Features Editor" },
+  { name: "Joshua Mendoza", initials: "JM", position: "Staff Writer" },
+  { name: "Reina Villanueva", initials: "RV", position: "Copy Editor" },
+  { name: "Editorial Board", initials: "EB", position: "Editorial Board" },
 ];
 
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import React from "react";
+
+import { EditorToolbar } from "./editor-toolbar";
+
+const extensions = [StarterKit, TextStyleKit, Image];
+
 export function ArticleEditor({ article }: { article?: Article }) {
-  const [title, setTitle] = useState(article?.title ?? "");
-  const [section, setSection] = useState<SectionName>(
-    article ? getSectionName(article.sectionSlug) : "News"
+  // SIDEBAR STATES
+  const [title, setTitle] = react.useState(article?.title ?? "");
+  const [section, setSection] = react.useState<SectionName>(
+    article ? getSectionName(article.sectionSlug) : "News",
   );
-  const [author, setAuthor] = useState(article?.authorName ?? "Maria Santos");
-  const [status, setStatus] = useState<ArticleStatus>(article?.status ?? "Draft");
-  const [dek, setDek] = useState(article?.dek ?? "");
-  const [tags, setTags] = useState<string[]>(article ? ["tuition", "board of trustees"] : []);
-  const [hasCover, setHasCover] = useState(Boolean(article));
-  const [coverImageAlt, setCoverImageAlt] = useState(article?.coverImageAlt ?? "");
+
+  const [author, setAuthor] = react.useState(
+    AUTHORS.find((a) => a.name === article?.authorName) ?? AUTHORS[0],
+  );
+
+  const [status, setStatus] = react.useState<ArticleStatus>(
+    article?.status ?? "Draft",
+  );
+  const [dek, setDek] = react.useState(article?.dek ?? "");
+
+  const [tags, setTags] = react.useState<string[]>(article?.tagSlugs ?? []);
+
+  const [hasCover, setHasCover] = react.useState(Boolean(article));
+  const [coverImageAlt, setCoverImageAlt] = react.useState(
+    article?.coverImageAlt ?? "",
+  );
+  const [publishAt, setPublishAt] = react.useState<Date | undefined>(
+    article?.publishAt ?? undefined,
+  );
+
+  const [isSaving, setIsSaving] = react.useState(false);
+
+  const selectedSection = SECTIONS.find((s) => s.name === section);
+
+  // FUNCTIONS
+  const editor = useEditor({
+    extensions,
+    content: article?.body ?? "Write your news content here…",
+  });
+
+  const saveDraft = async () => {
+    if (!editor || isSaving) return;
+
+    setIsSaving(true);
+
+    try {
+      const body = JSON.stringify({
+        sectionSlug: selectedSection?.slug ?? "",
+        title,
+        dek,
+        body: editor.getJSON(),
+        tagSlugs: tags,
+        authorName: author.name,
+        authorInitials: author.initials,
+        authorRole: author.position,
+        publishAt,
+        status: "Draft" as ArticleStatus,
+        coverImageUrl: "",
+        coverImageAssetId: "",
+        coverImageAlt: "",
+      });
+
+      const url = article?.slug
+        ? `/api/articles/${article.slug}`
+        : "/api/articles";
+      const method = article?.slug ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error(
+          "Failed to save draft:",
+          errorData?.error ?? response.statusText,
+        );
+        return;
+      }
+
+      const savedArticle = await response.json();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const publishDraft = async () => {
+    if (!editor || isSaving) return;
+    if (!article?.slug) return;
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`/api/articles/${article.slug}/publish`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error(
+          "Failed to publish article:",
+          errorData?.error ?? response.statusText,
+        );
+        return;
+      }
+
+      const publishedArticle = await response.json();
+      setStatus(publishedArticle.article.status);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-6">
         <Link href="/staff/articles">
-          <Button type="button" variant="ghost" size="icon-sm" aria-label="Back to articles">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Back to articles"
+          >
             <ArrowLeft />
           </Button>
         </Link>
@@ -70,10 +186,15 @@ export function ArticleEditor({ article }: { article?: Article }) {
           <span className="size-1.5 rounded-full bg-success" />
           Saved 2m ago
         </div>
-        <Button type="button" variant="outline" onClick={() => setStatus("Draft")}>
-          <FileText /> Save draft
+        <Button
+          type="button"
+          variant="outline"
+          onClick={saveDraft}
+          disabled={isSaving}
+        >
+          <FileText /> {isSaving ? "Saving…" : "Save draft"}
         </Button>
-        <Button type="button" onClick={() => setStatus("Published")}>
+        <Button type="button" onClick={publishDraft}>
           Publish <ArrowRight />
         </Button>
       </div>
@@ -81,15 +202,15 @@ export function ArticleEditor({ article }: { article?: Article }) {
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
         <div className="overflow-y-auto px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-2xl">
-            <EditorToolbar />
-
+            <EditorToolbar editor={editor} />
             <p className="tc-kicker text-brand mb-2">{section} · Breaking</p>
             <h1
               contentEditable
               suppressContentEditableWarning
+              onBlur={(e) => setTitle(e.currentTarget.textContent ?? "")}
               className="font-display mb-5 text-3xl leading-tight font-extrabold tracking-tight text-foreground outline-none sm:text-4xl"
             >
-              {title || "USC board defers tuition adjustment after three-hour hearing"}
+              {title || "Sample Title"}
             </h1>
 
             <textarea
@@ -100,51 +221,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
               className="mb-5 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
             />
 
-            {ARTICLE_BODY.slice(0, 2).map((p, i) => (
-              <p
-                key={i}
-                contentEditable
-                suppressContentEditableWarning
-                className="mb-5 text-lg leading-8 text-foreground outline-none"
-              >
-                {p}
-              </p>
-            ))}
-
-            <blockquote
-              contentEditable
-              suppressContentEditableWarning
-              className="font-display my-7 border-l-4 border-brand py-1 pl-6 text-2xl leading-tight font-bold text-foreground outline-none"
-            >
-              &ldquo;We heard you. We owe it to this community to get the number right, not just to
-              get it done.&rdquo;
-            </blockquote>
-
-            <figure className="my-7">
-              <PhotoPlaceholder ratio="16 / 9" iconSize={36} />
-              <figcaption
-                contentEditable
-                suppressContentEditableWarning
-                className="font-utility mt-2 text-xs text-muted-foreground outline-none"
-              >
-                SSC president Reina Villanueva addresses students after the hearing · Photo by
-                Aisha Cruz / TC
-              </figcaption>
-            </figure>
-
-            {ARTICLE_BODY.slice(2, 4).map((p, i) => (
-              <p
-                key={i}
-                contentEditable
-                suppressContentEditableWarning
-                className="mb-5 text-lg leading-8 text-foreground outline-none"
-              >
-                {p}
-              </p>
-            ))}
-            <p contentEditable suppressContentEditableWarning className="text-lg leading-8 text-muted-foreground outline-none">
-              Continue writing the story…
-            </p>
+            <EditorContent editor={editor} />
           </div>
         </div>
 
@@ -160,7 +237,10 @@ export function ArticleEditor({ article }: { article?: Article }) {
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Section
             </span>
-            <Select value={section} onValueChange={(v) => setSection(v as SectionName)}>
+            <Select
+              value={section}
+              onValueChange={(v) => setSection(v as SectionName)}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -178,14 +258,20 @@ export function ArticleEditor({ article }: { article?: Article }) {
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Author
             </span>
-            <Select value={author} onValueChange={(v) => v && setAuthor(v)}>
+            <Select
+              value={author.name}
+              onValueChange={(name) => {
+                const selected = AUTHORS.find((a) => a.name === name);
+                if (selected) setAuthor(selected);
+              }}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {AUTHORS.map((a) => (
-                  <SelectItem key={a} value={a}>
-                    {a}
+                  <SelectItem key={a.name} value={a.name}>
+                    {a.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -207,7 +293,12 @@ export function ArticleEditor({ article }: { article?: Article }) {
               <div className="overflow-hidden rounded-sm ring-1 ring-border">
                 <PhotoPlaceholder ratio="16 / 10" iconSize={28} />
                 <div className="flex gap-2 p-2.5">
-                  <Button type="button" size="sm" variant="outline" className="flex-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                  >
                     <Upload /> Replace
                   </Button>
                   <Button
@@ -242,7 +333,16 @@ export function ArticleEditor({ article }: { article?: Article }) {
               Publish date
             </span>
             <div className="relative">
-              <Input defaultValue="Jun 25, 2026 · 7:00 AM" className="pr-9" />
+              <Input
+                type="datetime-local"
+                value={toDatetimeLocalValue(publishAt)}
+                onChange={(e) =>
+                  setPublishAt(
+                    e.target.value ? new Date(e.target.value) : undefined,
+                  )
+                }
+                className="pr-9"
+              />
               <Calendar
                 className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"
                 size={15}

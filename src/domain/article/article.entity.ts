@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ArticleStatus } from "./article-status.value-object";
+import slugify from "slugify";
 
 export type Article = {
   slug: string;
@@ -41,6 +42,65 @@ export type Article = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type ArticleInput = {
+  sectionSlug: string;
+  title: string;
+  dek: string;
+  authorId: string;
+  authorName: string;
+  authorInitials: string;
+  authorRole?: string;
+  caption?: string;
+  body: JSONContent;
+  status: ArticleStatus;
+  tagSlugs: string[];
+  publishAt: Date | null;
+  coverImageUrl?: string;
+  coverImageAssetId?: string;
+  coverImageAlt?: string;
+};
+
+export function createArticle(
+  input: ArticleInput & { bodyText: string },
+): Article {
+  const article: Article = {
+    ...input,
+    slug: slugify(input.title, { lower: true }),
+    titleLower: input.title.toLowerCase(),
+    readTimeMinutes: 1, // currently an arbitrary value
+    publishedAt: null,
+    views: 0,
+    status: input.publishAt ? "Scheduled" : "Draft",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  return assertValidArticle(article);
+}
+
+export function updateArticleContent(
+  existing: Article,
+  input: ArticleInput & { bodyText: string },
+): Article {
+  const updated: Article = {
+    ...existing,
+    ...input,
+    titleLower: input.title.toLowerCase(),
+    readTimeMinutes: 1, // currently arbitrary, but will need calculation
+    updatedAt: new Date(),
+  };
+  return assertValidArticle(updated);
+}
+
+export function publishArticle(article: Article): Article {
+  const published: Article = {
+    ...article,
+    status: "Published",
+    publishedAt: article.publishedAt ?? new Date(),
+    updatedAt: new Date(),
+  };
+  return assertValidArticle(published);
+}
 
 export function assertValidArticle(article: Article): Article {
   if (!article.slug.trim()) throw new Error("Article.slug must not be empty");

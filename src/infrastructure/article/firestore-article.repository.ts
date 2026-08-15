@@ -2,13 +2,17 @@ import {
   Timestamp,
   type DocumentData,
   type QueryDocumentSnapshot,
-} from "firebase-admin/firestore"; 
-import { db } from "@/src/infrastructure/firebase/admin"; 
+} from "firebase-admin/firestore";
+import { db } from "@/src/infrastructure/firebase/admin";
 import { getSectionName, SECTIONS, type SectionInfo } from "@/src/lib/content";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { Article } from "@/src/domain/article/article.entity";
-import type { Section, SectionName } from "@/src/domain/article/section.value-object";
+import type {
+  Section,
+  SectionName,
+} from "@/src/domain/article/section.value-object";
+import { todo } from "node:test";
 
 const ARTICLES_COLLECTION = "articles";
 
@@ -22,7 +26,9 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
   return {
     ...data,
     // slug: doc.id, // or data.slug, depending on whether slug is the doc ID
-    publishedAt: data.publishedAt ? (data.publishedAt as Timestamp).toDate() : null,
+    publishedAt: data.publishedAt
+      ? (data.publishedAt as Timestamp).toDate()
+      : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
@@ -33,7 +39,6 @@ function toSection(info: SectionInfo): Section {
 }
 
 export class FirestoreArticleRepository implements ArticleRepository {
-
   async listPublished(): Promise<Article[]> {
     const snap = await db
       .collection(ARTICLES_COLLECTION)
@@ -44,7 +49,11 @@ export class FirestoreArticleRepository implements ArticleRepository {
 
   async findBySlug(slug: string): Promise<Article | null> {
     // If slug is just a field (not the doc ID):
-    const snap = await db.collection(ARTICLES_COLLECTION).where("slug", "==", slug).limit(1).get();
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("slug", "==", slug)
+      .limit(1)
+      .get();
     return snap.empty ? null : toDomainArticle(snap.docs[0]);
   }
 
@@ -57,7 +66,7 @@ export class FirestoreArticleRepository implements ArticleRepository {
     // Same approach as in-memory: TRENDING_SLUGS drives curation, not a
     // Firestore query. Fetch each by slug and preserve list order.
     const articles = await Promise.all(
-      TRENDING_SLUGS.slice(0, limit).map((slug) => this.findBySlug(slug))
+      TRENDING_SLUGS.slice(0, limit).map((slug) => this.findBySlug(slug)),
     );
     return articles.filter((a): a is Article => a !== null);
   }
@@ -71,15 +80,15 @@ export class FirestoreArticleRepository implements ArticleRepository {
     // and filter in application code, same fields in-memory checks.
     const published = await this.listPublished();
     return published.filter((article) => {
-    const sectionName = getSectionName(article.sectionSlug).toLowerCase();
+      const sectionName = getSectionName(article.sectionSlug).toLowerCase();
 
-    return (
-      article.titleLower.includes(q) ||
-      article.dek.toLowerCase().includes(q) ||
-      article.authorName.toLowerCase().includes(q) ||
-      sectionName.includes(q)
-    );
-  });
+      return (
+        article.titleLower.includes(q) ||
+        article.dek.toLowerCase().includes(q) ||
+        article.authorName.toLowerCase().includes(q) ||
+        sectionName.includes(q)
+      );
+    });
   }
 
   async listAll(): Promise<Article[]> {
@@ -101,5 +110,10 @@ export class FirestoreArticleRepository implements ArticleRepository {
   async findSectionByName(name: SectionName): Promise<Section | null> {
     const info = SECTIONS.find((section) => section.name === name);
     return info ? toSection(info) : null;
+  }
+
+  async saveArticle(article: Article): Promise<Article> {
+    await db.collection(ARTICLES_COLLECTION).doc(article.slug).set(article);
+    return article;
   }
 }

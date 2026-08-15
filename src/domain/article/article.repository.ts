@@ -19,4 +19,5 @@ export interface ArticleRepository {
   listSections(): Promise<Section[]>;
   findSectionBySlug(slug: string): Promise<Section | null>;
   findSectionByName(name: SectionName): Promise<Section | null>;
+  saveArticle(doc: Article): Promise<Article>;
 }
