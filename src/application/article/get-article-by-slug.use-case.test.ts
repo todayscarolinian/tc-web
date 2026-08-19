@@ -35,6 +35,7 @@ describe("getArticleBySlug", () => {
       listSections: () => { throw new Error("should not be called"); },
       findSectionBySlug: () => { throw new Error("should not be called"); },
       findSectionByName: () => { throw new Error("should not be called"); },
+      saveArticle: () => { throw new Error("should not be called"); },
     };
     expect(await getArticleBySlug(unreachableRepo, "")).toBeNull();
   });

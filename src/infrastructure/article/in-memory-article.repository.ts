@@ -1,9 +1,17 @@
 import type { JSONContent } from "@tiptap/core";
 import { SECTIONS, type SectionInfo } from "@/src/lib/content";
-import { ARTICLES, ARTICLE_BODY, TRENDING_SLUGS, type ArticleRecord } from "@/src/lib/articles";
+import {
+  ARTICLES,
+  ARTICLE_BODY,
+  TRENDING_SLUGS,
+  type ArticleRecord,
+} from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { Article } from "@/src/domain/article/article.entity";
-import type { Section, SectionName } from "@/src/domain/article/section.value-object";
+import type {
+  Section,
+  SectionName,
+} from "@/src/domain/article/section.value-object";
 
 // Every article currently shares this one canned body; a real per-article
 // body lives on the real doc once S1-02 lands. Wrapped as a single
@@ -26,7 +34,8 @@ const SHARED_BODY_TEXT = ARTICLE_BODY.join("\n\n");
 function toArticle(record: ArticleRecord): Article {
   const { section, ...rest } = record;
   const sectionSlug = SECTIONS.find((s) => s.name === section)?.slug ?? "";
-  const publishedAt = record.status === "Published" ? new Date(record.date) : null;
+  const publishedAt =
+    record.status === "Published" ? new Date(record.date) : null;
   return {
     ...rest,
     sectionSlug,
@@ -54,7 +63,9 @@ function toSection(info: SectionInfo): Section {
 
 export class InMemoryArticleRepository implements ArticleRepository {
   async listPublished(): Promise<Article[]> {
-    return ARTICLES.filter((article) => article.status === "Published").map(toArticle);
+    return ARTICLES.filter((article) => article.status === "Published").map(
+      toArticle,
+    );
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
@@ -83,7 +94,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         (article.title.toLowerCase().includes(q) ||
           article.dek.toLowerCase().includes(q) ||
           article.author.toLowerCase().includes(q) ||
-          article.section.toLowerCase().includes(q))
+          article.section.toLowerCase().includes(q)),
     ).map(toArticle); // filters ArticleRecord.author (pre-mapping), same value as the mapped Article.authorName
   }
 
@@ -96,12 +107,40 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async findSectionBySlug(slug: string): Promise<Section | null> {
-    const info = SECTIONS.find((section) => section.slug === slug)
+    const info = SECTIONS.find((section) => section.slug === slug);
     return info ? toSection(info) : null;
   }
 
   async findSectionByName(name: SectionName): Promise<Section | null> {
     const info = SECTIONS.find((section) => section.name === name);
     return info ? toSection(info) : null;
+  }
+
+  async saveArticle(doc: Article): Promise<Article> {
+    const index = ARTICLES.findIndex((article) => article.slug === doc.slug);
+    if (index === -1) {
+      ARTICLES.push({
+        ...doc,
+        section:
+          SECTIONS.find((s) => s.slug === doc.sectionSlug)?.name ?? "News",
+        date: doc.publishedAt?.toISOString() ?? new Date().toISOString(),
+        read: doc.readTimeMinutes.toString(),
+        author: doc.authorName,
+        initials: doc.authorInitials,
+        status: "Published",
+      });
+    } else {
+      ARTICLES[index] = {
+        ...doc,
+        section:
+          SECTIONS.find((s) => s.slug === doc.sectionSlug)?.name ?? "News",
+        date: doc.publishedAt?.toISOString() ?? new Date().toISOString(),
+        read: doc.readTimeMinutes.toString(),
+        author: doc.authorName,
+        initials: doc.authorInitials,
+        status: "Published",
+      };
+    }
+    return doc;
   }
 }
