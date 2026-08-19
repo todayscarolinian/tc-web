@@ -1,8 +1,16 @@
 "use client";
 
-import "../../src/lib/tiptap-styles.css";
-import Link from "next/link";
+import "@/src/lib/tiptap-styles.css";
+
 import react from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { TextStyleKit } from "@tiptap/extension-text-style";
+import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,6 +19,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,12 +34,14 @@ import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
-import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
-import { ARTICLE_BODY } from "@/src/lib/articles";
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+
 import type { Article } from "@/src/domain/article/article.entity";
-import { TextStyleKit } from "@tiptap/extension-text-style";
+import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+
+import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
+
+import { EditorToolbar } from "./editor-toolbar";
 
 const AUTHORS = [
   { name: "Maria Santos", initials: "MS", position: "Editor-in-Chief" },
@@ -43,16 +54,19 @@ const AUTHORS = [
   { name: "Editorial Board", initials: "EB", position: "Editorial Board" },
 ];
 
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
-import React from "react";
-
-import { EditorToolbar } from "./editor-toolbar";
-
-const extensions = [StarterKit, TextStyleKit, Image];
+const extensions = [
+  StarterKit,
+  TextStyleKit,
+  ImageResize.configure({
+    resize: false,
+  }),
+  Figure,
+  Figcaption,
+];
 
 export function ArticleEditor({ article }: { article?: Article }) {
+  const router = useRouter();
+
   // SIDEBAR STATES
   const [title, setTitle] = react.useState(article?.title ?? "");
   const [section, setSection] = react.useState<SectionName>(
@@ -74,8 +88,8 @@ export function ArticleEditor({ article }: { article?: Article }) {
   const [coverImageAlt, setCoverImageAlt] = react.useState(
     article?.coverImageAlt ?? "",
   );
-  const [publishAt, setPublishAt] = react.useState<Date | undefined>(
-    article?.publishAt ?? undefined,
+  const [publishAt, setPublishAt] = react.useState<Date | null>(
+    article?.publishAt ?? null,
   );
 
   const [isSaving, setIsSaving] = react.useState(false);
@@ -104,7 +118,9 @@ export function ArticleEditor({ article }: { article?: Article }) {
         authorInitials: author.initials,
         authorRole: author.position,
         publishAt,
-        status: "Draft" as ArticleStatus,
+        status: article
+          ? status
+          : ((publishAt ? "Scheduled" : "Draft") as ArticleStatus),
         coverImageUrl: "",
         coverImageAssetId: "",
         coverImageAlt: "",
@@ -130,7 +146,10 @@ export function ArticleEditor({ article }: { article?: Article }) {
         return;
       }
 
-      const savedArticle = await response.json();
+      const { article: savedArticle } = await response.json();
+      if (!article?.slug) {
+        router.push(`/staff/articles/${savedArticle.slug}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -335,13 +354,26 @@ export function ArticleEditor({ article }: { article?: Article }) {
             <div className="relative">
               <Input
                 type="datetime-local"
-                value={toDatetimeLocalValue(publishAt)}
-                onChange={(e) =>
-                  setPublishAt(
-                    e.target.value ? new Date(e.target.value) : undefined,
-                  )
-                }
-                className="pr-9"
+                value={publishAt ? toDatetimeLocalValue(publishAt) : ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (!value) {
+                    setPublishAt(null);
+
+                    if (status === "Scheduled") {
+                      setStatus("Draft");
+                    }
+
+                    return;
+                  }
+
+                  setPublishAt(new Date(value));
+
+                  if (status === "Draft") {
+                    setStatus("Scheduled");
+                  }
+                }}
               />
               <Calendar
                 className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground"

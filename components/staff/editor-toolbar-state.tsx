@@ -28,8 +28,6 @@ export function EditorToolbarStateSelector(
     return emptyMenuBarState;
   }
 
-  const editor = ctx.editor;
-
   return {
     // Text formatting
     isBold: ctx.editor.isActive("bold") ?? false,

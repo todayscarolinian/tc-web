@@ -53,20 +53,20 @@ const setLink = (editor: Editor) => {
 
 const handleImageUpload = (editor: Editor) => {
   const input = document.createElement("input");
-
   input.type = "file";
   input.accept = "image/*";
 
   input.onchange = () => {
     const file = input.files?.[0];
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const src = URL.createObjectURL(file);
 
     editor.chain().focus().setImage({ src }).run();
+
+    editor.commands.addCaption();
+
+    input.value = "";
   };
 
   input.click();
@@ -121,10 +121,10 @@ const ACTIONS: Config[] = [
     isActiveKey: "isLink",
   },
   {
-    key: "quote",
+    key: "pullquote",
     label: null,
     icon: Quote,
-    title: "Quote",
+    title: "PullQuote",
     action: (editor) => editor.chain().focus().toggleBlockquote().run(),
     isActiveKey: "isBlockquote",
   },

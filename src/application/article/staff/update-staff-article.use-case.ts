@@ -3,7 +3,6 @@ import type {
   ArticleInput,
   Article,
 } from "@/src/domain/article/article.entity";
-import { extractPlainText } from "@/src/lib/tiptap";
 import { updateArticleContent } from "@/src/domain/article/article.entity";
 export async function updateStaffArticle(
   articleRepo: ArticleRepository,
@@ -13,8 +12,7 @@ export async function updateStaffArticle(
   const existing = await articleRepo.findBySlug(slug);
   if (!existing) throw new Error(`Article not found: ${slug}`);
 
-  const bodyText = extractPlainText(doc.body);
-  const article = updateArticleContent(existing, { ...doc, bodyText });
+  const article = updateArticleContent(existing, doc);
 
   return articleRepo.saveArticle(article);
 }

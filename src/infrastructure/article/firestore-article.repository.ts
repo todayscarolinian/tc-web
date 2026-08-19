@@ -12,7 +12,6 @@ import type {
   Section,
   SectionName,
 } from "@/src/domain/article/section.value-object";
-import { todo } from "node:test";
 
 const ARTICLES_COLLECTION = "articles";
 

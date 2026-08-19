@@ -28,9 +28,14 @@
   }
 
   blockquote {
-    border-left: 4px solid red;
+    border-left: 4px solid rgb(155, 0, 0);
     padding-left: 1rem;
     margin: 1.5rem 0;
+
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.6;
   }
 
   a {
@@ -43,4 +48,18 @@
       text-decoration-thickness: 2px;
     }
   }
+}
+
+figcaption {
+  text-align: left;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+figcaption.is-empty::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

@@ -1,6 +1,12 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ArticleStatus } from "./article-status.value-object";
 import slugify from "slugify";
+import { generateText } from "@tiptap/core";
+import StarterKit from "@tiptap/starter-kit";
+import { TextStyleKit } from "@tiptap/extension-text-style";
+import Image from "@tiptap/extension-image";
+
+const extensions = [StarterKit, TextStyleKit, Image];
 
 export type Article = {
   slug: string;
@@ -61,9 +67,7 @@ export type ArticleInput = {
   coverImageAlt?: string;
 };
 
-export function createArticle(
-  input: ArticleInput & { bodyText: string },
-): Article {
+export function createArticle(input: ArticleInput): Article {
   const article: Article = {
     ...input,
     slug: slugify(input.title, { lower: true }),
@@ -71,6 +75,7 @@ export function createArticle(
     readTimeMinutes: 1, // currently an arbitrary value
     publishedAt: null,
     views: 0,
+    bodyText: extractPlainText(input.body),
     status: input.publishAt ? "Scheduled" : "Draft",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -80,12 +85,13 @@ export function createArticle(
 
 export function updateArticleContent(
   existing: Article,
-  input: ArticleInput & { bodyText: string },
+  input: ArticleInput,
 ): Article {
   const updated: Article = {
     ...existing,
     ...input,
     titleLower: input.title.toLowerCase(),
+    bodyText: extractPlainText(input.body),
     readTimeMinutes: 1, // currently arbitrary, but will need calculation
     updatedAt: new Date(),
   };
@@ -106,4 +112,8 @@ export function assertValidArticle(article: Article): Article {
   if (!article.slug.trim()) throw new Error("Article.slug must not be empty");
   if (!article.title.trim()) throw new Error("Article.title must not be empty");
   return article;
+}
+
+export function extractPlainText(content: JSONContent): string {
+  return generateText(content, extensions);
 }
