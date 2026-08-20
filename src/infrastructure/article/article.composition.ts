@@ -1,9 +1,6 @@
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { SectionName } from "@/src/domain/article/section.value-object";
-import type {
-  Article,
-  ArticleInput,
-} from "@/src/domain/article/article.entity";
+import type { ArticleInput } from "@/src/domain/article/article.entity";
 import { listPublishedArticles } from "@/src/application/article/list-published-articles.use-case";
 import { getArticleBySlug } from "@/src/application/article/get-article-by-slug.use-case";
 import { listTrendingArticles } from "@/src/application/article/list-trending-articles.use-case";

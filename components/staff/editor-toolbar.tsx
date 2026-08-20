@@ -3,13 +3,11 @@
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 
-import { useState } from "react";
 import {
   Bold,
   Italic,
   Underline,
   Link2,
-  Unlink2,
   Quote,
   List,
   Image as ImageIcon,
@@ -17,7 +15,6 @@ import {
   Redo2,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
-import Image from "@tiptap/extension-image";
 
 import {
   EditorToolbarStateSelector,

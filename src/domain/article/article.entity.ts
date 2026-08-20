@@ -59,7 +59,6 @@ export type ArticleInput = {
   authorRole?: string;
   caption?: string;
   body: JSONContent;
-  status: ArticleStatus;
   tagSlugs: string[];
   publishAt: Date | null;
   coverImageUrl?: string;
@@ -70,7 +69,7 @@ export type ArticleInput = {
 export function createArticle(input: ArticleInput): Article {
   const article: Article = {
     ...input,
-    slug: slugify(input.title, { lower: true }),
+    slug: slugify(input.title, { lower: true, strict: true }),
     titleLower: input.title.toLowerCase(),
     readTimeMinutes: 1, // currently an arbitrary value
     publishedAt: null,
@@ -87,12 +86,20 @@ export function updateArticleContent(
   existing: Article,
   input: ArticleInput,
 ): Article {
+  const status: ArticleStatus =
+    existing.status === "Published"
+      ? "Published"
+      : input.publishAt
+        ? "Scheduled"
+        : "Draft";
+
   const updated: Article = {
     ...existing,
     ...input,
     titleLower: input.title.toLowerCase(),
     bodyText: extractPlainText(input.body),
     readTimeMinutes: 1, // currently arbitrary, but will need calculation
+    status,
     updatedAt: new Date(),
   };
   return assertValidArticle(updated);

@@ -3,7 +3,7 @@ import { Open_Sans, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/src/lib/utils";
 import { PUBLICATION } from "@/src/infrastructure/publication/publication.composition";
-
+import { Toaster } from "sonner";
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-display" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-ui" });
 const rajdhani = Rajdhani({
@@ -34,7 +34,9 @@ export default function RootLayout({
         "font-sans",
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children} <Toaster richColors />
+      </body>
     </html>
   );
 }

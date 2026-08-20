@@ -1,5 +1,5 @@
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import { Article, createArticle } from "@/src/domain/article/article.entity";
+import { Article } from "@/src/domain/article/article.entity";
 import { publishArticle } from "@/src/domain/article/article.entity";
 export async function publishStaffArticle(
   articleRepo: ArticleRepository,

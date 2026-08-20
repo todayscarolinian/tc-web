@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StatusPill } from "@/components/staff/status-pill";
@@ -118,9 +119,6 @@ export function ArticleEditor({ article }: { article?: Article }) {
         authorInitials: author.initials,
         authorRole: author.position,
         publishAt,
-        status: article
-          ? status
-          : ((publishAt ? "Scheduled" : "Draft") as ArticleStatus),
         coverImageUrl: "",
         coverImageAssetId: "",
         coverImageAlt: "",
@@ -139,16 +137,17 @@ export function ArticleEditor({ article }: { article?: Article }) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        console.error(
-          "Failed to save draft:",
-          errorData?.error ?? response.statusText,
-        );
+        const message = errorData?.error ?? response.statusText;
+
+        toast.error(`Failed to save draft: ${message}`);
         return;
       }
 
       const { article: savedArticle } = await response.json();
+      toast.success("Article saved successfully!");
       if (!article?.slug) {
         router.push(`/staff/articles/${savedArticle.slug}`);
+        router.refresh();
       }
     } finally {
       setIsSaving(false);
@@ -168,14 +167,14 @@ export function ArticleEditor({ article }: { article?: Article }) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        console.error(
-          "Failed to publish article:",
-          errorData?.error ?? response.statusText,
-        );
+        const message = errorData?.error ?? response.statusText;
+
+        toast.error(`Failed to publish article: ${message}`);
         return;
       }
 
       const publishedArticle = await response.json();
+      toast.success("Article published successfully!");
       setStatus(publishedArticle.article.status);
     } finally {
       setIsSaving(false);
@@ -203,7 +202,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
         />
         <div className="hidden items-center gap-1.5 font-utility text-xs font-semibold tracking-wide text-muted-foreground uppercase md:flex">
           <span className="size-1.5 rounded-full bg-success" />
-          Saved 2m ago
+          Saved 2m ago {/*currently arbitrary */}
         </div>
         <Button
           type="button"
@@ -211,9 +210,18 @@ export function ArticleEditor({ article }: { article?: Article }) {
           onClick={saveDraft}
           disabled={isSaving}
         >
-          <FileText /> {isSaving ? "Saving…" : "Save draft"}
+          <FileText />{" "}
+          {isSaving
+            ? "Saving…"
+            : status === "Published"
+              ? "Save"
+              : "Save draft"}
         </Button>
-        <Button type="button" onClick={publishDraft}>
+        <Button
+          type="button"
+          onClick={publishDraft}
+          disabled={status === "Published" || isSaving}
+        >
           Publish <ArrowRight />
         </Button>
       </div>
@@ -222,7 +230,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
         <div className="overflow-y-auto px-4 py-8 sm:px-8">
           <div className="mx-auto max-w-2xl">
             <EditorToolbar editor={editor} />
-            <p className="tc-kicker text-brand mb-2">{section} · Breaking</p>
+            <p className="tc-kicker text-brand mb-2">{section}</p>
             <h1
               contentEditable
               suppressContentEditableWarning
@@ -355,24 +363,20 @@ export function ArticleEditor({ article }: { article?: Article }) {
               <Input
                 type="datetime-local"
                 value={publishAt ? toDatetimeLocalValue(publishAt) : ""}
+                disabled={status === "Published"}
                 onChange={(e) => {
+                  if (status === "Published") return;
+
                   const value = e.target.value;
 
                   if (!value) {
                     setPublishAt(null);
-
-                    if (status === "Scheduled") {
-                      setStatus("Draft");
-                    }
-
+                    if (status === "Scheduled") setStatus("Draft");
                     return;
                   }
 
                   setPublishAt(new Date(value));
-
-                  if (status === "Draft") {
-                    setStatus("Scheduled");
-                  }
+                  if (status === "Draft") setStatus("Scheduled");
                 }}
               />
               <Calendar
