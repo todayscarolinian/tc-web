@@ -3,7 +3,7 @@ import { Open_Sans, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/src/lib/utils";
 import { PUBLICATION } from "@/src/infrastructure/publication/publication.composition";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-display" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-ui" });
 const rajdhani = Rajdhani({
