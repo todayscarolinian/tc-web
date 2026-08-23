@@ -18,7 +18,7 @@ export async function PUT(
 
   const input: ArticleInput = {
     ...rawBody,
-    authorId: session.userId,
+    // authorId: session.userId,
   };
 
   try {

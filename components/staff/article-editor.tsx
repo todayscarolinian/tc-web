@@ -36,6 +36,8 @@ import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
 
+import type { UserProfile } from "@/src/lib/herald/types";
+
 import type { Article } from "@/src/domain/article/article.entity";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 
@@ -43,17 +45,7 @@ import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 
 import { EditorToolbar } from "./editor-toolbar";
-
-const AUTHORS = [
-  { name: "Maria Santos", initials: "MS", position: "Editor-in-Chief" },
-  { name: "Noah Lim", initials: "NL", position: "Staff Writer" },
-  { name: "Liam Reyes", initials: "LR", position: "Staff Writer" },
-  { name: "Aisha Cruz", initials: "AC", position: "Sports Editor" },
-  { name: "Patricia Gallardo", initials: "PG", position: "Features Editor" },
-  { name: "Joshua Mendoza", initials: "JM", position: "Staff Writer" },
-  { name: "Reina Villanueva", initials: "RV", position: "Copy Editor" },
-  { name: "Editorial Board", initials: "EB", position: "Editorial Board" },
-];
+import { AuthorSelect } from "./author-select";
 
 const extensions = [
   StarterKit,
@@ -65,7 +57,7 @@ const extensions = [
   Figcaption,
 ];
 
-export function ArticleEditor({ article }: { article?: Article }) {
+export function ArticleEditor({ article, currentUserId }: { article?: Article; currentUserId: string  | null }) {
   const router = useRouter();
 
   // SIDEBAR STATES
@@ -74,9 +66,8 @@ export function ArticleEditor({ article }: { article?: Article }) {
     article ? getSectionName(article.sectionSlug) : "News",
   );
 
-  const [author, setAuthor] = react.useState(
-    AUTHORS.find((a) => a.name === article?.authorName) ?? AUTHORS[0],
-  );
+  const [authors, setAuthors] = react.useState<UserProfile[]>([]);
+  const [authorId, setAuthorId] = react.useState<string | null>(article?.authorId ?? currentUserId);
 
   const [status, setStatus] = react.useState<ArticleStatus>(
     article?.status ?? "Draft",
@@ -115,9 +106,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
         dek,
         body: editor.getJSON(),
         tagSlugs: tags,
-        authorName: author.name,
-        authorInitials: author.initials,
-        authorRole: author.position,
+        authorId: authorId,
         publishAt,
         coverImageUrl: "",
         coverImageAssetId: "",
@@ -160,6 +149,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
     setIsSaving(true);
 
     try {
+      await saveDraft();
       const response = await fetch(`/api/articles/${article.slug}/publish`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -180,6 +170,17 @@ export function ArticleEditor({ article }: { article?: Article }) {
       setIsSaving(false);
     }
   };
+
+  react.useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        const filtered = data.users.items.filter((user: UserProfile) =>
+          user.positions.some((p) => p.domains.includes("TC Official Website"))
+        );
+        setAuthors(filtered);
+      });
+  }, [article]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -281,29 +282,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
             </Select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
-              Author
-            </span>
-            <Select
-              value={author.name}
-              onValueChange={(name) => {
-                const selected = AUTHORS.find((a) => a.name === name);
-                if (selected) setAuthor(selected);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AUTHORS.map((a) => (
-                  <SelectItem key={a.name} value={a.name}>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <AuthorSelect authors={authors} value={authorId} onChange={setAuthorId} />
 
           <div className="flex flex-col gap-1.5">
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">

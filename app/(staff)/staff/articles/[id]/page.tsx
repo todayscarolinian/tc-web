@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArticleEditor } from "@/components/staff/article-editor";
 import { articleService } from "@/src/infrastructure/article/article.composition";
+import { sessionService } from "@/src/infrastructure/auth/auth.composition";
 
 export async function generateStaticParams() {
   const articles = await articleService.staff.listAll();
@@ -9,7 +10,7 @@ export async function generateStaticParams() {
 
 // The article list is exhaustively known at build time — an unlisted id is a
 // genuine 404, not a candidate for on-demand rendering.
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export default async function StaffArticleEditPage({
   params,
@@ -18,7 +19,9 @@ export default async function StaffArticleEditPage({
 }) {
   const { id } = await params;
   const article = await articleService.staff.getBySlug(id);
+  const session = await sessionService.getCurrentStaffSession();
+
   if (!article) notFound();
 
-  return <ArticleEditor article={article} />;
+  return <ArticleEditor article={article} currentUserId={session?.userId ?? null} />;
 }
