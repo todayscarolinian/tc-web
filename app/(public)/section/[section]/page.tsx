@@ -16,6 +16,10 @@ export async function generateStaticParams() {
 }
 export const dynamicParams = false;
 
+// fallback revalidation window; on-demand revalidation is
+// triggered from the publish use-case via revalidatePath().
+export const revalidate = 300;
+
 export default async function SectionPage({
   params,
 }: {

@@ -11,6 +11,10 @@ import { EmptyState } from "@/components/site/empty-state";
 import { Button } from "@/components/ui/button";
 import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
+// fallback revalidation window; on-demand revalidation is
+// triggered from the publish/update use-cases via revalidatePath().
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [lead, ...stories] = await articleService.listPublished();
   const trending = await articleService.listTrending(4);
