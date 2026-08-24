@@ -1,7 +1,18 @@
 // src/lib/herald/fetch-authors.ts
 import "server-only";
 import { cookies } from "next/headers";
-import type { UserProfile } from "@/src/lib/herald/types";
+import { REQUIRED_DOMAIN, type UserProfile } from "@/src/lib/herald/types";
+
+export function isEligibleAuthor(
+  authorId: string,
+  users: UserProfile[],
+): boolean {
+  return users.some(
+    (user) =>
+      user.id === authorId &&
+      user.positions.some((p) => p.domains.includes(REQUIRED_DOMAIN)),
+  );
+}
 
 export async function getAllHeraldUsers(): Promise<UserProfile[]> {
   const coreUrl = process.env.NEXT_PUBLIC_HERALD_CORE_URL; // http://localhost:3002
