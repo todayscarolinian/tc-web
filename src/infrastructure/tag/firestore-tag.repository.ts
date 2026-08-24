@@ -26,7 +26,7 @@ export class FirestoreTagRepository implements TagRepository {
   }
 
   async findOrCreate(name: string): Promise<Tag> {
-    const ref = db.collection(TAGS_COLLECTION).doc(slugify(name));
+    const ref = db.collection(TAGS_COLLECTION).doc(slugify(name, { lower: true, strict: true }));
     return db.runTransaction(async (tx) => {
       const existing = await tx.get(ref);
       if (existing.exists) {
