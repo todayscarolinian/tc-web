@@ -25,4 +25,8 @@ export class FirebaseStorageAdapter implements StoragePort {
 
     return { uploadUrl, publicUrl };
   }
+
+  async delete({ storagePath }: { storagePath: string }): Promise<void> {
+    await bucket.file(storagePath).delete({ ignoreNotFound: true });
+  }
 }

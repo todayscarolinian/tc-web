@@ -2,7 +2,7 @@
 
 import "@/src/lib/tiptap-styles.css";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -43,6 +43,8 @@ import type { ArticleStatus } from "@/src/domain/article/article-status.value-ob
 
 import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
+import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
+import { requestMediaUploadUrl, deleteMediaAsset } from "@/actions/media.actions";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { AuthorSelect } from "./author-select";
@@ -67,7 +69,7 @@ export function ArticleEditor({
   const router = useRouter();
 
   // SIDEBAR STATES
-  const [title, setTitle] = useState(article?.title ?? "");
+  const [title, setTitle] = useState<string>(article?.title ?? "");
   const [section, setSection] = useState<SectionName>(
     article ? getSectionName(article.sectionSlug) : "News",
   );
@@ -84,7 +86,13 @@ export function ArticleEditor({
 
   const [tags, setTags] = useState<string[]>(article?.tagSlugs ?? []);
 
-  const [hasCover, setHasCover] = useState(Boolean(article));
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    article?.coverImageUrl ?? "",
+  );
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(
+    null,
+  );
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [coverImageAlt, setCoverImageAlt] = useState(
     article?.coverImageAlt ?? "",
   );
@@ -95,12 +103,101 @@ export function ArticleEditor({
   const [isSaving, setIsSaving] = useState(false);
 
   const selectedSection = SECTIONS.find((s) => s.name === section);
+  const displayCoverUrl = previewBlobUrl ?? coverImageUrl;
+  const hasCover = Boolean(displayCoverUrl);
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  // Guards against two overlapping handleCoverFile calls racing (e.g. a
+  // slow upload still in flight when a second one starts): each call
+  // captures the id current at its start, and checks it's still current
+  // after every await before touching state, so a stale call can't
+  // clobber a newer one's result. The disabled Replace button stops the
+  // obvious trigger, but doesn't guarantee no overlap — this is the
+  // actual correctness guard.
+  const coverUploadIdRef = useRef(0);
+
+  useEffect(() => {
+    if (!previewBlobUrl) return;
+    return () => URL.revokeObjectURL(previewBlobUrl);
+  }, [previewBlobUrl]);
 
   // FUNCTIONS
   const editor = useEditor({
     extensions,
     content: article?.body ?? "Write your news content here…",
   });
+
+  const handleCoverFile = async (file: File) => {
+    if (!ALLOWED_IMAGE_CONTENT_TYPES.has(file.type)) {
+      toast.error(`Unsupported file type: ${file.type || "unknown"}`);
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error("File exceeds the 10MB upload limit.");
+      return;
+    }
+
+    const previousCoverImageUrl = coverImageUrl;
+    // Pre-increment claims this call's own id and bumps the shared
+    // counter in one step; capturing it in a local means later
+    // `coverUploadIdRef.current !== uploadId` checks compare against
+    // what this call started with, not whatever the ref holds by then.
+    const uploadId = ++coverUploadIdRef.current;
+    setPreviewBlobUrl(URL.createObjectURL(file));
+    setIsUploadingCover(true);
+
+    try {
+      const result = await requestMediaUploadUrl({
+        fileName: file.name, 
+        contentType: file.type,
+        sizeBytes: file.size,
+        folder: "Covers",
+      });
+      if (coverUploadIdRef.current !== uploadId) return;
+
+      if ("error" in result) {
+        toast.error(result.message);
+        setPreviewBlobUrl(null);
+        return;
+      }
+
+      const response = await fetch(result.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (coverUploadIdRef.current !== uploadId) return;
+
+      if (!response.ok) {
+        toast.error("Failed to upload cover image.");
+        setPreviewBlobUrl(null);
+        return;
+      }
+
+      setCoverImageUrl(result.publicUrl);
+      setPreviewBlobUrl(null);
+      // Best-effort cleanup of the file this one replaced — a unique path
+      // per upload, so it's never shared with another article.
+      if (previousCoverImageUrl) {
+        void deleteMediaAsset({ publicUrl: previousCoverImageUrl });
+      }
+    } catch {
+      if (coverUploadIdRef.current !== uploadId) return;
+      toast.error("Failed to upload cover image. Check your connection and try again.");
+      setPreviewBlobUrl(null);
+    } finally {
+      if (coverUploadIdRef.current === uploadId) setIsUploadingCover(false);
+    }
+  };
+
+  const removeCoverImage = () => {
+    if (coverImageUrl) {
+      void deleteMediaAsset({ publicUrl: coverImageUrl });
+    }
+    setCoverImageUrl("");
+    setCoverImageAlt("");
+    setPreviewBlobUrl(null);
+  };
 
   const saveDraft = async () => {
     if (!editor || isSaving) return;
@@ -123,9 +220,8 @@ export function ArticleEditor({
           : "",
         authorRole: selectedAuthor?.positions[0]?.name,
         publishAt,
-        coverImageUrl: "",
-        coverImageAssetId: "",
-        coverImageAlt: "",
+        coverImageUrl,
+        coverImageAlt,
       });
 
       const url = article?.slug
@@ -318,17 +414,35 @@ export function ArticleEditor({
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Cover image
             </span>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) handleCoverFile(file);
+              }}
+            />
             {hasCover ? (
               <div className="overflow-hidden rounded-sm ring-1 ring-border">
-                <PhotoPlaceholder ratio="16 / 10" iconSize={28} />
+                <PhotoPlaceholder
+                  ratio="16 / 10"
+                  iconSize={28}
+                  src={displayCoverUrl}
+                  alt={coverImageAlt}
+                />
                 <div className="flex gap-2 p-2.5">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     className="flex-1"
+                    disabled={isUploadingCover}
+                    onClick={() => coverInputRef.current?.click()}
                   >
-                    <Upload /> Replace
+                    <Upload /> {isUploadingCover ? "Uploading…" : "Replace"}
                   </Button>
                   <Button
                     type="button"
@@ -336,7 +450,8 @@ export function ArticleEditor({
                     variant="ghost"
                     className="text-destructive hover:text-destructive"
                     aria-label="Remove cover image"
-                    onClick={() => setHasCover(false)}
+                    disabled={isUploadingCover}
+                    onClick={removeCoverImage}
                   >
                     <Trash2 />
                   </Button>
@@ -353,7 +468,11 @@ export function ArticleEditor({
                 </div>
               </div>
             ) : (
-              <CoverDropzone compact onClick={() => setHasCover(true)} />
+              <CoverDropzone
+                compact
+                onClick={() => coverInputRef.current?.click()}
+                onDrop={handleCoverFile}
+              />
             )}
           </div>
 
