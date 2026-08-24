@@ -16,8 +16,6 @@ export async function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
 }
 
-// fallback revalidation window; on-demand revalidation is
-// triggered from the publish/update use-cases via revalidatePath().
 export const revalidate = 3600;
 
 export default async function ArticlePage({

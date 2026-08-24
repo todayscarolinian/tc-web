@@ -39,8 +39,6 @@ export async function PUT(
   try {
     const article = await articleService.staff.update(slug, input);
 
-    // on-demand revalidation so edits to a published article
-    // show up on the public page without waiting for the fallback window.
     revalidatePath(`/article/${article.slug}`);
 
     return NextResponse.json({ article });

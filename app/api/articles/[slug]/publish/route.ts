@@ -17,8 +17,6 @@ export async function PUT(
   try {
     const article = await articleService.staff.publish(slug);
 
-    // on-demand revalidation so the new article is reachable
-    // without waiting for the next full deploy or fallback window.
     revalidatePath(`/article/${article.slug}`);
     revalidatePath(`/section/${article.sectionSlug}`);
     revalidatePath("/");
