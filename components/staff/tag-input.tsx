@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Fragment } from "react";
+import { toast } from "sonner";
 import {
   Combobox,
   ComboboxChip,
@@ -64,6 +65,9 @@ export function TagInput({
       );
       onChange(tags.includes(tag.slug) ? tags : [...tags, tag.slug]);
       setInputValue("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create tag";
+      toast.error(message);
     } finally {
       setCreating(false);
     }
