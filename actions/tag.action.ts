@@ -1,21 +1,12 @@
 "use server";
 
 import { tagService } from "@/src/infrastructure/tag/tag.composition";
-import { assertValidTag } from "@/src/domain/tag/tag.entity";
-import { slugify } from "@/src/lib/slugify";
 import type { Tag } from "@/src/domain/tag/tag.entity";
 
-export async function createTagAction(name: string): Promise<Tag> {
-  const tag: Tag = {
-    name,
-    slug: slugify(name),
-    description: "",
-    createdAt: new Date(),
-  };
-
-  assertValidTag(tag);
-  await tagService.create(tag);
-  return tag;
+// Since we are just checking the name, its better to just check it only ; unless we do it for consistency check
+export async function findOrCreateTagAction(name: string): Promise<Tag> {
+  if (!name.trim()) throw new Error("Tag name must not be empty");
+  return tagService.findOrCreate(name);
 }
 
 export async function getTagsAction(): Promise<Tag[]> {

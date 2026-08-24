@@ -6,6 +6,5 @@ export const tagRepository: TagRepository = new FirestoreTagRepository();
 
 export const tagService = {
   listAll: () => tagRepository.listAll(),
-  findBySlug: (slug: string) => tagRepository.findBySlug(slug),
-  create: (tag: Tag) => tagRepository.create(tag),
+  findOrCreate: (name: string) => tagRepository.findOrCreate(name),
 };

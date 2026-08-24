@@ -6,6 +6,7 @@ import {
 import { db } from "@/src/infrastructure/firebase/admin";
 import type { TagRepository } from "@/src/domain/tag/tag.repository";
 import type { Tag } from "@/src/domain/tag/tag.entity";
+import slugify from "slugify";
 import { assertValidTag } from "@/src/domain/tag/tag.entity";
 
 const TAGS_COLLECTION = "tags";
@@ -24,16 +25,22 @@ export class FirestoreTagRepository implements TagRepository {
     return snap.docs.map(toDomainTag);
   }
 
-  async findBySlug(slug: string): Promise<Tag | null> {
-    const doc = await db.collection(TAGS_COLLECTION).doc(slug).get();
-    return doc.exists ? toDomainTag(doc as QueryDocumentSnapshot<DocumentData>) : null;
+  async findOrCreate(name: string): Promise<Tag> {
+    const ref = db.collection(TAGS_COLLECTION).doc(slugify(name));
+    return db.runTransaction(async (tx) => {
+      const existing = await tx.get(ref);
+      if (existing.exists) {
+        return toDomainTag(existing as QueryDocumentSnapshot<DocumentData>);
+      }
+      const tag = assertValidTag({
+        name,
+        slug: ref.id,
+        description: "",
+        createdAt: new Date(),
+      });
+      tx.create(ref, { ...tag, createdAt: Timestamp.fromDate(tag.createdAt) });
+      return tag;
+    });
   }
 
-  async create(tag: Tag): Promise<void> {
-    assertValidTag(tag);
-    await db
-      .collection(TAGS_COLLECTION)
-      .doc(tag.slug) // slug as doc ID — matches how articles use slug as identity
-      .set({ ...tag, createdAt: Timestamp.fromDate(tag.createdAt) });
-  }
 }

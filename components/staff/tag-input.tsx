@@ -14,7 +14,7 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 import type { Tag } from "@/src/domain/tag/tag.entity";
-import { createTagAction, getTagsAction } from "@/actions/tag.action";
+import { findOrCreateTagAction, getTagsAction } from "@/actions/tag.action";
 
 export function TagInput({
   tags,      
@@ -58,9 +58,11 @@ export function TagInput({
     if (!name || creating) return;
     setCreating(true);
     try {
-      const newTag = await createTagAction(name); 
-      setAllTags((prev) => [...prev, newTag]);
-      onChange([...tags, newTag.slug]);
+      const tag = await findOrCreateTagAction(name);
+      setAllTags((prev) =>
+        prev.some((t) => t.slug === tag.slug) ? prev : [...prev, tag]
+      );
+      onChange(tags.includes(tag.slug) ? tags : [...tags, tag.slug]);
       setInputValue("");
     } finally {
       setCreating(false);
@@ -90,7 +92,9 @@ export function TagInput({
           {(values: Tag[]) => (
             <Fragment>
               {values.map((tag) => (
-                <ComboboxChip key={tag.slug}>{tag.name}</ComboboxChip>
+                <ComboboxChip key={tag.slug} className="bg-destructive text-white rounded-full">
+                  {tag.name}
+                </ComboboxChip>
               ))}
               <ComboboxChipsInput />
             </Fragment>

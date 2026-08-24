@@ -4,8 +4,6 @@ import type { Tag } from "./tag.entity";
 export interface TagRepository {
   /** All tags, for populating pickers (e.g. the article editor's tag select). */
   listAll(): Promise<Tag[]>;
-  /** Raw lookup by identity. */
-  findBySlug(slug: string): Promise<Tag | null>;
-  /** Creates a new tag if one with this slug doesn't already exist. */
-  create(tag: Tag): Promise<void>;
+  /** Finds a tag by name, or creates it if it doesn't exist. */
+  findOrCreate(name: string): Promise<Tag>;
 }
