@@ -40,6 +40,8 @@ export async function PUT(
     const article = await articleService.staff.update(slug, input);
 
     revalidatePath(`/article/${article.slug}`);
+    revalidatePath(`/section/${article.sectionSlug}`);
+    revalidatePath("/section/[section]/page/[page]", "page");
 
     return NextResponse.json({ article });
   } catch (err) {
