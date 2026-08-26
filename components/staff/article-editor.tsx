@@ -108,6 +108,8 @@ export function ArticleEditor({
     setIsSaving(true);
 
     try {
+      const selectedAuthor = authors.find((a) => a.id === authorId);
+
       const body = JSON.stringify({
         sectionSlug: selectedSection?.slug ?? "",
         title,
@@ -115,6 +117,11 @@ export function ArticleEditor({
         body: editor.getJSON(),
         tagSlugs: tags,
         authorId: authorId,
+        authorName: selectedAuthor?.name ?? "",
+        authorInitials: selectedAuthor
+          ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
+          : "",
+        authorRole: selectedAuthor?.positions[0]?.name,
         publishAt,
         coverImageUrl: "",
         coverImageAssetId: "",
