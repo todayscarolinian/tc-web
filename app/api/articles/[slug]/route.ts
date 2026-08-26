@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import { sessionService } from "@/src/infrastructure/auth/auth.composition";
-import { getAllHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
+import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
 import type { ArticleInput } from "@/src/domain/article/article.entity";
 
 export async function PUT(
@@ -22,7 +22,7 @@ export async function PUT(
     return NextResponse.json({ error: "authorId is required" }, { status: 400 });
   }
 
-  const eligibleAuthors = await getAllHeraldUsers();
+  const eligibleAuthors = await getEligibleHeraldUsers();
   if (!isEligibleAuthor(authorId, eligibleAuthors)) {
     return NextResponse.json(
       { error: "authorId must be a staff member with TC Official Website access" },
