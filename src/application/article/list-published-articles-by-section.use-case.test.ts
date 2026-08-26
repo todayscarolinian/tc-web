@@ -54,17 +54,20 @@ describe("listPublishedArticlesBySection", () => {
     const first = await listPublishedArticlesBySection(repo, "sports", 1);
     expect(first.totalPages).toBeGreaterThan(1);
 
+    const { totalCount } = await repo.listPublishedBySection("sports", {
+      limit: Number.MAX_SAFE_INTEGER,
+      offset: 0,
+    });
+
     const seenSlugs = new Set<string>();
-    let totalReturned = 0;
     for (let page = 1; page <= first.totalPages; page++) {
       const { articles } = await listPublishedArticlesBySection(repo, "sports", page);
       for (const article of articles) {
         expect(seenSlugs.has(article.slug)).toBe(false); // no duplicates across pages
         seenSlugs.add(article.slug);
       }
-      totalReturned += articles.length;
     }
-    expect(totalReturned).toBe(seenSlugs.size); // no gaps: every fetched article accounted for
+    expect(seenSlugs.size).toBe(totalCount); // no gaps: every section article was returned exactly once
   });
 
   it("caps each page at SECTION_PAGE_SIZE", async () => {
