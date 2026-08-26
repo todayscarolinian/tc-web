@@ -22,7 +22,12 @@ export async function getAllHeraldUsers(): Promise<UserProfile[]> {
     throw new Error("Herald core URL not configured");
   }
 
-  const res = await fetch(`${coreUrl}/api/users`, {
+  const params = new URLSearchParams({
+    paginated: "false",
+    domain: REQUIRED_DOMAIN,
+  });
+
+  const res = await fetch(`${coreUrl}/api/users?${params}`, {
     method: "GET",
     headers: { cookie: cookieHeader }, // forward the logged-in user's session cookie
     cache: "no-store",
