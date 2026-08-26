@@ -14,7 +14,7 @@ export function isEligibleAuthor(
   );
 }
 
-export async function getAllHeraldUsers(): Promise<UserProfile[]> {
+export async function getEligibleHeraldUsers(): Promise<UserProfile[]> {
   const coreUrl = process.env.NEXT_PUBLIC_HERALD_CORE_URL; // http://localhost:3002
   const cookieHeader = (await cookies()).toString();
 

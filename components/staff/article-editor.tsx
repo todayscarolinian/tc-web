@@ -2,7 +2,7 @@
 
 import "@/src/lib/tiptap-styles.css";
 
-import react from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -57,34 +57,42 @@ const extensions = [
   Figcaption,
 ];
 
-export function ArticleEditor({ article, currentUserId }: { article?: Article; currentUserId: string  | null }) {
+export function ArticleEditor({
+  article,
+  currentUserId,
+}: {
+  article?: Article;
+  currentUserId: string | null;
+}) {
   const router = useRouter();
 
   // SIDEBAR STATES
-  const [title, setTitle] = react.useState(article?.title ?? "");
-  const [section, setSection] = react.useState<SectionName>(
+  const [title, setTitle] = useState(article?.title ?? "");
+  const [section, setSection] = useState<SectionName>(
     article ? getSectionName(article.sectionSlug) : "News",
   );
 
-  const [authors, setAuthors] = react.useState<UserProfile[]>([]);
-  const [authorId, setAuthorId] = react.useState<string | null>(article?.authorId ?? currentUserId);
+  const [authors, setAuthors] = useState<UserProfile[]>([]);
+  const [authorId, setAuthorId] = useState<string | null>(
+    article?.authorId ?? currentUserId,
+  );
 
-  const [status, setStatus] = react.useState<ArticleStatus>(
+  const [status, setStatus] = useState<ArticleStatus>(
     article?.status ?? "Draft",
   );
-  const [dek, setDek] = react.useState(article?.dek ?? "");
+  const [dek, setDek] = useState(article?.dek ?? "");
 
-  const [tags, setTags] = react.useState<string[]>(article?.tagSlugs ?? []);
+  const [tags, setTags] = useState<string[]>(article?.tagSlugs ?? []);
 
-  const [hasCover, setHasCover] = react.useState(Boolean(article));
-  const [coverImageAlt, setCoverImageAlt] = react.useState(
+  const [hasCover, setHasCover] = useState(Boolean(article));
+  const [coverImageAlt, setCoverImageAlt] = useState(
     article?.coverImageAlt ?? "",
   );
-  const [publishAt, setPublishAt] = react.useState<Date | null>(
+  const [publishAt, setPublishAt] = useState<Date | null>(
     article?.publishAt ?? null,
   );
 
-  const [isSaving, setIsSaving] = react.useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedSection = SECTIONS.find((s) => s.name === section);
 
@@ -171,14 +179,11 @@ export function ArticleEditor({ article, currentUserId }: { article?: Article; c
     }
   };
 
-  react.useEffect(() => {
+  useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
       .then((data) => {
-        const filtered = data.users.items.filter((user: UserProfile) =>
-          user.positions.some((p) => p.domains.includes("TC Official Website"))
-        );
-        setAuthors(filtered);
+        setAuthors(data.users.items);
       });
   }, [article]);
 
@@ -281,8 +286,16 @@ export function ArticleEditor({ article, currentUserId }: { article?: Article; c
               </SelectContent>
             </Select>
           </div>
-
-          <AuthorSelect authors={authors} value={authorId} onChange={setAuthorId} />
+          <div className="flex flex-col gap-1.5">
+            <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+              Author
+            </span>
+            <AuthorSelect
+              authors={authors}
+              value={authorId}
+              onChange={setAuthorId}
+            />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
