@@ -16,9 +16,7 @@ export async function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
 }
 
-// The story list is exhaustively known at build time — an unlisted slug
-// is a genuine 404, not a candidate for on-demand rendering.
-export const dynamicParams = false;
+export const revalidate = 3600;
 
 export default async function ArticlePage({
   params,

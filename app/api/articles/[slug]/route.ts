@@ -1,5 +1,6 @@
 // app/api/articles/[slug]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import { sessionService } from "@/src/infrastructure/auth/auth.composition";
 import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
@@ -37,6 +38,9 @@ export async function PUT(
 
   try {
     const article = await articleService.staff.update(slug, input);
+
+    revalidatePath(`/article/${article.slug}`);
+
     return NextResponse.json({ article });
   } catch (err) {
     return NextResponse.json(

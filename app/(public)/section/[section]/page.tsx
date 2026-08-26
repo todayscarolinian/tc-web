@@ -16,6 +16,8 @@ export async function generateStaticParams() {
 }
 export const dynamicParams = false;
 
+export const revalidate = 300;
+
 export default async function SectionPage({
   params,
 }: {
