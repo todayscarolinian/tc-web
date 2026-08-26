@@ -191,6 +191,9 @@ export function ArticleEditor({
       .then((res) => res.json())
       .then((data) => {
         setAuthors(data.users.items);
+      })
+      .catch(() => {
+        toast.error("Failed to load authors");
       });
   }, [article]);
 
