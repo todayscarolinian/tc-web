@@ -44,6 +44,7 @@ function toArticle(record: ArticleRecord): Article {
     authorName: record.author,
     authorInitials: record.initials,
     authorRole: record.role,
+    authorAvatarUrl: record.avatarUrl,
     publishedAt,
     readTimeMinutes: parseInt(record.read, 10) || 0,
     // Every article currently shares one canned body; a real CMS/DB
@@ -132,6 +133,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         read: doc.readTimeMinutes.toString(),
         author: doc.authorName,
         initials: doc.authorInitials,
+        avatarUrl: doc.authorAvatarUrl,
         status: "Published",
       });
     } else {
@@ -143,6 +145,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         read: doc.readTimeMinutes.toString(),
         author: doc.authorName,
         initials: doc.authorInitials,
+        avatarUrl: doc.authorAvatarUrl,
         status: "Published",
       };
     }

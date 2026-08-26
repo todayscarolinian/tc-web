@@ -57,6 +57,7 @@ that a type file structurally can't carry. If the two ever disagree, the
 | `authorName` | string | yes | display-name snapshot captured at publish time — deliberately not a live Herald lookup (see `authors` section below) |
 | `authorInitials` | string | yes | snapshot |
 | `authorRole` | string | no | snapshot |
+| `authorAvatarUrl` | string | no | Herald `profilePictureURL` snapshot, captured at save time — same rationale as `authorName`/`authorInitials`/`authorRole` above. See `authors/{authorId}` below for why this duplicates rather than joins against that collection's own `avatarUrl` |
 | `publishedAt` | Timestamp \| null | yes | `FieldValue.serverTimestamp()`, set once on first publish; null for Draft |
 | `publishAt` | Timestamp \| null | no | future scheduled publish time (S3-02) |
 | `readTimeMinutes` | number | yes | replaces the mock's free-text `read` (`"4 min read"` / `"3 min"` — inconsistent even today); derive the display string at render time |
@@ -133,9 +134,16 @@ identity cache, not the source of truth.** Herald owns real identity
   derived view over article snapshots.
 - A CMS author-picker (S2-04) shouldn't round-trip to Herald on every editor
   page load.
-- Avatar data belongs here rather than duplicated onto every article
-  snapshot (`bio` was considered for the same reason but cut for MVP — see
-  "Not carried forward" below).
+- ~~Avatar data belongs here rather than duplicated onto every article
+  snapshot~~ — **superseded.** `Article.authorAvatarUrl` denormalizes the
+  Herald `profilePictureURL` snapshot onto every article doc instead,
+  matching `authorName`/`authorInitials`/`authorRole`'s existing pattern
+  (see `articles/{slug}` above). This collection's own `avatarUrl` field
+  (below) still exists for the `/authors/[slug]` route, which needs an
+  identity record independent of any single article — the two are separate,
+  intentionally duplicated snapshots serving different read paths, not one
+  feeding the other. (`bio` remains cut for MVP per "Not carried forward"
+  below — that reasoning is unaffected by this change.)
 
 Upsert strategy: **lazily upserted as a side effect of the publish
 flow**, piggybacking the same write that sets `Article.authorId`/`authorName`

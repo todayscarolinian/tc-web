@@ -6,7 +6,7 @@ import { sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 export async function generateStaticParams() {
@@ -31,6 +31,7 @@ export default async function AuthorPage({
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center gap-4 border-b border-border pb-8">
         <Avatar size="lg" className="size-16 text-lg">
+          <AvatarImage src={lead.authorAvatarUrl} alt={lead.authorName} />
           <AvatarFallback className="bg-brand text-lg text-white">
             {lead.authorInitials}
           </AvatarFallback>
