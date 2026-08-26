@@ -8,4 +8,11 @@ export interface StoragePort {
     storagePath: string;
     contentType: string;
   }): Promise<{ uploadUrl: string; publicUrl: string }>;
+
+  /**
+   * Deletes an object. Silently no-ops if it's already gone — callers use
+   * this for best-effort cleanup of superseded uploads, not as a source of
+   * truth for whether the object existed.
+   */
+  delete(params: { storagePath: string }): Promise<void>;
 }

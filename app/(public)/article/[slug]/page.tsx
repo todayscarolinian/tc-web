@@ -37,7 +37,13 @@ export default async function ArticlePage({
 
   return (
     <>
-      <PhotoPlaceholder icon={sectionIcon(getSectionName(article.sectionSlug))} ratio="21 / 9" iconSize={56} />
+      <PhotoPlaceholder
+        icon={sectionIcon(getSectionName(article.sectionSlug))}
+        ratio="21 / 9"
+        iconSize={56}
+        src={article.coverImageUrl}
+        alt={article.coverImageAlt}
+      />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         {article.caption && (
           <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{article.caption}</p>

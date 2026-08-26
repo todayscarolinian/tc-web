@@ -6,12 +6,27 @@ export function PhotoPlaceholder({
   ratio = "3 / 2",
   className,
   iconSize = 36,
+  src,
+  alt = "",
 }: {
   icon?: LucideIcon;
   ratio?: string;
   className?: string;
   iconSize?: number;
+  src?: string;
+  alt?: string;
 }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={cn("w-full object-cover", className)}
+        style={{ aspectRatio: ratio }}
+      />
+    );
+  }
+
   return (
     <div
       className={cn(

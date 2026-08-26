@@ -8,4 +8,5 @@ const storagePort: StoragePort = new FirebaseStorageAdapter();
 export const mediaStorageService = {
   createSignedUploadUrl: (params: { storagePath: string; contentType: string }) =>
     storagePort.createSignedUploadUrl(params),
+  delete: (params: { storagePath: string }) => storagePort.delete(params),
 };

@@ -3,16 +3,7 @@
 import { cookies } from "next/headers";
 import { requireHeraldAccess, isAccessError, type AccessError } from "@/src/lib/herald/require-access";
 import { mediaStorageService } from "@/src/infrastructure/media/media.composition";
-
-const ALLOWED_CONTENT_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/svg+xml",
-]);
-
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MiB — generous for editorial photos, cheap on the 5GB free Storage tier (ADR-007)
+import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 
 type RequestMediaUploadUrlInput = {
   fileName: string;
@@ -21,7 +12,7 @@ type RequestMediaUploadUrlInput = {
   folder: string;
 };
 
-type RequestMediaUploadUrlResult =
+export type RequestMediaUploadUrlResult =
   | { uploadUrl: string; storagePath: string; publicUrl: string }
   | AccessError
   | { error: "INVALID_FILE"; message: string };
@@ -40,10 +31,10 @@ export async function requestMediaUploadUrl(
   const access = await requireHeraldAccess(cookieHeader);
   if (isAccessError(access)) return access;
 
-  if (!ALLOWED_CONTENT_TYPES.has(input.contentType)) {
+  if (!ALLOWED_IMAGE_CONTENT_TYPES.has(input.contentType)) {
     return { error: "INVALID_FILE", message: `Unsupported file type: ${input.contentType}` };
   }
-  if (input.sizeBytes > MAX_SIZE_BYTES) {
+  if (input.sizeBytes > MAX_IMAGE_SIZE_BYTES) {
     return { error: "INVALID_FILE", message: "File exceeds the 10MB upload limit." };
   }
 
@@ -55,4 +46,28 @@ export async function requestMediaUploadUrl(
   });
 
   return { uploadUrl, storagePath, publicUrl };
+}
+
+export type DeleteMediaAssetResult = { ok: true } | AccessError;
+
+// Callers only ever have the public URL (it's what's stored on the article),
+// not the storage path — parse it back out rather than widening the client
+// contract to carry storagePath around just for cleanup.
+function extractStoragePath(publicUrl: string): string | null {
+  const match = publicUrl.match(/\/o\/([^?]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export async function deleteMediaAsset(input: {
+  publicUrl: string;
+}): Promise<DeleteMediaAssetResult> {
+  const cookieHeader = (await cookies()).toString();
+  const access = await requireHeraldAccess(cookieHeader);
+  if (isAccessError(access)) return access;
+
+  const storagePath = extractStoragePath(input.publicUrl);
+  if (!storagePath) return { ok: true };
+
+  await mediaStorageService.delete({ storagePath });
+  return { ok: true };
 }
