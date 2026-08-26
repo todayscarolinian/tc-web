@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { articleService } from "@/src/infrastructure/article/article.composition";
+import { tagService } from "@/src/infrastructure/tag/tag.composition";
 import { getSectionName } from "@/src/lib/content";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";
@@ -33,6 +35,11 @@ export default async function ArticlePage({
     .slice(0, 3);
   const bodyHtml = renderArticleBodyHTML(article.body);
 
+  const allTags = article.tagSlugs.length > 0 ? await tagService.listAll() : [];
+  const articleTags = article.tagSlugs
+    .map((tagSlug) => allTags.find((t) => t.slug === tagSlug))
+    .filter((tag) => tag !== undefined);
+
   return (
     <>
       <PhotoPlaceholder
@@ -55,36 +62,38 @@ export default async function ArticlePage({
         </h1>
         <p className="mt-3 text-lg leading-7 text-text-secondary">{article.dek}</p>
 
-        <div className="mt-6 flex items-center gap-3 border-y border-border py-4">
+        <Link
+          href={`/author/${article.authorId}`}
+          className="group mt-6 flex items-center gap-3 border-y border-border py-4"
+        >
           <Avatar size="lg">
             <AvatarFallback className="bg-brand text-white">{article.authorInitials}</AvatarFallback>
           </Avatar>
           <div className="grow">
-            <p className="font-ui text-sm font-bold text-foreground">By {article.authorName}</p>
+            <p className="font-ui text-sm font-bold text-foreground group-hover:underline">
+              By {article.authorName}
+            </p>
             <span className="font-utility text-xs text-muted-foreground">
               {article.authorRole ? article.authorRole + " · " : ""}
               {formatDisplayDate(article.publishedAt)} · {formatReadTime(article.readTimeMinutes)}
             </span>
           </div>
-        </div>
+        </Link>
 
         <div
           className="prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground [&>blockquote]:font-display [&>blockquote]:border-l-4 [&>blockquote]:border-brand [&>blockquote]:py-1 [&>blockquote]:pl-5 [&>blockquote]:text-2xl [&>blockquote]:leading-8 [&>blockquote]:font-semibold [&>blockquote]:italic [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:pr-3 [&>p:first-of-type]:first-letter:pt-1 [&>p:first-of-type]:first-letter:font-display [&>p:first-of-type]:first-letter:text-6xl [&>p:first-of-type]:first-letter:leading-13 [&>p:first-of-type]:first-letter:font-extrabold [&>p:first-of-type]:first-letter:text-brand-strong"
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
 
-        <div className="mt-8 flex flex-wrap gap-2">
-          <Badge className="rounded-full bg-brand text-white">tuition</Badge>
-          <Badge className="rounded-full" variant="outline">
-            board of trustees
-          </Badge>
-          <Badge className="rounded-full" variant="outline">
-            SSC
-          </Badge>
-          <Badge className="rounded-full" variant="outline">
-            USC main
-          </Badge>
-        </div>
+        {articleTags.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-2">
+            {articleTags.map((tag) => (
+              <Badge key={tag.slug} className="rounded-full" variant="outline">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         <ShareRow />
       </div>

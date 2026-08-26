@@ -63,9 +63,9 @@ function toSection(info: SectionInfo): Section {
 
 export class InMemoryArticleRepository implements ArticleRepository {
   async listPublished(): Promise<Article[]> {
-    return ARTICLES.filter((article) => article.status === "Published").map(
-      toArticle,
-    );
+    return ARTICLES.filter((article) => article.status === "Published")
+      .map(toArticle)
+      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
@@ -96,6 +96,11 @@ export class InMemoryArticleRepository implements ArticleRepository {
           article.author.toLowerCase().includes(q) ||
           article.section.toLowerCase().includes(q)),
     ).map(toArticle); // filters ArticleRecord.author (pre-mapping), same value as the mapped Article.authorName
+  }
+
+  async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
+    const published = await this.listPublished();
+    return published.filter((article) => article.authorId === authorId);
   }
 
   async listAll(): Promise<Article[]> {

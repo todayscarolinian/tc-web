@@ -286,7 +286,7 @@ export function ArticleEditor({
     fetch("/api/users")
       .then((res) => res.json())
       .then((data) => {
-        setAuthors(data.users.items);
+        setAuthors(data.users);
       })
       .catch(() => {
         toast.error("Failed to load authors");

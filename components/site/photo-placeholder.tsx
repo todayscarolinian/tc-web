@@ -18,10 +18,11 @@ export function PhotoPlaceholder({
 }) {
   if (src) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element -- external Firebase Storage URL, no remotePatterns configured yet
       <img
         src={src}
-        alt={alt}
-        className={cn("w-full object-cover", className)}
+        alt={alt ?? ""}
+        className={cn("w-full bg-muted object-cover", className)}
         style={{ aspectRatio: ratio }}
       />
     );
