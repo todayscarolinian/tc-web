@@ -98,6 +98,28 @@ export class InMemoryArticleRepository implements ArticleRepository {
     ).map(toArticle); // filters ArticleRecord.author (pre-mapping), same value as the mapped Article.authorName
   }
 
+  async listPublishedBySection(
+    sectionSlug: string,
+    { limit, offset }: { limit: number; offset: number },
+  ): Promise<{ articles: Article[]; totalCount: number }> {
+    const inSection = ARTICLES.filter(
+      (article) =>
+        article.status === "Published" &&
+        (SECTIONS.find((s) => s.name === article.section)?.slug ?? "") ===
+          sectionSlug,
+    )
+      .map(toArticle)
+      .sort((a, b) => {
+        const byDate = (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0);
+        return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
+      });
+
+    return {
+      articles: inSection.slice(offset, offset + limit),
+      totalCount: inSection.length,
+    };
+  }
+
   async listAll(): Promise<Article[]> {
     return ARTICLES.map(toArticle);
   }
