@@ -13,3 +13,4 @@ export async function signOutFromHerald() {
     credentials: "include",
   });
 }
+

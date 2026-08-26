@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { articleService } from "@/src/infrastructure/article/article.composition";
 import type { ArticleInput } from "@/src/domain/article/article.entity";
 import { sessionService } from "@/src/infrastructure/auth/auth.composition";
+import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
 // Demonstrates exposing the same use-case an internal page uses, over HTTP,
 // for a future external/mobile/decoupled-frontend consumer.
 export async function GET() {
@@ -16,7 +17,21 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as ArticleInput;
-  const input = { ...body, authorId: session.userId };
+
+  const authorId = body.authorId;
+  if (!authorId) {
+    return NextResponse.json({ error: "authorId is required" }, { status: 400 });
+  }
+
+  const eligibleAuthors = await getEligibleHeraldUsers();
+  if (!isEligibleAuthor(authorId, eligibleAuthors)) {
+    return NextResponse.json(
+      { error: "authorId must be a staff member with TC Official Website access" },
+      { status: 400 },
+    );
+  }
+
+  const input: ArticleInput = { ...body, authorId };
 
   const article = await articleService.staff.save(input);
   return NextResponse.json({ article }, { status: 201 });

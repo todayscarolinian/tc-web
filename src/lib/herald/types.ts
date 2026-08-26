@@ -6,6 +6,8 @@ export type Domain =
 
 export const REQUIRED_DOMAIN: Domain = "TC Official Website";
 
+export type UUID = string
+
 export type HeraldUser = {
   id: string;
   email: string;
@@ -34,3 +36,27 @@ export type VerifySessionResponse = APIResponse<{
   session: HeraldSession;
   user: HeraldUser;
 }>;
+
+export interface UserProfile {
+  id: UUID
+  name: string
+  firstName: string
+  middleName?: string
+  lastName: string
+  email: string
+  positions: Position[]
+  emailVerified: boolean
+  disabled: boolean
+  profilePictureURL?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Position {
+  id: UUID
+  name: string
+  abbreviation: string
+  domains: Domain[]
+  createdAt: string
+  updatedAt: string
+}

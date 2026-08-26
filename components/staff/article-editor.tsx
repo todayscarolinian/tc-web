@@ -2,7 +2,7 @@
 
 import "@/src/lib/tiptap-styles.css";
 
-import react from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -36,6 +36,8 @@ import { StatusPill } from "@/components/staff/status-pill";
 import { TagInput } from "@/components/staff/tag-input";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
 
+import type { UserProfile } from "@/src/lib/herald/types";
+
 import type { Article } from "@/src/domain/article/article.entity";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 
@@ -43,17 +45,7 @@ import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 
 import { EditorToolbar } from "./editor-toolbar";
-
-const AUTHORS = [
-  { name: "Maria Santos", initials: "MS", position: "Editor-in-Chief" },
-  { name: "Noah Lim", initials: "NL", position: "Staff Writer" },
-  { name: "Liam Reyes", initials: "LR", position: "Staff Writer" },
-  { name: "Aisha Cruz", initials: "AC", position: "Sports Editor" },
-  { name: "Patricia Gallardo", initials: "PG", position: "Features Editor" },
-  { name: "Joshua Mendoza", initials: "JM", position: "Staff Writer" },
-  { name: "Reina Villanueva", initials: "RV", position: "Copy Editor" },
-  { name: "Editorial Board", initials: "EB", position: "Editorial Board" },
-];
+import { AuthorSelect } from "./author-select";
 
 const extensions = [
   StarterKit,
@@ -65,35 +57,42 @@ const extensions = [
   Figcaption,
 ];
 
-export function ArticleEditor({ article }: { article?: Article }) {
+export function ArticleEditor({
+  article,
+  currentUserId,
+}: {
+  article?: Article;
+  currentUserId: string | null;
+}) {
   const router = useRouter();
 
   // SIDEBAR STATES
-  const [title, setTitle] = react.useState(article?.title ?? "");
-  const [section, setSection] = react.useState<SectionName>(
+  const [title, setTitle] = useState(article?.title ?? "");
+  const [section, setSection] = useState<SectionName>(
     article ? getSectionName(article.sectionSlug) : "News",
   );
 
-  const [author, setAuthor] = react.useState(
-    AUTHORS.find((a) => a.name === article?.authorName) ?? AUTHORS[0],
+  const [authors, setAuthors] = useState<UserProfile[]>([]);
+  const [authorId, setAuthorId] = useState<string | null>(
+    article?.authorId ?? currentUserId,
   );
 
-  const [status, setStatus] = react.useState<ArticleStatus>(
+  const [status, setStatus] = useState<ArticleStatus>(
     article?.status ?? "Draft",
   );
-  const [dek, setDek] = react.useState(article?.dek ?? "");
+  const [dek, setDek] = useState(article?.dek ?? "");
 
-  const [tags, setTags] = react.useState<string[]>(article?.tagSlugs ?? []);
+  const [tags, setTags] = useState<string[]>(article?.tagSlugs ?? []);
 
-  const [hasCover, setHasCover] = react.useState(Boolean(article));
-  const [coverImageAlt, setCoverImageAlt] = react.useState(
+  const [hasCover, setHasCover] = useState(Boolean(article));
+  const [coverImageAlt, setCoverImageAlt] = useState(
     article?.coverImageAlt ?? "",
   );
-  const [publishAt, setPublishAt] = react.useState<Date | null>(
+  const [publishAt, setPublishAt] = useState<Date | null>(
     article?.publishAt ?? null,
   );
 
-  const [isSaving, setIsSaving] = react.useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedSection = SECTIONS.find((s) => s.name === section);
 
@@ -109,15 +108,20 @@ export function ArticleEditor({ article }: { article?: Article }) {
     setIsSaving(true);
 
     try {
+      const selectedAuthor = authors.find((a) => a.id === authorId);
+
       const body = JSON.stringify({
         sectionSlug: selectedSection?.slug ?? "",
         title,
         dek,
         body: editor.getJSON(),
         tagSlugs: tags,
-        authorName: author.name,
-        authorInitials: author.initials,
-        authorRole: author.position,
+        authorId: authorId,
+        authorName: selectedAuthor?.name ?? "",
+        authorInitials: selectedAuthor
+          ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
+          : "",
+        authorRole: selectedAuthor?.positions[0]?.name,
         publishAt,
         coverImageUrl: "",
         coverImageAssetId: "",
@@ -160,6 +164,7 @@ export function ArticleEditor({ article }: { article?: Article }) {
     setIsSaving(true);
 
     try {
+      await saveDraft();
       const response = await fetch(`/api/articles/${article.slug}/publish`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -180,6 +185,17 @@ export function ArticleEditor({ article }: { article?: Article }) {
       setIsSaving(false);
     }
   };
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        setAuthors(data.users.items);
+      })
+      .catch(() => {
+        toast.error("Failed to load authors");
+      });
+  }, [article]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -280,29 +296,15 @@ export function ArticleEditor({ article }: { article?: Article }) {
               </SelectContent>
             </Select>
           </div>
-
           <div className="flex flex-col gap-1.5">
             <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Author
             </span>
-            <Select
-              value={author.name}
-              onValueChange={(name) => {
-                const selected = AUTHORS.find((a) => a.name === name);
-                if (selected) setAuthor(selected);
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AUTHORS.map((a) => (
-                  <SelectItem key={a.name} value={a.name}>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AuthorSelect
+              authors={authors}
+              value={authorId}
+              onChange={setAuthorId}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
