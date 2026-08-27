@@ -57,6 +57,7 @@ that a type file structurally can't carry. If the two ever disagree, the
 | `authorName` | string | yes | display-name snapshot captured at publish time — deliberately not a live Herald lookup (see `authors` section below) |
 | `authorInitials` | string | yes | snapshot |
 | `authorRole` | string | no | snapshot |
+| `authorAvatarUrl` | string | no | Herald `profilePictureURL` snapshot, captured at save time — same rationale as `authorName`/`authorInitials`/`authorRole` above. See `authors/{authorId}` below for why this duplicates rather than joins against that collection's own `avatarUrl` |
 | `publishedAt` | Timestamp \| null | yes | `FieldValue.serverTimestamp()`, set once on first publish; null for Draft |
 | `publishAt` | Timestamp \| null | no | future scheduled publish time (S3-02) |
 | `readTimeMinutes` | number | yes | replaces the mock's free-text `read` (`"4 min read"` / `"3 min"` — inconsistent even today); derive the display string at render time |
@@ -127,15 +128,22 @@ Doc ID = Herald's `user.id`. **This collection is an explicit Herald
 identity cache, not the source of truth.** Herald owns real identity
 (`src/lib/herald/README.md`); this collection exists because:
 
-- The `/authors/[slug]` reader route needs a listable, queryable identity
+- The `/author/[slug]` reader route needs a listable, queryable identity
   record independent of any single article — [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)
   gives that route a 3600s ISR window, implying it's a real page, not a
   derived view over article snapshots.
 - A CMS author-picker (S2-04) shouldn't round-trip to Herald on every editor
   page load.
-- Avatar data belongs here rather than duplicated onto every article
-  snapshot (`bio` was considered for the same reason but cut for MVP — see
-  "Not carried forward" below).
+- ~~Avatar data belongs here rather than duplicated onto every article
+  snapshot~~ — **superseded.** `Article.authorAvatarUrl` denormalizes the
+  Herald `profilePictureURL` snapshot onto every article doc instead,
+  matching `authorName`/`authorInitials`/`authorRole`'s existing pattern
+  (see `articles/{slug}` above). This collection's own `avatarUrl` field
+  (below) still exists for the `/author/[slug]` route, which needs an
+  identity record independent of any single article — the two are separate,
+  intentionally duplicated snapshots serving different read paths, not one
+  feeding the other. (`bio` remains cut for MVP per "Not carried forward"
+  below — that reasoning is unaffected by this change.)
 
 Upsert strategy: **lazily upserted as a side effect of the publish
 flow**, piggybacking the same write that sets `Article.authorId`/`authorName`
@@ -146,7 +154,7 @@ MVP.
 |---|---|---|
 | `authorId` | string | yes (duplicates doc ID) |
 | `name` | string | yes |
-| `slug` | string | yes — Herald's `user.id` likely isn't URL-friendly; single-field index serves `/authors/[slug]` |
+| `slug` | string | yes — Herald's `user.id` likely isn't URL-friendly; single-field index serves `/author/[slug]` |
 | `initials` | string | yes |
 | `role` | string | no |
 | `avatarUrl` | string | no |
@@ -193,7 +201,7 @@ form of this table.
 | IDX2 | `articles` | `sectionSlug ASC, status ASC, publishedAt DESC` | S2-07 section-page pagination, S4-03 related-by-section |
 | IDX3 | `articles` | `tagSlugs ARRAY_CONTAINS, status ASC, publishedAt DESC` | S3-05 topic pages, S4-03 related-by-tag |
 | IDX4 | `articles` | `status ASC, updatedAt DESC` | staff article list filtered by status tab (S3-01) |
-| IDX5 | `articles` | `authorId ASC, status ASC, publishedAt DESC` | `/authors/[slug]` ([ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md) gives this route an ISR window, but no repository method exists yet — see "Known gaps" below) |
+| IDX5 | `articles` | `authorId ASC, status ASC, publishedAt DESC` | `/author/[slug]` ([ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md) gives this route an ISR window, but no repository method exists yet — see "Known gaps" below) |
 | IDX6 | `articles` | `featured ASC, status ASC, publishedAt DESC` | S4-05 banner — fallback only; prefer the config-doc approach below |
 | IDX7 | `articles` | `status ASC, publishAt ASC` | S3-02 scheduled-publish sweep |
 | IDX8 | `mediaAssets` | `folder ASC, uploadedAt DESC` | S3-03 browse-by-folder |
@@ -388,7 +396,7 @@ does that against real documents.
   Worth deciding at S1-02/S1-03 time whether that's an accepted exception
   (like the `Publication` singleton pattern in `docs/architecture.md`) or
   should go through the repository port — not decided in this pass.
-- **No repository method for `/authors/[slug]`** (`listPublishedByAuthor`)
+- **No repository method for `/author/[slug]`** (`listPublishedByAuthor`)
   despite [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)
   already giving that route a 3600s ISR window. Needs adding whenever
   `domain/author/` and that route are built out.

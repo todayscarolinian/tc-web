@@ -38,5 +38,5 @@ export async function getEligibleHeraldUsers(): Promise<UserProfile[]> {
   }
 
   const body = await res.json();
-  return body.data?.items ?? body.data ?? body.users ?? body;
+  return body.items ?? body.data ?? body.users ?? body;
 }

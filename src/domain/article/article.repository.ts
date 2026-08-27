@@ -19,6 +19,8 @@ export interface ArticleRepository {
     sectionSlug: string,
     opts: { limit: number; offset: number },
   ): Promise<{ articles: Article[]; totalCount: number }>;
+  /** Published articles by a given author, most recent first. */
+  findPublishedByAuthorId(authorId: string): Promise<Article[]>;
   /** All statuses. Staff-facing. */
   listAll(): Promise<Article[]>;
   listSections(): Promise<Section[]>;

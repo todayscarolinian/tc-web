@@ -44,6 +44,7 @@ function toArticle(record: ArticleRecord): Article {
     authorName: record.author,
     authorInitials: record.initials,
     authorRole: record.role,
+    authorAvatarUrl: record.avatarUrl,
     publishedAt,
     readTimeMinutes: parseInt(record.read, 10) || 0,
     // Every article currently shares one canned body; a real CMS/DB
@@ -63,9 +64,9 @@ function toSection(info: SectionInfo): Section {
 
 export class InMemoryArticleRepository implements ArticleRepository {
   async listPublished(): Promise<Article[]> {
-    return ARTICLES.filter((article) => article.status === "Published").map(
-      toArticle,
-    );
+    return ARTICLES.filter((article) => article.status === "Published")
+      .map(toArticle)
+      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
@@ -119,6 +120,11 @@ export class InMemoryArticleRepository implements ArticleRepository {
       totalCount: inSection.length,
     };
   }
+  
+  async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
+    const published = await this.listPublished();
+    return published.filter((article) => article.authorId === authorId);
+  }
 
   async listAll(): Promise<Article[]> {
     return ARTICLES.map(toArticle);
@@ -149,6 +155,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         read: doc.readTimeMinutes.toString(),
         author: doc.authorName,
         initials: doc.authorInitials,
+        avatarUrl: doc.authorAvatarUrl,
         status: "Published",
       });
     } else {
@@ -160,6 +167,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         read: doc.readTimeMinutes.toString(),
         author: doc.authorName,
         initials: doc.authorInitials,
+        avatarUrl: doc.authorAvatarUrl,
         status: "Published",
       };
     }

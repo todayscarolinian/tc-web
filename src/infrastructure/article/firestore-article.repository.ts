@@ -42,6 +42,7 @@ export class FirestoreArticleRepository implements ArticleRepository {
     const snap = await db
       .collection(ARTICLES_COLLECTION)
       .where("status", "==", "Published")
+      .orderBy("publishedAt", "desc")
       .get();
     return snap.docs.map(toDomainArticle);
   }
@@ -107,6 +108,16 @@ export class FirestoreArticleRepository implements ArticleRepository {
       .get();
 
     return { articles: snap.docs.map(toDomainArticle), totalCount };
+  }
+  
+  async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("authorId", "==", authorId)
+      .where("status", "==", "Published")
+      .orderBy("publishedAt", "desc")
+      .get();
+    return snap.docs.map(toDomainArticle);
   }
 
   async listAll(): Promise<Article[]> {

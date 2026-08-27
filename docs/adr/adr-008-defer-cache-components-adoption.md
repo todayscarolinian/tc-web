@@ -22,7 +22,7 @@ decision than a single cache call.
 
 [ADR-004](adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)
 already commits every reader route (`/`, `/[section]`, `/[section]/[slug]`,
-`/authors/[slug]`) to a specific ISR-window model built entirely on the
+`/author/[slug]`) to a specific ISR-window model built entirely on the
 *previous* caching system (`export const revalidate`, `revalidatePath()`).
 
 The project is not yet deployed — no production traffic depends on today's

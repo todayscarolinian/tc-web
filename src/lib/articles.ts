@@ -8,6 +8,7 @@ export type ArticleRecord = {
   author: string;
   initials: string;
   role?: string;
+  avatarUrl?: string;
   date: string;
   read: string;
   caption?: string;

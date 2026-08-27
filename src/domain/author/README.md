@@ -9,14 +9,14 @@ field list and rationale.
 
 **This is a Herald identity cache, not the source of truth.** Herald (TC's
 IdP/SSO, see `src/lib/herald/README.md`) owns real identity. This collection
-exists for the `/authors/[slug]` reader route, a CMS author-picker (S2-04),
+exists for the `/author/[slug]` reader route, a CMS author-picker (S2-04),
 and richer bio/avatar data than a per-article snapshot carries — not as
 something `Article.authorId`'s validity is checked against. Lazily upserted
 as a side effect of the publish flow (piggybacking the same write that sets
 `Article.authorId`/`authorName`), not proactively synced.
 
 **Future repository port** — `AuthorRepository`:
-- `findBySlug(slug: string): Promise<Author | null>` — for `/authors/[slug]`
+- `findBySlug(slug: string): Promise<Author | null>` — for `/author/[slug]`
 - `findById(authorId: string): Promise<Author | null>`
 - `upsertFromHeraldSession(user: HeraldUser): Promise<Author>` — the
   lazy-cache-write path, called from the same Server Action that publishes

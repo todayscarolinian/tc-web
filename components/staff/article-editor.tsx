@@ -219,6 +219,7 @@ export function ArticleEditor({
           ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
           : "",
         authorRole: selectedAuthor?.positions[0]?.name,
+        authorAvatarUrl: selectedAuthor?.profilePictureURL,
         publishAt,
         coverImageUrl,
         coverImageAlt,
@@ -286,7 +287,7 @@ export function ArticleEditor({
     fetch("/api/users")
       .then((res) => res.json())
       .then((data) => {
-        setAuthors(data.users.items);
+        setAuthors(data.users);
       })
       .catch(() => {
         toast.error("Failed to load authors");

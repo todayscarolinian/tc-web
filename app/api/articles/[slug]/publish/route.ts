@@ -20,6 +20,7 @@ export async function PUT(
     revalidatePath(`/article/${article.slug}`);
     revalidatePath(`/section/${article.sectionSlug}`);
     revalidatePath("/section/[section]/page/[page]", "page");
+    revalidatePath(`/author/${article.authorId}`);
     revalidatePath("/");
 
     return NextResponse.json({ article });
