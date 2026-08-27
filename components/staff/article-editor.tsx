@@ -199,57 +199,64 @@ export function ArticleEditor({
     setPreviewBlobUrl(null);
   };
 
+  const persistDraft = async (): Promise<string | null> => {
+    if (!editor) return null;
+
+    const selectedAuthor = authors.find((a) => a.id === authorId);
+
+    const body = JSON.stringify({
+      sectionSlug: selectedSection?.slug ?? "",
+      title,
+      dek,
+      body: editor.getJSON(),
+      tagSlugs: tags,
+      authorId: authorId,
+      authorName: selectedAuthor?.name ?? "",
+      authorInitials: selectedAuthor
+        ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
+        : "",
+      authorRole: selectedAuthor?.positions[0]?.name,
+      authorAvatarUrl: selectedAuthor?.profilePictureURL,
+      publishAt,
+      coverImageUrl,
+      coverImageAlt,
+    });
+
+    const currentSlug = article?.slug;
+    const url = currentSlug ? `/api/articles/${currentSlug}` : "/api/articles";
+    const method = currentSlug ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const message = errorData?.error ?? response.statusText;
+
+      toast.error(`Failed to save draft: ${message}`);
+      return null;
+    }
+
+    const { article: savedArticle } = await response.json();
+    toast.success("Article saved successfully!");
+
+    if (!currentSlug) {
+      router.push(`/staff/articles/${savedArticle.slug}`);
+      router.refresh();
+    }
+
+    return savedArticle.slug;
+  };
+
   const saveDraft = async () => {
     if (!editor || isSaving) return;
 
     setIsSaving(true);
-
     try {
-      const selectedAuthor = authors.find((a) => a.id === authorId);
-
-      const body = JSON.stringify({
-        sectionSlug: selectedSection?.slug ?? "",
-        title,
-        dek,
-        body: editor.getJSON(),
-        tagSlugs: tags,
-        authorId: authorId,
-        authorName: selectedAuthor?.name ?? "",
-        authorInitials: selectedAuthor
-          ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
-          : "",
-        authorRole: selectedAuthor?.positions[0]?.name,
-        authorAvatarUrl: selectedAuthor?.profilePictureURL,
-        publishAt,
-        coverImageUrl,
-        coverImageAlt,
-      });
-
-      const url = article?.slug
-        ? `/api/articles/${article.slug}`
-        : "/api/articles";
-      const method = article?.slug ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const message = errorData?.error ?? response.statusText;
-
-        toast.error(`Failed to save draft: ${message}`);
-        return;
-      }
-
-      const { article: savedArticle } = await response.json();
-      toast.success("Article saved successfully!");
-      if (!article?.slug) {
-        router.push(`/staff/articles/${savedArticle.slug}`);
-        router.refresh();
-      }
+      await persistDraft();
     } finally {
       setIsSaving(false);
     }
@@ -257,12 +264,13 @@ export function ArticleEditor({
 
   const publishDraft = async () => {
     if (!editor || isSaving) return;
-    if (!article?.slug) return;
     setIsSaving(true);
 
     try {
-      await saveDraft();
-      const response = await fetch(`/api/articles/${article.slug}/publish`, {
+      const slug = await persistDraft();
+      if (!slug) return;
+
+      const response = await fetch(`/api/articles/${slug}/publish`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
