@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans, Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/src/lib/utils";
-import { PUBLICATION } from "@/src/infrastructure/publication/publication.composition";
+import { PUBLICATION } from "@/src/entities/publication/infrastructure/publication.composition";
 import { Toaster } from "@/components/ui/sonner";
 const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-display" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-ui" });

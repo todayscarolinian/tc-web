@@ -1,4 +1,4 @@
-import type { Publication } from "@/src/domain/publication/publication.value-object";
+import type { Publication } from "@/src/entities/publication/core/publication.types";
 
 // No repository/adapter class — a static, non-user-editable singleton has
 // no swap-implementation seam to abstract. Pages import this constant
