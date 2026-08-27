@@ -14,7 +14,7 @@ import {
   ComboboxValue,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
-import type { Tag } from "@/src/domain/tag/tag.entity";
+import type { Tag } from "@/src/entities/tag/core/tag.domain";
 import { findOrCreateTagAction, getTagsAction } from "@/actions/tag.action";
 
 export function TagInput({

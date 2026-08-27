@@ -1,4 +1,4 @@
-# domain/tag
+# entities/tag
 
 Not yet implemented — folder scaffolded as a placeholder.
 
@@ -17,7 +17,7 @@ no separate `tagId` field; `slug` is the identity.
 `Article.tagSlugs: string[]` and `MediaAsset.tagSlugs: string[]` hold `tags`
 doc IDs (`Tag.slug` values), resolved against a cached read of the whole
 `tags` collection at render time rather than embedded as full `Tag` objects —
-see `domain/article/article.entity.ts` and `domain/media/media.entity.ts`.
+see `entities/article/core/article.domain.ts` and `entities/media/core/media.domain.ts`.
 Both collections share one `tags` collection and one cache. Firestore
 enforces no referential integrity here — every `tagSlugs` entry must
 reference a real `tags` doc, enforced at the repository-adapter layer
@@ -33,3 +33,10 @@ view, not a reflection of this decision either way.
 
 **Wraps** — nothing yet; no `tags` shape exists in mock data today (net new,
 per the sprint plan's S1-01 ticket).
+
+**Note (structural move):** despite the "not yet implemented" framing above
+(carried over verbatim from the original placeholder doc), this slice is
+actually implemented — see `core/`, `infrastructure/firestore-tag.repository.ts`,
+`usecase/`, `services/`. This README's content is stale and due for a rewrite;
+left as-is here since updating its content is outside the scope of this
+structural restructuring.

@@ -1,7 +1,7 @@
 "use server";
 
-import { tagService } from "@/src/infrastructure/tag/tag.composition";
-import type { Tag } from "@/src/domain/tag/tag.entity";
+import { tagService } from "@/src/entities/tag/services/tag.service.factory";
+import type { Tag } from "@/src/entities/tag/core/tag.domain";
 
 // Since we are just checking the name, its better to just check it only ; unless we do it for consistency check
 export async function findOrCreateTagAction(name: string): Promise<Tag> {

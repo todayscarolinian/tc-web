@@ -3,7 +3,7 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
-import { db } from "@/src/infrastructure/firebase/admin";
+import { db } from "@/src/lib/firebase/admin";
 import { getSectionName, SECTIONS, type SectionInfo } from "@/src/lib/content";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";

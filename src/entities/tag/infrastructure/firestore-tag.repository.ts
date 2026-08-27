@@ -3,11 +3,11 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
-import { db } from "@/src/infrastructure/firebase/admin";
-import type { TagRepository } from "@/src/domain/tag/tag.repository";
-import type { Tag } from "@/src/domain/tag/tag.entity";
+import { db } from "@/src/lib/firebase/admin";
+import type { TagRepository } from "@/src/entities/tag/core/tag.repository";
+import type { Tag } from "@/src/entities/tag/core/tag.domain";
 import slugify from "slugify";
-import { assertValidTag } from "@/src/domain/tag/tag.entity";
+import { assertValidTag } from "@/src/entities/tag/core/tag.domain";
 
 const TAGS_COLLECTION = "tags";
 

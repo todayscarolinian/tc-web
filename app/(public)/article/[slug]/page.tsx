@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { articleService } from "@/src/infrastructure/article/article.composition";
-import { tagService } from "@/src/infrastructure/tag/tag.composition";
+import { tagService } from "@/src/entities/tag/services/tag.service.factory";
 import { getSectionName } from "@/src/lib/content";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";

@@ -1,6 +1,6 @@
 import "server-only";
 import type { StoragePort } from "@/src/domain/media/storage.port";
-import { bucket } from "@/src/infrastructure/firebase/admin";
+import { bucket } from "@/src/lib/firebase/admin";
 
 const SIGNED_URL_TTL_MS = 15 * 60 * 1000;
 
