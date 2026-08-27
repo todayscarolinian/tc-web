@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { requireHeraldAccess, isAccessError, type AccessError } from "@/src/lib/herald/require-access";
-import { mediaStorageService } from "@/src/infrastructure/media/media.composition";
+import { mediaStorageService } from "@/src/entities/media/services/media.service.factory";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 
 type RequestMediaUploadUrlInput = {
