@@ -11,6 +11,7 @@ type Article = {
   authorName: string;
   authorInitials: string;
   authorRole?: string;
+  authorAvatarUrl?: string;
   publishedAt: Date | null;
   publishAt?: Date | null;
   readTimeMinutes: number;

@@ -22,6 +22,7 @@ export type Article = {
   authorName: string;
   authorInitials: string;
   authorRole?: string;
+  authorAvatarUrl?: string;
   // Null until first publish. Distinct from `publishAt` (a future
   // scheduled time, S3-02) — this is when the article actually went live.
   publishedAt: Date | null;
@@ -57,6 +58,7 @@ export type ArticleInput = {
   authorName: string;
   authorInitials: string;
   authorRole?: string;
+  authorAvatarUrl?: string;
   caption?: string;
   body: JSONContent;
   tagSlugs: string[];

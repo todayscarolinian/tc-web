@@ -41,7 +41,7 @@ Staff routes (`/staff/*`) will remain fully **dynamic (SSR)** — they are never
 | `/` (homepage) | 60 seconds | `publishArticle`, `updateArticle` |
 | `/[section]` | 300 seconds | `publishArticle` for that section |
 | `/[section]/[slug]` | 3600 seconds | `updateArticle` for that article |
-| `/authors/[slug]` | 3600 seconds | `publishArticle` for that author |
+| `/author/[slug]` | 3600 seconds | `publishArticle` for that author |
 | `/search` | No cache (SSR) | — |
 | `/staff/*` | No cache (SSR) | — |
 

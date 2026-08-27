@@ -44,7 +44,7 @@ We will use **Firestore** as the primary application database and **Firebase Sto
 | `/` (homepage) | 60s | `publishArticle`, `updateArticle` |
 | `/[section]` | 300s | `publishArticle` for that section |
 | `/[section]/[slug]` | 3600s | `updateArticle` for that article |
-| `/authors/[slug]` | 3600s | `publishArticle` for that author |
+| `/author/[slug]` | 3600s | `publishArticle` for that author |
 
 A Firestore read only happens when a page is *regenerated* — on the fallback window expiring, or on `revalidatePath()` firing after a publish/update — not on every pageview. An article that gets 100 reads in an hour costs Firestore roughly one read (the regeneration that served all 100), not 100. This means:
 
