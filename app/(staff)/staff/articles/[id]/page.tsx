@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArticleEditor } from "@/components/staff/article-editor";
 import { articleService } from "@/src/infrastructure/article/article.composition";
-import { sessionService } from "@/src/infrastructure/auth/auth.composition";
+import { sessionService } from "@/src/entities/auth/services/auth.service.factory";
 
 export async function generateStaticParams() {
   const articles = await articleService.staff.listAll();

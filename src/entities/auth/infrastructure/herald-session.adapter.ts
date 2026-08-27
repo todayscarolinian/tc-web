@@ -4,8 +4,8 @@ import {
   requireHeraldAccess,
   isAccessError,
 } from "@/src/lib/herald/require-access";
-import type { SessionPort } from "@/src/domain/auth/session.port";
-import type { StaffSession } from "@/src/domain/auth/staff-session.value-object";
+import type { SessionPort } from "@/src/entities/auth/core/session.port";
+import type { StaffSession } from "@/src/entities/auth/core/auth.types";
 
 export class HeraldSessionAdapter implements SessionPort {
   async getCurrentStaffSession(): Promise<StaffSession> {
