@@ -9,7 +9,7 @@ export type Author = {
   updatedAt: Date;
 };
 
-export function assertValidArticle(author: Author): Author {
+export function assertValidAuthor(author: Author): Author {
   if (!author.slug.trim()) throw new Error("Author.slug must not be empty");
   if (!author.name.trim()) throw new Error("Author.name must not be empty");
   return author;

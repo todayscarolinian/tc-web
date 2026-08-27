@@ -1,4 +1,4 @@
-# domain/author
+# entities/author
 
 Not yet implemented — folder scaffolded as a placeholder.
 
@@ -24,11 +24,16 @@ as a side effect of the publish flow (piggybacking the same write that sets
 
 **Relationship to `Article`** — `Article.authorId`/`authorName`/
 `authorInitials`/`authorRole` (added in this pass, see
-`domain/article/article.entity.ts`) are a byline **snapshot** captured at
-publish time, deliberately not a live join against this collection — see
+`entities/article/core/article.domain.ts`) are a byline **snapshot** captured
+at publish time, deliberately not a live join against this collection — see
 `src/lib/herald/README.md` §7 for why (ISR pages shouldn't have a runtime
 dependency on Herald to render already-published content).
 
 **Wraps** — nothing yet; `Article.author` is currently a flat string in both
 the domain type and `lib/articles.ts`'s mock data (net new split, per S1-01
 and the Herald README's already-decided design).
+
+**Note (structural move):** `assertValidArticle` was renamed to
+`assertValidAuthor` while relocating this file — a pre-existing copy-paste
+naming bug (it validated an `Author`, not an `Article`), fixed incidentally
+since the file was already being touched.
