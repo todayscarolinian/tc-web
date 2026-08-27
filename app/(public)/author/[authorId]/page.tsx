@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";

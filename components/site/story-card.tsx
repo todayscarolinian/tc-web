@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { Article } from "@/src/entities/article/core/article.domain";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";

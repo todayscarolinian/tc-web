@@ -6,8 +6,8 @@ import {
   TRENDING_SLUGS,
   type ArticleRecord,
 } from "@/src/lib/articles";
-import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
+import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
@@ -24,9 +24,9 @@ const SHARED_BODY: JSONContent = {
 const SHARED_BODY_TEXT = ARTICLE_BODY.join("\n\n");
 
 // Wraps the existing lib/articles.ts mock data — the mock data itself
-// stays in lib/, this file only adapts it to the domain shape. Swapping to
-// a real DB later means writing a new ArticleRepository implementation,
-// not touching this data. Fields the mock doesn't have yet (authorId,
+// stays in lib/, this file only adapts it to the domain shape. Test-only
+// fixture (no production adapter consumes this — the real adapter is
+// FirestoreArticleRepository). Fields the mock doesn't have yet (authorId,
 // timestamps, tags, cover image, etc.) are synthesized here as a mapping
 // shim — the real per-field mapping is S1-02's job once Firestore docs exist.
 function toArticle(record: ArticleRecord): Article {
@@ -118,7 +118,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
       totalCount: inSection.length,
     };
   }
-  
+
   async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
     const published = await this.listPublished();
     return published.filter((article) => article.authorId === authorId);

@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { InMemoryArticleRepository } from "@/src/infrastructure/article/in-memory-article.repository";
-import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import { listArticlesByAuthor } from "./list-articles-by-author.use-case";
+import { InMemoryArticleRepository } from "@/src/entities/article/__tests__/fixtures/in-memory-article.repository";
+import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
+import { createArticleService } from "@/src/entities/article/services/article.service";
 
-describe("listArticlesByAuthor", () => {
-  const repo = new InMemoryArticleRepository();
+describe("articleService.listByAuthor", () => {
+  const service = createArticleService(new InMemoryArticleRepository());
 
   it("resolves a known author to only their published articles", async () => {
-    const results = await listArticlesByAuthor(repo, "Aisha Cruz");
+    const results = await service.listByAuthor("Aisha Cruz");
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((a) => a.authorId === "Aisha Cruz")).toBe(true);
     expect(results.every((a) => a.status === "Published")).toBe(true);
   });
 
   it("resolves an unknown author to []", async () => {
-    expect(await listArticlesByAuthor(repo, "does-not-exist")).toEqual([]);
+    expect(await service.listByAuthor("does-not-exist")).toEqual([]);
   });
 
   it("resolves a blank authorId to [] without calling the repository", async () => {
@@ -32,6 +32,7 @@ describe("listArticlesByAuthor", () => {
       findSectionByName: () => { throw new Error("should not be called"); },
       saveArticle: () => { throw new Error("should not be called"); },
     };
-    expect(await listArticlesByAuthor(unreachableRepo, "   ")).toEqual([]);
+    const unreachableService = createArticleService(unreachableRepo);
+    expect(await unreachableService.listByAuthor("   ")).toEqual([]);
   });
 });

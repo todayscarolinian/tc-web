@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q") ?? "";

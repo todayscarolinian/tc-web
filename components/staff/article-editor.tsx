@@ -38,8 +38,8 @@ import { CoverDropzone } from "@/components/staff/cover-dropzone";
 
 import type { UserProfile } from "@/src/lib/herald/types";
 
-import type { Article } from "@/src/domain/article/article.entity";
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { Article } from "@/src/entities/article/core/article.domain";
+import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 
 import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import type { SectionName } from "@/src/entities/section/core/section.types";

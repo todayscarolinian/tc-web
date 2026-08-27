@@ -13,7 +13,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionDot } from "@/components/staff/section-dot";
 import { StatusPill } from "@/components/staff/status-pill";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { Article } from "@/src/entities/article/core/article.domain";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { formatDisplayDate } from "@/src/lib/article-format";
 import { cn } from "@/src/lib/utils";

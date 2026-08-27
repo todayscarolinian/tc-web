@@ -6,8 +6,8 @@ import {
 import { db } from "@/src/lib/firebase/admin";
 import { getSectionName, SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
-import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
+import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
@@ -107,7 +107,7 @@ export class FirestoreArticleRepository implements ArticleRepository {
 
     return { articles: snap.docs.map(toDomainArticle), totalCount };
   }
-  
+
   async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
     const snap = await db
       .collection(ARTICLES_COLLECTION)

@@ -18,7 +18,7 @@ import { getSectionName } from "@/src/entities/section/infrastructure/static-sec
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate } from "@/src/lib/article-format";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { Article } from "@/src/entities/article/core/article.domain";
 
 
 

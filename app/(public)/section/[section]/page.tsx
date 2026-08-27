@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";

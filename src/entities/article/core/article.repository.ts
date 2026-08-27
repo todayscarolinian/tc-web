@@ -1,8 +1,8 @@
-import type { Article } from "./article.entity";
+import type { Article } from "./article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
-// Port only — no implementation lives in domain/. All methods return
+// Port only — no implementation lives in core/. All methods return
 // Promises even though today's only adapter is synchronous in-memory data,
 // so a future DB-backed adapter is a drop-in swap with no call-site changes.
 export interface ArticleRepository {

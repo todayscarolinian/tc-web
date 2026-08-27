@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArticleEditor } from "@/components/staff/article-editor";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { sessionService } from "@/src/entities/auth/services/auth.service.factory";
 
 export async function generateStaticParams() {

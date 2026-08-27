@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { Newspaper } from "lucide-react";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { accentTextClass } from "@/src/lib/section-style";
 import { StoryCard } from "@/components/site/story-card";
 import { Pager } from "@/components/site/pager";

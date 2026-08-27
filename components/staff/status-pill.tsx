@@ -1,4 +1,4 @@
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 import { cn } from "@/src/lib/utils";
 
 const PILL_CLASS: Record<ArticleStatus, string> = {

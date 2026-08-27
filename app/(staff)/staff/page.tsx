@@ -10,7 +10,7 @@ import { SectionLegend } from "@/components/staff/section-legend";
 import { DashboardArticlesPanel } from "@/components/staff/dashboard-articles-panel";
 import { TopStoriesRail } from "@/components/staff/top-stories-rail";
 import { DASHBOARD_STATS, PAGEVIEWS_30D, TOP_STORIES } from "@/src/lib/staff-data";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 
 export default async function StaffDashboardPage() {
   const articles = await articleService.staff.listAll();

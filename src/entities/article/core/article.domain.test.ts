@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertValidArticle, type Article } from "./article.entity";
+import { assertValidArticle, type Article } from "./article.domain";
 
 function makeArticle(overrides: Partial<Article> = {}): Article {
   return {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
-import { articleService } from "@/src/infrastructure/article/article.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";

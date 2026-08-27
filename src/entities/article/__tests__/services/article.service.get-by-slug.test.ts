@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { InMemoryArticleRepository } from "@/src/infrastructure/article/in-memory-article.repository";
-import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import { getArticleBySlug } from "./get-article-by-slug.use-case";
+import { InMemoryArticleRepository } from "@/src/entities/article/__tests__/fixtures/in-memory-article.repository";
+import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
+import { createArticleService } from "@/src/entities/article/services/article.service";
 
 // Uses the real InMemoryArticleRepository — legitimate here since it and
 // lib/articles.ts have zero React/Next dependencies, so this is a genuine
 // unit test, not an integration test requiring Next's runtime.
-describe("getArticleBySlug", () => {
-  const repo = new InMemoryArticleRepository();
+describe("articleService.getBySlug", () => {
+  const service = createArticleService(new InMemoryArticleRepository());
 
   it("resolves a known slug to the matching article", async () => {
-    const article = await getArticleBySlug(repo, "tuition");
+    const article = await service.getBySlug("tuition");
     expect(article?.title).toBe(
       "USC board defers tuition adjustment after three-hour student hearing"
     );
   });
 
   it("resolves an unknown slug to null", async () => {
-    expect(await getArticleBySlug(repo, "does-not-exist")).toBeNull();
+    expect(await service.getBySlug("does-not-exist")).toBeNull();
   });
 
   it("resolves a draft article's slug to null — public reads must not see drafts", async () => {
-    expect(await getArticleBySlug(repo, "library-hours-opinion")).toBeNull();
+    expect(await service.getBySlug("library-hours-opinion")).toBeNull();
   });
 
   it("resolves an empty slug to null without calling the repository", async () => {
@@ -39,6 +39,7 @@ describe("getArticleBySlug", () => {
       findSectionByName: () => { throw new Error("should not be called"); },
       saveArticle: () => { throw new Error("should not be called"); },
     };
-    expect(await getArticleBySlug(unreachableRepo, "")).toBeNull();
+    const unreachableService = createArticleService(unreachableRepo);
+    expect(await unreachableService.getBySlug("")).toBeNull();
   });
 });
