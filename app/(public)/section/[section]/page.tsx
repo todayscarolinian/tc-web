@@ -27,9 +27,11 @@ export default async function SectionPage({
   const section = await articleService.findSectionBySlug(slug);
   if (!section) notFound();
 
-  const articles = await articleService.listPublished();
-  const inSection = articles.filter((a) => a.sectionSlug === section.slug);
-  const [lead, ...grid] = inSection;
+  const { articles, totalPages } = await articleService.listPublishedBySection(
+    section.slug,
+    1,
+  );
+  const [lead, ...grid] = articles;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -93,7 +95,7 @@ export default async function SectionPage({
                 ))}
               </div>
 
-              <Pager />
+              <Pager sectionSlug={section.slug} currentPage={1} totalPages={totalPages} />
             </>
           )}
         </>

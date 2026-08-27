@@ -91,6 +91,25 @@ export class FirestoreArticleRepository implements ArticleRepository {
     });
   }
 
+  async listPublishedBySection(
+    sectionSlug: string,
+    { limit, offset }: { limit: number; offset: number },
+  ): Promise<{ articles: Article[]; totalCount: number }> {
+    const base = db
+      .collection(ARTICLES_COLLECTION)
+      .where("sectionSlug", "==", sectionSlug)
+      .where("status", "==", "Published");
+
+    const totalCount = (await base.count().get()).data().count;
+    const snap = await base
+      .orderBy("publishedAt", "desc")
+      .offset(offset)
+      .limit(limit)
+      .get();
+
+    return { articles: snap.docs.map(toDomainArticle), totalCount };
+  }
+  
   async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
     const snap = await db
       .collection(ARTICLES_COLLECTION)

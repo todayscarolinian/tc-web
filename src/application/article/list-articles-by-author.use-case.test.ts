@@ -24,6 +24,7 @@ describe("listArticlesByAuthor", () => {
       findPublishedBySlug: () => { throw new Error("should not be called"); },
       listTrending: () => { throw new Error("should not be called"); },
       search: () => { throw new Error("should not be called"); },
+      listPublishedBySection: () => { throw new Error("should not be called"); },
       findPublishedByAuthorId: () => { throw new Error("should not be called"); },
       listAll: () => { throw new Error("should not be called"); },
       listSections: () => { throw new Error("should not be called"); },

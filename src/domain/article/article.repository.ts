@@ -14,6 +14,11 @@ export interface ArticleRepository {
   listTrending(limit?: number): Promise<Article[]>;
   /** Published articles only. */
   search(query: string): Promise<Article[]>;
+  /** Published articles in one section, newest first, offset-paginated. */
+  listPublishedBySection(
+    sectionSlug: string,
+    opts: { limit: number; offset: number },
+  ): Promise<{ articles: Article[]; totalCount: number }>;
   /** Published articles by a given author, most recent first. */
   findPublishedByAuthorId(authorId: string): Promise<Article[]>;
   /** All statuses. Staff-facing. */
