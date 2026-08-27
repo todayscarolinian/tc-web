@@ -1,5 +1,6 @@
 import type { Article } from "./article.entity";
-import type { Section, SectionName } from "./section.value-object";
+import type { Section } from "@/src/entities/section/core/section.domain";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 
 // Port only — no implementation lives in domain/. All methods return
 // Promises even though today's only adapter is synchronous in-memory data,

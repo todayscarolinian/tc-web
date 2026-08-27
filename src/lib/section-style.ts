@@ -6,7 +6,8 @@ import {
   FileText,
   type LucideIcon,
 } from "lucide-react";
-import { SECTIONS, type SectionInfo, type SectionName } from "@/src/lib/content";
+import { SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 import { cn } from "@/src/lib/utils";
 
 const ACCENT_TEXT_CLASS: Record<SectionInfo["accent"], string> = {

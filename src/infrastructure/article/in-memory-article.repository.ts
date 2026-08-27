@@ -1,5 +1,5 @@
 import type { JSONContent } from "@tiptap/core";
-import { SECTIONS, type SectionInfo } from "@/src/lib/content";
+import { SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
 import {
   ARTICLES,
   ARTICLE_BODY,
@@ -8,10 +8,8 @@ import {
 } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { Article } from "@/src/domain/article/article.entity";
-import type {
-  Section,
-  SectionName,
-} from "@/src/domain/article/section.value-object";
+import type { Section } from "@/src/entities/section/core/section.domain";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 
 // Every article currently shares this one canned body; a real per-article
 // body lives on the real doc once S1-02 lands. Wrapped as a single

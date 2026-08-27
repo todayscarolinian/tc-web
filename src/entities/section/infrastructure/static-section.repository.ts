@@ -1,26 +1,16 @@
-export type SectionName =
-  | "News"
-  | "Campus Life"
-  | "Sports"
-  | "Arts & Culture"
-  | "Opinion";
+import type { Section } from "@/src/entities/section/core/section.domain";
+import type { SectionName } from "@/src/entities/section/core/section.types";
+import type { SectionRepository } from "@/src/entities/section/core/section.repository";
 
-export type SectionInfo = {
-  name: SectionName;
-  slug: string;
-  blurb: string;
-  accent: "news" | "campus" | "sports" | "culture" | "opinion";
-};
+// Retained for callers that just want the plain array/lookup rather than
+// going through the SectionRepository port — mirrors the pre-move
+// lib/content.ts public surface (SECTIONS, getSectionName, SectionInfo) so
+// this move is a pure relocation, not a rename of what call sites consume.
+export type SectionInfo = Section;
 
 // The `name`<->`slug` mapping is a static, in-memory lookup over 5 fixed
 // entries — not a Firestore join — so Article stores only `sectionSlug` and
 // derives the display name here wherever it's needed. See firestore-schema.md.
-export function getSectionName(slug: string): SectionName {
-  const section = SECTIONS.find((s) => s.slug === slug);
-  if (!section) throw new Error(`Unknown section slug: ${slug}`);
-  return section.name;
-}
-
 export const SECTIONS: SectionInfo[] = [
   {
     name: "News",
@@ -57,3 +47,23 @@ export const SECTIONS: SectionInfo[] = [
     accent: "opinion",
   },
 ];
+
+export function getSectionName(slug: string): SectionName {
+  const section = SECTIONS.find((s) => s.slug === slug);
+  if (!section) throw new Error(`Unknown section slug: ${slug}`);
+  return section.name;
+}
+
+export class StaticSectionRepository implements SectionRepository {
+  async listAll(): Promise<Section[]> {
+    return SECTIONS;
+  }
+
+  async findBySlug(slug: string): Promise<Section | null> {
+    return SECTIONS.find((s) => s.slug === slug) ?? null;
+  }
+
+  async findByName(name: SectionName): Promise<Section | null> {
+    return SECTIONS.find((s) => s.name === name) ?? null;
+  }
+}

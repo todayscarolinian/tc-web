@@ -41,7 +41,8 @@ import type { UserProfile } from "@/src/lib/herald/types";
 import type { Article } from "@/src/domain/article/article.entity";
 import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
 
-import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
+import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 import { requestMediaUploadUrl, deleteMediaAsset } from "@/actions/media.actions";

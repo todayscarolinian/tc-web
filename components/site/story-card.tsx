@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Article } from "@/src/domain/article/article.entity";
-import { getSectionName } from "@/src/lib/content";
+import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";

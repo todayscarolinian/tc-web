@@ -1,5 +1,5 @@
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
-import type { SectionName } from "@/src/domain/article/section.value-object";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { ArticleInput } from "@/src/domain/article/article.entity";
 import { listPublishedArticles } from "@/src/application/article/list-published-articles.use-case";
 import { listPublishedArticlesBySection } from "@/src/application/article/list-published-articles-by-section.use-case";

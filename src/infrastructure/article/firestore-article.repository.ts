@@ -4,14 +4,12 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
 import { db } from "@/src/lib/firebase/admin";
-import { getSectionName, SECTIONS, type SectionInfo } from "@/src/lib/content";
+import { getSectionName, SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/domain/article/article.repository";
 import type { Article } from "@/src/domain/article/article.entity";
-import type {
-  Section,
-  SectionName,
-} from "@/src/domain/article/section.value-object";
+import type { Section } from "@/src/entities/section/core/section.domain";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 
 const ARTICLES_COLLECTION = "articles";
 

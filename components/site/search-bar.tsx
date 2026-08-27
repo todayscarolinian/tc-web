@@ -14,7 +14,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/site/empty-state";
-import { getSectionName } from "@/src/lib/content";
+import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate } from "@/src/lib/article-format";
 import { useDebouncedValue } from "@/hooks/use-debounce";

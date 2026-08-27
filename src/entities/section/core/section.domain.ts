@@ -1,5 +1,4 @@
-import { SectionName } from "./section.value-object";
-import { SectionAccent } from "./section.value-object";
+import type { SectionName, SectionAccent } from "./section.types";
 
 export type Section = {
   name: SectionName;
