@@ -154,7 +154,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         author: doc.authorName,
         initials: doc.authorInitials,
         avatarUrl: doc.authorAvatarUrl,
-        status: "Published",
+        status: doc.status,
       });
     } else {
       ARTICLES[index] = {
@@ -166,7 +166,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
         author: doc.authorName,
         initials: doc.authorInitials,
         avatarUrl: doc.authorAvatarUrl,
-        status: "Published",
+        status: doc.status,
       };
     }
     return doc;

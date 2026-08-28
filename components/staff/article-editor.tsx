@@ -12,11 +12,13 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
 
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
   Calendar,
   FileText,
   Trash2,
+  Undo2,
   Upload,
 } from "lucide-react";
 
@@ -254,7 +256,15 @@ export function ArticleEditor({
     }
   };
 
-  const publishDraft = async () => {
+  const STATUS_TRANSITION_LABEL: Record<"publish" | "unpublish" | "archive", string> = {
+    publish: "published",
+    unpublish: "unpublished",
+    archive: "archived",
+  };
+
+  const applyStatusTransition = async (
+    action: "publish" | "unpublish" | "archive",
+  ) => {
     if (!editor || isSaving) return;
     setIsSaving(true);
 
@@ -262,7 +272,7 @@ export function ArticleEditor({
       const slug = await persistDraft();
       if (!slug) return;
 
-      const response = await fetch(`/api/articles/${slug}/publish`, {
+      const response = await fetch(`/api/articles/${slug}/${action}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -271,17 +281,21 @@ export function ArticleEditor({
         const errorData = await response.json().catch(() => null);
         const message = errorData?.error ?? response.statusText;
 
-        toast.error(`Failed to publish article: ${message}`);
+        toast.error(`Failed to ${action} article: ${message}`);
         return;
       }
 
-      const publishedArticle = await response.json();
-      toast.success("Article published successfully!");
-      setStatus(publishedArticle.article.status);
+      const { article: updatedArticle } = await response.json();
+      toast.success(`Article ${STATUS_TRANSITION_LABEL[action]} successfully!`);
+      setStatus(updatedArticle.status);
     } finally {
       setIsSaving(false);
     }
   };
+
+  const publishDraft = () => applyStatusTransition("publish");
+  const unpublishDraft = () => applyStatusTransition("unpublish");
+  const archiveDraft = () => applyStatusTransition("archive");
 
   useEffect(() => {
     fetch("/api/users")
@@ -317,6 +331,16 @@ export function ArticleEditor({
           <span className="size-1.5 rounded-full bg-success" />
           Saved 2m ago {/*currently arbitrary */}
         </div>
+        {status !== "Archived" && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={archiveDraft}
+            disabled={isSaving}
+          >
+            <Archive /> Archive
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -326,17 +350,25 @@ export function ArticleEditor({
           <FileText />{" "}
           {isSaving
             ? "Saving…"
-            : status === "Published"
+            : status === "Published" || status === "Archived"
               ? "Save"
               : "Save draft"}
         </Button>
-        <Button
-          type="button"
-          onClick={publishDraft}
-          disabled={status === "Published" || isSaving}
-        >
-          Publish <ArrowRight />
-        </Button>
+        {status === "Published" && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={unpublishDraft}
+            disabled={isSaving}
+          >
+            <Undo2 /> Unpublish
+          </Button>
+        )}
+        {status !== "Published" && (
+          <Button type="button" onClick={publishDraft} disabled={isSaving}>
+            {status === "Archived" ? "Republish" : "Publish"} <ArrowRight />
+          </Button>
+        )}
       </div>
 
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">

@@ -46,7 +46,7 @@ function sortValue(article: Article, key: ArticleSortKey): string | number {
   }
 }
 
-const STATUS_OPTIONS: ("All" | ArticleStatus)[] = ["All", "Published", "Draft", "Scheduled"];
+const STATUS_OPTIONS: ("All" | ArticleStatus)[] = ["All", "Published", "Draft", "Scheduled", "Archived"];
 
 export function ArticlesView({ initialArticles }: { initialArticles: Article[] }) {
   const [articles, setArticles] = useState(initialArticles);

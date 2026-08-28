@@ -1,6 +1,12 @@
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
-import { createArticle, publishArticle, updateArticleContent } from "@/src/entities/article/core/article.factory";
+import {
+  archiveArticle,
+  createArticle,
+  publishArticle,
+  unpublishArticle,
+  updateArticleContent,
+} from "@/src/entities/article/core/article.factory";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { ArticleUseCase } from "@/src/entities/article/usecase/article.usecase";
 import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecase";
@@ -79,6 +85,24 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
         const published = publishArticle(article);
 
         return repo.saveArticle(published);
+      },
+
+      async unpublish(slug: string): Promise<Article> {
+        const article = await repo.findBySlug(slug);
+        if (!article) throw new Error(`Article not found: ${slug}`);
+
+        const unpublished = unpublishArticle(article);
+
+        return repo.saveArticle(unpublished);
+      },
+
+      async archive(slug: string): Promise<Article> {
+        const article = await repo.findBySlug(slug);
+        if (!article) throw new Error(`Article not found: ${slug}`);
+
+        const archived = archiveArticle(article);
+
+        return repo.saveArticle(archived);
       },
 
       async update(slug: string, doc: ArticleInput): Promise<Article> {
