@@ -108,6 +108,8 @@ export function ArticleEditor({
   const selectedSection = SECTIONS.find((s) => s.name === section);
   const displayCoverUrl = previewBlobUrl ?? coverImageUrl;
   const hasCover = Boolean(displayCoverUrl);
+  const hasPendingSchedule =
+    (status === "Draft" || status === "Scheduled") && publishAt !== null;
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   // Guards against two overlapping handleCoverFile calls racing (e.g. a
@@ -365,8 +367,17 @@ export function ArticleEditor({
           </Button>
         )}
         {status !== "Published" && (
-          <Button type="button" onClick={publishDraft} disabled={isSaving}>
-            {status === "Archived" ? "Republish" : "Publish"} <ArrowRight />
+          <Button
+            type="button"
+            onClick={hasPendingSchedule ? saveDraft : publishDraft}
+            disabled={isSaving}
+          >
+            {hasPendingSchedule
+              ? "Schedule Publish"
+              : status === "Archived"
+                ? "Republish"
+                : "Publish"}{" "}
+            <ArrowRight />
           </Button>
         )}
       </div>

@@ -124,6 +124,15 @@ export class InMemoryArticleRepository implements ArticleRepository {
     return published.filter((article) => article.authorId === authorId);
   }
 
+  async findDueForPublish(now: Date): Promise<Article[]> {
+    return ARTICLES.filter((article) => article.status === "Scheduled")
+      .map(toArticle)
+      .filter(
+        (article): article is Article & { publishAt: Date } =>
+          article.publishAt != null && article.publishAt.getTime() <= now.getTime(),
+      );
+  }
+
   async listAll(): Promise<Article[]> {
     return ARTICLES.map(toArticle);
   }
