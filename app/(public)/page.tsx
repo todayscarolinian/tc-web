@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
-import { articleService } from "@/src/infrastructure/article/article.composition";
-import { getSectionName } from "@/src/lib/content";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
@@ -17,9 +17,13 @@ export default async function HomePage() {
   const [lead, ...stories] = await articleService.listPublished();
   const trending = await articleService.listTrending(4);
 
-  const campusMix = stories.filter((s) =>
-    ["campus-life", "arts-culture", "sports", "opinion"].includes(s.sectionSlug)
-  ).slice(0, 4);
+  const campusMix = stories
+    .filter((s) =>
+      ["campus-life", "arts-culture", "sports", "opinion"].includes(
+        s.sectionSlug,
+      ),
+    )
+    .slice(0, 4);
 
   return (
     <>
@@ -31,16 +35,24 @@ export default async function HomePage() {
                 icon={sectionIcon(getSectionName(lead.sectionSlug))}
                 ratio="16 / 9"
                 iconSize={48}
+                src={lead.coverImageUrl}
+                alt={lead.coverImageAlt}
               />
               {lead.caption && (
-                <p className="font-utility mt-2 text-xs text-muted-foreground">{lead.caption}</p>
+                <p className="font-utility mt-2 text-xs text-muted-foreground">
+                  {lead.caption}
+                </p>
               )}
               <div className="mt-4">
-                <span className="tc-kicker text-brand">{getSectionName(lead.sectionSlug)}</span>
+                <span className="tc-kicker text-brand">
+                  {getSectionName(lead.sectionSlug)}
+                </span>
                 <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
                   {lead.title}
                 </h1>
-                <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">{lead.dek}</p>
+                <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">
+                  {lead.dek}
+                </p>
                 <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
                   By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
                   {formatReadTime(lead.readTimeMinutes)}
@@ -60,7 +72,9 @@ export default async function HomePage() {
               Most read
             </h2>
             {trending.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">Nothing trending yet.</p>
+              <p className="py-4 text-sm text-muted-foreground">
+                Nothing trending yet.
+              </p>
             ) : (
               <div className="flex flex-col">
                 {trending.map((t, i) => (
@@ -73,7 +87,12 @@ export default async function HomePage() {
                       {i + 1}
                     </span>
                     <div>
-                      <span className={kickerClassForSection(getSectionName(t.sectionSlug))} style={{ fontSize: 11 }}>
+                      <span
+                        className={kickerClassForSection(
+                          getSectionName(t.sectionSlug),
+                        )}
+                        style={{ fontSize: 11 }}
+                      >
                         {getSectionName(t.sectionSlug)}
                       </span>
                       <h4 className="font-display mt-1 text-sm leading-5 font-bold text-foreground group-hover:underline">
@@ -88,7 +107,9 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-12 flex items-center gap-4 border-b border-border pb-3">
-          <h2 className="font-display text-2xl font-bold text-foreground">Latest stories</h2>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Latest stories
+          </h2>
         </div>
         {stories.length === 0 ? (
           <EmptyState
@@ -105,7 +126,9 @@ export default async function HomePage() {
         )}
 
         <div className="mt-12 flex items-center gap-4 border-b border-border pb-3">
-          <h2 className="font-display text-2xl font-bold text-foreground">From Campus Life</h2>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            From Campus Life
+          </h2>
           <span className="grow" />
           <Link href="/section/campus-life">
             <Button variant="ghost" size="sm">

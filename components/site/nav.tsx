@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { SECTIONS } from "@/src/lib/content";
+import { SECTIONS } from "@/src/entities/section/infrastructure/static-section.repository";
 import { cn } from "@/src/lib/utils";
 import {
   Sheet,

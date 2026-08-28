@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticlesTable } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
-import type { Article } from "@/src/domain/article/article.entity";
+import type { ArticleStatus } from "@/src/entities/article/core/article.types";
+import type { Article } from "@/src/entities/article/core/article.domain";
 
 const FILTERS = ["All", "Published", "Draft", "Scheduled"] as const;
 type Filter = (typeof FILTERS)[number];

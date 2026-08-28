@@ -26,9 +26,9 @@ import {
 import { ArticlesTable, type ArticleSort, type ArticleSortKey } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
 import { PageHeader } from "@/components/staff/page-header";
-import { SECTIONS, getSectionName } from "@/src/lib/content";
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
-import type { Article } from "@/src/domain/article/article.entity";
+import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
+import type { ArticleStatus } from "@/src/entities/article/core/article.types";
+import type { Article } from "@/src/entities/article/core/article.domain";
 
 // ArticleSortKey's "author"/"date" don't map 1:1 onto Article's field names
 // (authorName/publishedAt) — this resolves a sortable value for each key

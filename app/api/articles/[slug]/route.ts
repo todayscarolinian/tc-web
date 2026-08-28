@@ -1,10 +1,10 @@
 // app/api/articles/[slug]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { articleService } from "@/src/infrastructure/article/article.composition";
-import { sessionService } from "@/src/infrastructure/auth/auth.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { sessionService } from "@/src/entities/auth/services/auth.service.factory";
 import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
-import type { ArticleInput } from "@/src/domain/article/article.entity";
+import type { ArticleInput } from "@/src/entities/article/core/article.domain";
 
 export async function PUT(
   request: NextRequest,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { articleService } from "@/src/infrastructure/article/article.composition";
-import type { ArticleInput } from "@/src/domain/article/article.entity";
-import { sessionService } from "@/src/infrastructure/auth/auth.composition";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
+import type { ArticleInput } from "@/src/entities/article/core/article.domain";
+import { sessionService } from "@/src/entities/auth/services/auth.service.factory";
 import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
 // Demonstrates exposing the same use-case an internal page uses, over HTTP,
 // for a future external/mobile/decoupled-frontend consumer.

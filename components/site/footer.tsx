@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SECTIONS } from "@/src/lib/content";
-import { PUBLICATION } from "@/src/infrastructure/publication/publication.composition";
+import { SECTIONS } from "@/src/entities/section/infrastructure/static-section.repository";
+import { PUBLICATION } from "@/src/entities/publication/infrastructure/publication.composition";
 
 const PAPER_LINKS = [
   {

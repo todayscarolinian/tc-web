@@ -1,4 +1,5 @@
-import { SECTIONS, type SectionName } from "@/src/lib/content";
+import { SECTIONS } from "@/src/entities/section/infrastructure/static-section.repository";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 import { accentBgClass } from "@/src/lib/section-style";
 import { cn } from "@/src/lib/utils";
 

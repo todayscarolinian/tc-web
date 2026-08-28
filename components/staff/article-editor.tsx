@@ -38,13 +38,14 @@ import { CoverDropzone } from "@/components/staff/cover-dropzone";
 
 import type { UserProfile } from "@/src/lib/herald/types";
 
-import type { Article } from "@/src/domain/article/article.entity";
-import type { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import type { Article } from "@/src/entities/article/core/article.domain";
+import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 
-import { SECTIONS, getSectionName, type SectionName } from "@/src/lib/content";
+import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
-import { requestMediaUploadUrl, deleteMediaAsset } from "@/actions/media.actions";
+import { deleteMediaAsset } from "@/src/entities/media/actions/media.actions";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { AuthorSelect } from "./author-select";
@@ -133,7 +134,7 @@ export function ArticleEditor({
       return;
     }
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error("File exceeds the 10MB upload limit.");
+      toast.error("File exceeds the 2MB upload limit.");
       return;
     }
 
@@ -147,34 +148,25 @@ export function ArticleEditor({
     setIsUploadingCover(true);
 
     try {
-      const result = await requestMediaUploadUrl({
-        fileName: file.name, 
-        contentType: file.type,
-        sizeBytes: file.size,
-        folder: "Covers",
-      });
-      if (coverUploadIdRef.current !== uploadId) return;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "Covers");
 
-      if ("error" in result) {
-        toast.error(result.message);
-        setPreviewBlobUrl(null);
-        return;
-      }
-
-      const response = await fetch(result.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+      const response = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
       });
       if (coverUploadIdRef.current !== uploadId) return;
 
       if (!response.ok) {
-        toast.error("Failed to upload cover image.");
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message ?? "Failed to upload cover image.");
         setPreviewBlobUrl(null);
         return;
       }
 
-      setCoverImageUrl(result.publicUrl);
+      const { publicUrl } = await response.json();
+      setCoverImageUrl(publicUrl);
       setPreviewBlobUrl(null);
       // Best-effort cleanup of the file this one replaced — a unique path
       // per upload, so it's never shared with another article.
@@ -199,57 +191,64 @@ export function ArticleEditor({
     setPreviewBlobUrl(null);
   };
 
+  const persistDraft = async (): Promise<string | null> => {
+    if (!editor) return null;
+
+    const selectedAuthor = authors.find((a) => a.id === authorId);
+
+    const body = JSON.stringify({
+      sectionSlug: selectedSection?.slug ?? "",
+      title,
+      dek,
+      body: editor.getJSON(),
+      tagSlugs: tags,
+      authorId: authorId,
+      authorName: selectedAuthor?.name ?? "",
+      authorInitials: selectedAuthor
+        ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
+        : "",
+      authorRole: selectedAuthor?.positions[0]?.name,
+      authorAvatarUrl: selectedAuthor?.profilePictureURL,
+      publishAt,
+      coverImageUrl,
+      coverImageAlt,
+    });
+
+    const currentSlug = article?.slug;
+    const url = currentSlug ? `/api/articles/${currentSlug}` : "/api/articles";
+    const method = currentSlug ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      const message = errorData?.error ?? response.statusText;
+
+      toast.error(`Failed to save draft: ${message}`);
+      return null;
+    }
+
+    const { article: savedArticle } = await response.json();
+    toast.success("Article saved successfully!");
+
+    if (!currentSlug) {
+      router.push(`/staff/articles/${savedArticle.slug}`);
+      router.refresh();
+    }
+
+    return savedArticle.slug;
+  };
+
   const saveDraft = async () => {
     if (!editor || isSaving) return;
 
     setIsSaving(true);
-
     try {
-      const selectedAuthor = authors.find((a) => a.id === authorId);
-
-      const body = JSON.stringify({
-        sectionSlug: selectedSection?.slug ?? "",
-        title,
-        dek,
-        body: editor.getJSON(),
-        tagSlugs: tags,
-        authorId: authorId,
-        authorName: selectedAuthor?.name ?? "",
-        authorInitials: selectedAuthor
-          ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
-          : "",
-        authorRole: selectedAuthor?.positions[0]?.name,
-        authorAvatarUrl: selectedAuthor?.profilePictureURL,
-        publishAt,
-        coverImageUrl,
-        coverImageAlt,
-      });
-
-      const url = article?.slug
-        ? `/api/articles/${article.slug}`
-        : "/api/articles";
-      const method = article?.slug ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const message = errorData?.error ?? response.statusText;
-
-        toast.error(`Failed to save draft: ${message}`);
-        return;
-      }
-
-      const { article: savedArticle } = await response.json();
-      toast.success("Article saved successfully!");
-      if (!article?.slug) {
-        router.push(`/staff/articles/${savedArticle.slug}`);
-        router.refresh();
-      }
+      await persistDraft();
     } finally {
       setIsSaving(false);
     }
@@ -257,12 +256,13 @@ export function ArticleEditor({
 
   const publishDraft = async () => {
     if (!editor || isSaving) return;
-    if (!article?.slug) return;
     setIsSaving(true);
 
     try {
-      await saveDraft();
-      const response = await fetch(`/api/articles/${article.slug}/publish`, {
+      const slug = await persistDraft();
+      if (!slug) return;
+
+      const response = await fetch(`/api/articles/${slug}/publish`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });

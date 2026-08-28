@@ -15,7 +15,7 @@ import {
   UserSquare,
   type LucideIcon,
 } from "lucide-react";
-import type { SectionName } from "@/src/lib/content";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 
 export const CURRENT_STAFF_USER = {
   name: "Maria Santos",
