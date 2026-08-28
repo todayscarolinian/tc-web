@@ -45,7 +45,7 @@ import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
-import { requestMediaUploadUrl, deleteMediaAsset } from "@/actions/media.actions";
+import { deleteMediaAsset } from "@/src/entities/media/actions/media.actions";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { AuthorSelect } from "./author-select";
@@ -134,7 +134,7 @@ export function ArticleEditor({
       return;
     }
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error("File exceeds the 10MB upload limit.");
+      toast.error("File exceeds the 2MB upload limit.");
       return;
     }
 
@@ -148,34 +148,25 @@ export function ArticleEditor({
     setIsUploadingCover(true);
 
     try {
-      const result = await requestMediaUploadUrl({
-        fileName: file.name, 
-        contentType: file.type,
-        sizeBytes: file.size,
-        folder: "Covers",
-      });
-      if (coverUploadIdRef.current !== uploadId) return;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "Covers");
 
-      if ("error" in result) {
-        toast.error(result.message);
-        setPreviewBlobUrl(null);
-        return;
-      }
-
-      const response = await fetch(result.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+      const response = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
       });
       if (coverUploadIdRef.current !== uploadId) return;
 
       if (!response.ok) {
-        toast.error("Failed to upload cover image.");
+        const errorData = await response.json().catch(() => null);
+        toast.error(errorData?.message ?? "Failed to upload cover image.");
         setPreviewBlobUrl(null);
         return;
       }
 
-      setCoverImageUrl(result.publicUrl);
+      const { publicUrl } = await response.json();
+      setCoverImageUrl(publicUrl);
       setPreviewBlobUrl(null);
       // Best-effort cleanup of the file this one replaced — a unique path
       // per upload, so it's never shared with another article.

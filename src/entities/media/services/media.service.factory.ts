@@ -6,7 +6,7 @@ import { FirebaseStorageAdapter } from "@/src/entities/media/infrastructure/fire
 const storagePort: StoragePort = new FirebaseStorageAdapter();
 
 export const mediaStorageService = {
-  createSignedUploadUrl: (params: { storagePath: string; contentType: string }) =>
-    storagePort.createSignedUploadUrl(params),
+  upload: (params: { storagePath: string; contentType: string; data: Buffer }) =>
+    storagePort.upload(params),
   delete: (params: { storagePath: string }) => storagePort.delete(params),
 };

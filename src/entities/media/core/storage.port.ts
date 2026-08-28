@@ -1,13 +1,14 @@
 export interface StoragePort {
   /**
-   * Issues a short-lived signed URL a client can PUT a file to directly.
-   * Callers are responsible for gating who may call this — this port has
-   * no concept of staff/auth, see actions/media.actions.ts.
+   * Writes a file's bytes and returns its public URL. Callers are
+   * responsible for gating who may call this — this port has no concept
+   * of staff/auth, see app/api/media/upload/route.ts.
    */
-  createSignedUploadUrl(params: {
+  upload(params: {
     storagePath: string;
     contentType: string;
-  }): Promise<{ uploadUrl: string; publicUrl: string }>;
+    data: Buffer;
+  }): Promise<{ publicUrl: string }>;
 
   /**
    * Deletes an object. Silently no-ops if it's already gone — callers use
