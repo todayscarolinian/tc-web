@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/core";
-import { ArticleStatus } from "@/src/domain/article/article-status.value-object";
+import { ArticleStatus } from "@/src/entities/article/core/article.types";
 
 type Article = {
   slug: string;
@@ -11,6 +11,7 @@ type Article = {
   authorName: string;
   authorInitials: string;
   authorRole?: string;
+  authorAvatarUrl?: string;
   publishedAt: Date | null;
   publishAt?: Date | null;
   readTimeMinutes: number;

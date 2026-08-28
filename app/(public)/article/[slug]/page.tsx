@@ -1,13 +1,15 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { articleService } from "@/src/infrastructure/article/article.composition";
-import { getSectionName } from "@/src/lib/content";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { tagService } from "@/src/entities/tag/services/tag.service.factory";
+import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { ShareRow } from "@/components/site/share-row";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
@@ -16,9 +18,7 @@ export async function generateStaticParams() {
   return articles.map((a) => ({ slug: a.slug }));
 }
 
-// The story list is exhaustively known at build time — an unlisted slug
-// is a genuine 404, not a candidate for on-demand rendering.
-export const dynamicParams = false;
+export const revalidate = 3600;
 
 export default async function ArticlePage({
   params,
@@ -35,9 +35,20 @@ export default async function ArticlePage({
     .slice(0, 3);
   const bodyHtml = renderArticleBodyHTML(article.body);
 
+  const allTags = article.tagSlugs.length > 0 ? await tagService.listAll() : [];
+  const articleTags = article.tagSlugs
+    .map((tagSlug) => allTags.find((t) => t.slug === tagSlug))
+    .filter((tag) => tag !== undefined);
+
   return (
     <>
-      <PhotoPlaceholder icon={sectionIcon(getSectionName(article.sectionSlug))} ratio="21 / 9" iconSize={56} />
+      <PhotoPlaceholder
+        icon={sectionIcon(getSectionName(article.sectionSlug))}
+        ratio="21 / 9"
+        iconSize={56}
+        src={article.coverImageUrl}
+        alt={article.coverImageAlt}
+      />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         {article.caption && (
           <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{article.caption}</p>
@@ -51,36 +62,39 @@ export default async function ArticlePage({
         </h1>
         <p className="mt-3 text-lg leading-7 text-text-secondary">{article.dek}</p>
 
-        <div className="mt-6 flex items-center gap-3 border-y border-border py-4">
+        <Link
+          href={`/author/${article.authorId}`}
+          className="group mt-6 flex items-center gap-3 border-y border-border py-4"
+        >
           <Avatar size="lg">
+            <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
             <AvatarFallback className="bg-brand text-white">{article.authorInitials}</AvatarFallback>
           </Avatar>
           <div className="grow">
-            <p className="font-ui text-sm font-bold text-foreground">By {article.authorName}</p>
+            <p className="font-ui text-sm font-bold text-foreground group-hover:underline">
+              By {article.authorName}
+            </p>
             <span className="font-utility text-xs text-muted-foreground">
               {article.authorRole ? article.authorRole + " · " : ""}
               {formatDisplayDate(article.publishedAt)} · {formatReadTime(article.readTimeMinutes)}
             </span>
           </div>
-        </div>
+        </Link>
 
         <div
           className="prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground [&>blockquote]:font-display [&>blockquote]:border-l-4 [&>blockquote]:border-brand [&>blockquote]:py-1 [&>blockquote]:pl-5 [&>blockquote]:text-2xl [&>blockquote]:leading-8 [&>blockquote]:font-semibold [&>blockquote]:italic [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:pr-3 [&>p:first-of-type]:first-letter:pt-1 [&>p:first-of-type]:first-letter:font-display [&>p:first-of-type]:first-letter:text-6xl [&>p:first-of-type]:first-letter:leading-13 [&>p:first-of-type]:first-letter:font-extrabold [&>p:first-of-type]:first-letter:text-brand-strong"
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
 
-        <div className="mt-8 flex flex-wrap gap-2">
-          <Badge className="rounded-full bg-brand text-white">tuition</Badge>
-          <Badge className="rounded-full" variant="outline">
-            board of trustees
-          </Badge>
-          <Badge className="rounded-full" variant="outline">
-            SSC
-          </Badge>
-          <Badge className="rounded-full" variant="outline">
-            USC main
-          </Badge>
-        </div>
+        {articleTags.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-2">
+            {articleTags.map((tag) => (
+              <Badge key={tag.slug} className="rounded-full" variant="outline">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         <ShareRow />
       </div>

@@ -1,4 +1,4 @@
-import type { SectionName } from "./content";
+import type { SectionName } from "@/src/entities/section/core/section.types";
 
 export type ArticleRecord = {
   slug: string;
@@ -8,6 +8,7 @@ export type ArticleRecord = {
   author: string;
   initials: string;
   role?: string;
+  avatarUrl?: string;
   date: string;
   read: string;
   caption?: string;

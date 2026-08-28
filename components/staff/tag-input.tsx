@@ -1,55 +1,132 @@
 "use client";
 
-import { useState } from "react";
-import { X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useMemo, useState, Fragment } from "react";
+import { toast } from "sonner";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/components/ui/combobox";
+import type { Tag } from "@/src/entities/tag/core/tag.domain";
+import { findOrCreateTagAction, getTagsAction } from "@/src/entities/tag/actions/tag.action";
 
 export function TagInput({
-  tags,
-  onChange,
+  tags,      
+  onChange,  
 }: {
   tags: string[];
   onChange: (tags: string[]) => void;
 }) {
-  const [draft, setDraft] = useState("");
+  const anchor = useComboboxAnchor();
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
-  function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && draft.trim()) {
-      e.preventDefault();
-      const next = draft.trim().toLowerCase();
-      if (!tags.includes(next)) onChange([...tags, next]);
-      setDraft("");
-    } else if (e.key === "Backspace" && !draft && tags.length > 0) {
-      onChange(tags.slice(0, -1));
+  const selectedTags = useMemo(
+    () => allTags.filter((t) => tags.includes(t.slug)),
+    [allTags, tags]
+  );
+
+  // options shown = filtered by what's typed, capped to first 5 per your spec
+  const visibleOptions = useMemo(() => {
+    const q = inputValue.trim().toLowerCase();
+    const filtered = q
+      ? allTags.filter((t) => t.name.toLowerCase().includes(q))
+      : allTags;
+    return filtered.slice(0, 5);
+  }, [allTags, inputValue]);
+
+  const exactMatch = allTags.some(
+    (t) => t.name.toLowerCase() === inputValue.trim().toLowerCase()
+  );
+  const showCreateOption = inputValue.trim().length > 0 && !exactMatch;
+
+  function toggleTag(tag: Tag) {
+    const exists = tags.includes(tag.slug);
+    onChange(exists ? tags.filter((s) => s !== tag.slug) : [...tags, tag.slug]);
+  }
+
+  async function handleCreate() {
+    const name = inputValue.trim();
+    if (!name || creating) return;
+    setCreating(true);
+    try {
+      const tag = await findOrCreateTagAction(name);
+      setAllTags((prev) =>
+        prev.some((t) => t.slug === tag.slug) ? prev : [...prev, tag]
+      );
+      onChange(tags.includes(tag.slug) ? tags : [...tags, tag.slug]);
+      setInputValue("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create tag";
+      toast.error(message);
+    } finally {
+      setCreating(false);
     }
   }
 
-  function removeTag(tag: string) {
-    onChange(tags.filter((t) => t !== tag));
-  }
+  useEffect(() => {
+    getTagsAction()
+      .then(setAllTags)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <div className="flex min-h-11 flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-2 py-1.5">
-      {tags.map((tag) => (
-        <Badge key={tag} variant="secondary" className="gap-1 rounded-xs pr-1">
-          {tag}
+    <Combobox
+      multiple
+      autoHighlight
+      items={visibleOptions}
+      value={selectedTags}
+      onValueChange={(newSelected: Tag[]) =>
+        onChange(newSelected.map((t) => t.slug))  // translate back to slugs on the way out
+      }
+      inputValue={inputValue}
+      onInputValueChange={setInputValue}
+    >
+      <ComboboxChips ref={anchor} className="w-full max-w-xs">
+        <ComboboxValue>
+          {(values: Tag[]) => (
+            <Fragment>
+              {values.map((tag) => (
+                <ComboboxChip key={tag.slug} className="bg-destructive text-white rounded-full">
+                  {tag.name}
+                </ComboboxChip>
+              ))}
+              <ComboboxChipsInput />
+            </Fragment>
+          )}
+        </ComboboxValue>
+      </ComboboxChips>
+      <ComboboxContent anchor={anchor}>
+        <ComboboxEmpty>
+          {loading ? "Loading tags…" : "No tags found."}
+        </ComboboxEmpty>
+        <ComboboxList>
+          {(item: Tag) => (
+            <ComboboxItem key={item.slug} value={item} onClick={() => toggleTag(item)}>
+              {item.name}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+        {showCreateOption && (
           <button
             type="button"
-            onClick={() => removeTag(tag)}
-            aria-label={`Remove ${tag}`}
-            className="rounded-full hover:bg-foreground/10"
+            onClick={handleCreate}
+            disabled={creating}
+            className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left text-sm font-medium text-brand hover:bg-brand/10 rounded-sm transition-colors"
           >
-            <X size={11} />
+            {creating ? "Creating…" : `Create tag "${inputValue.trim()}"`}
           </button>
-        </Badge>
-      ))}
-      <input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={addTag}
-        placeholder={tags.length === 0 ? "Add tag…" : ""}
-        className="min-w-20 flex-1 border-0 bg-transparent py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground"
-      />
-    </div>
+        )}
+      </ComboboxContent>
+    </Combobox>
   );
 }

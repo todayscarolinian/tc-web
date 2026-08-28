@@ -34,7 +34,10 @@ export function SettingsView() {
         actions={
           <>
             {saved && (
-              <Badge variant="secondary" className="bg-success/15 text-success-strong">
+              <Badge
+                variant="secondary"
+                className="bg-success/15 text-success-strong"
+              >
                 <CheckCircle2 /> Saved
               </Badge>
             )}
@@ -61,7 +64,12 @@ export function SettingsView() {
                 <Button type="button" size="sm" variant="outline">
                   <Upload /> Upload photo
                 </Button>
-                <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                >
                   Remove
                 </Button>
               </div>
@@ -70,11 +78,20 @@ export function SettingsView() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="settings-name">Full name</Label>
-                <Input id="settings-name" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input
+                  id="settings-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="settings-email">Email</Label>
-                <Input id="settings-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="settings-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
 
@@ -82,8 +99,12 @@ export function SettingsView() {
               <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
                 Role
               </span>
-              <Badge className="bg-brand text-primary-foreground">{CURRENT_STAFF_USER.role}</Badge>
-              <span className="text-xs text-muted-foreground">Contact an administrator to change your role.</span>
+              <Badge className="bg-brand text-primary-foreground">
+                {CURRENT_STAFF_USER.role}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                Contact an administrator to change your role.
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -105,10 +126,17 @@ export function SettingsView() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="settings-new-pw">New password</Label>
-                <Input id="settings-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} />
+                <Input
+                  id="settings-new-pw"
+                  type="password"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="settings-confirm-pw">Confirm new password</Label>
+                <Label htmlFor="settings-confirm-pw">
+                  Confirm new password
+                </Label>
                 <Input
                   id="settings-confirm-pw"
                   type="password"

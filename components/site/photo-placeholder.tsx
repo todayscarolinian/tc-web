@@ -6,12 +6,28 @@ export function PhotoPlaceholder({
   ratio = "3 / 2",
   className,
   iconSize = 36,
+  src,
+  alt = "",
 }: {
   icon?: LucideIcon;
   ratio?: string;
   className?: string;
   iconSize?: number;
+  src?: string;
+  alt?: string;
 }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- external Firebase Storage URL, no remotePatterns configured yet
+      <img
+        src={src}
+        alt={alt ?? ""}
+        className={cn("w-full bg-muted object-cover", className)}
+        style={{ aspectRatio: ratio }}
+      />
+    );
+  }
+
   return (
     <div
       className={cn(

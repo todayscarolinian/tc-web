@@ -1,4 +1,4 @@
-import { SECTIONS } from "@/src/lib/content";
+import { SECTIONS } from "@/src/entities/section/infrastructure/static-section.repository";
 import { accentBgClass } from "@/src/lib/section-style";
 
 export function SectionLegend() {

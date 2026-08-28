@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { sessionService } from "@/src/entities/auth/services/auth.service.factory";
+
+export async function PUT(
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  const session = await sessionService.getCurrentStaffSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { slug } = await params;
+
+  try {
+    const article = await articleService.staff.publish(slug);
+
+    revalidatePath(`/article/${article.slug}`);
+    revalidatePath(`/section/${article.sectionSlug}`);
+    revalidatePath("/section/[section]/page/[page]", "page");
+    revalidatePath(`/author/${article.authorId}`);
+    revalidatePath("/");
+
+    return NextResponse.json({ article });
+  } catch (err) {
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 404 },
+    );
+  }
+}
