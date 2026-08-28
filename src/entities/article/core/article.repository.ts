@@ -2,9 +2,7 @@ import type { Article } from "./article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
-// Port only — no implementation lives in core/. All methods return
-// Promises even though today's only adapter is synchronous in-memory data,
-// so a future DB-backed adapter is a drop-in swap with no call-site changes.
+// Port only — no implementation lives in core/.
 export interface ArticleRepository {
   /** Published articles only, lead article first. Used by public reads. */
   listPublished(): Promise<Article[]>;

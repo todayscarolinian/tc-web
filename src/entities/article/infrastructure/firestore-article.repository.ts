@@ -14,10 +14,7 @@ import type { SectionName } from "@/src/entities/section/core/section.types";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
-// specific quirks (Timestamp fields) — does NOT reshape record fields the
-// way in-memory's toArticle() does, because Firestore docs are expected to
-// already be Article-shaped. If that assumption is wrong, this needs the
-// same field-mapping logic in-memory has.
+// specific quirks (Timestamp fields)
 function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
   const data = doc.data();
   return {

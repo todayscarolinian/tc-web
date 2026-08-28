@@ -4,9 +4,6 @@ import type { SectionName } from "@/src/entities/section/core/section.types";
 
 export const SECTION_PAGE_SIZE = 12;
 
-// One entity, two audiences (see docs/architecture.md) — public reads and
-// staff CRUD/workflow share the same ArticleRepository, so this interface
-// mirrors that split rather than being broken into two feature slices.
 export interface ArticleUseCase {
   /** Published articles only, most recent first. */
   listPublished(): Promise<Article[]>;

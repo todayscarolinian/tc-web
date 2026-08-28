@@ -7,8 +7,6 @@ import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecas
 
 export function createArticleService(repo: ArticleRepository): ArticleUseCase {
   return {
-    // Trivial pass-through today; the seam for future filtering (status,
-    // embargo, pagination) once articles have real lifecycle state.
     listPublished(): Promise<Article[]> {
       return repo.listPublished();
     },
@@ -24,8 +22,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       return repo.listTrending(limit);
     },
 
-    // Guards the blank-query case here so every adapter (in-memory, future DB
-    // full-text search) doesn't have to reimplement the same short-circuit.
+    // Guards the blank-query case here so every adapter doesn't have to reimplement the same short-circuit.
     search(query: string): Promise<Article[]> {
       if (!query.trim()) return Promise.resolve([]);
       return repo.search(query);
