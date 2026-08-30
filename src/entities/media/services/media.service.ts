@@ -16,6 +16,10 @@ export function createMediaService(
       return mediaRepository.listAll();
     },
 
+    findById(id: string): Promise<MediaAsset | null> {
+      return mediaRepository.findById(id);
+    },
+
     async create(input: MediaAssetInput): Promise<MediaAsset> {
       const asset = assertValidMediaAsset({
         ...input,

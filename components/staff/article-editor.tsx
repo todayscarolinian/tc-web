@@ -149,6 +149,12 @@ export function ArticleEditor({
     setPendingCoverFile(file);
     setPreviewBlobUrl(URL.createObjectURL(file));
 
+    if (coverImageUrl) {
+      setCoverImageAlt("");
+      toast.error("Add alt text for the new cover before it can be attached.");
+      return;
+    }
+
     if (!coverImageAlt.trim()) {
       toast.error("Add alt text before the cover can be attached.");
       return;

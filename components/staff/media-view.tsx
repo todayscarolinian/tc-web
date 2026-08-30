@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Images, Trash2, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -27,13 +27,16 @@ import {
 import { PageHeader } from "@/components/staff/page-header";
 import { MediaGrid } from "@/components/staff/media-grid";
 import { CoverDropzone } from "@/components/staff/cover-dropzone";
+import { TagInput } from "@/components/staff/tag-input";
 import { EmptyState } from "@/components/site/empty-state";
-import { MEDIA_FOLDERS, MEDIA_TAGS } from "@/src/lib/staff-data";
+import { MEDIA_FOLDERS } from "@/src/lib/staff-data";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 import { downloadMediaFile } from "@/src/lib/media-format";
 import { uploadMediaFile } from "@/src/lib/upload-media";
 import { deleteMediaAsset } from "@/src/entities/media/actions/media.actions";
 import type { MediaAssetDTO } from "@/src/entities/media/core/media.domain";
+import { getTagsAction } from "@/src/entities/tag/actions/tag.action";
+import type { Tag } from "@/src/entities/tag/core/tag.domain";
 import { cn } from "@/src/lib/utils";
 
 const UPLOAD_FOLDERS = MEDIA_FOLDERS.filter((folder) => folder !== "All");
@@ -52,6 +55,18 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    getTagsAction()
+      .then(setAllTags)
+      .catch(() => setAllTags([]));
+  }, []);
+
+  const availableTags = useMemo(() => {
+    const usedSlugs = new Set(items.flatMap((item) => item.tagSlugs));
+    return allTags.filter((t) => usedSlugs.has(t.slug));
+  }, [allTags, items]);
 
   const filtered = useMemo(
     () =>
@@ -223,32 +238,9 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
-                Tags
+                Tagssasad
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {MEDIA_TAGS.map((name) => {
-                  const active = uploadTags.includes(name);
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() =>
-                        setUploadTags((current) =>
-                          current.includes(name)
-                            ? current.filter((tagName) => tagName !== name)
-                            : [...current, name],
-                        )
-                      }
-                      className={cn(
-                        "rounded-full px-2.5 py-1 font-utility text-xs font-semibold text-text-secondary ring-1 ring-border hover:text-foreground",
-                        active && "bg-brand text-primary-foreground ring-0",
-                      )}
-                    >
-                      {name}
-                    </button>
-                  );
-                })}
-              </div>
+              <TagInput tags={uploadTags} onChange={setUploadTags} />
             </div>
             <div className="flex gap-2">
               <Button type="button" onClick={() => void handleUpload()} disabled={isUploading}>
@@ -289,17 +281,17 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
                 Tags
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {MEDIA_TAGS.map((name) => (
+                {availableTags.map((t) => (
                   <button
-                    key={name}
+                    key={t.slug}
                     type="button"
-                    onClick={() => setTag((current) => (current === name ? null : name))}
+                    onClick={() => setTag((current) => (current === t.slug ? null : t.slug))}
                     className={cn(
                       "rounded-full px-2.5 py-1 font-utility text-xs font-semibold text-text-secondary ring-1 ring-border hover:text-foreground",
-                      tag === name && "bg-brand text-primary-foreground ring-0",
+                      tag === t.slug && "bg-brand text-primary-foreground ring-0",
                     )}
                   >
-                    {name}
+                    {t.name}
                   </button>
                 ))}
               </div>
@@ -365,8 +357,8 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
               Delete {selected.size === 1 ? "this file" : `${selected.size} files`}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the file from the library and Firebase Storage. Cover images still in use
-              cannot be deleted.
+              This removes the file from the library and Firebase Storage. Files still used by an
+              article — as a cover or inline in the body — cannot be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

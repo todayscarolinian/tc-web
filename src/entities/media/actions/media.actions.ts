@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { requireHeraldAccess, isAccessError, type AccessError } from "@/src/lib/herald/require-access";
 import { mediaService } from "@/src/entities/media/services/media.service.factory";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { articleBodyReferencesUrl } from "@/src/entities/article/core/article.factory";
 
 export type DeleteMediaAssetResult =
   | { ok: true }
@@ -21,12 +22,21 @@ export async function deleteMediaAsset(input: {
     return { error: "NOT_FOUND", message: "Media asset not found." };
   }
 
+  const asset = await mediaService.findById(input.id);
+  if (!asset) {
+    return { error: "NOT_FOUND", message: "Media asset not found." };
+  }
+
   const articles = await articleService.staff.listAll();
-  const inUse = articles.some((article) => article.coverImageAssetId === input.id);
+  const inUse = articles.some(
+    (article) =>
+      article.coverImageAssetId === input.id ||
+      articleBodyReferencesUrl(article.body, asset.url),
+  );
   if (inUse) {
     return {
       error: "IN_USE",
-      message: "This file is used as a cover image and cannot be deleted.",
+      message: "This file is used in an article (as a cover or inline image) and cannot be deleted.",
     };
   }
 

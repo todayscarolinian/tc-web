@@ -86,4 +86,16 @@ describe("mediaService", () => {
     const service = createMediaService(new InMemoryMediaRepository(), new FakeStoragePort());
     await expect(service.delete("missing")).rejects.toThrow("Media asset not found");
   });
+
+  it("finds a created asset by id", async () => {
+    const service = createMediaService(new InMemoryMediaRepository(), new FakeStoragePort());
+    const created = await service.create(makeInput());
+
+    expect(await service.findById(created.id)).toEqual(created);
+  });
+
+  it("returns null when findById can't find the asset", async () => {
+    const service = createMediaService(new InMemoryMediaRepository(), new FakeStoragePort());
+    expect(await service.findById("missing")).toBeNull();
+  });
 });

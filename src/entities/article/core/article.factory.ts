@@ -62,3 +62,9 @@ export function publishArticle(article: Article): Article {
 export function extractPlainText(content: JSONContent): string {
   return generateText(content, extensions);
 }
+
+export function articleBodyReferencesUrl(content: JSONContent, url: string): boolean {
+  if (!url) return false;
+  if (content.attrs?.src === url) return true;
+  return (content.content ?? []).some((child) => articleBodyReferencesUrl(child, url));
+}

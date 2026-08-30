@@ -23,6 +23,9 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
+    publishAt: data.publishAt
+      ? (data.publishAt as Timestamp).toDate()
+      : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
