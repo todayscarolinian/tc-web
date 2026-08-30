@@ -28,6 +28,8 @@ export interface ArticleUseCase {
     getBySlug(slug: string): Promise<Article | null>;
     save(doc: ArticleInput): Promise<Article>;
     publish(slug: string): Promise<Article>;
+    unpublish(slug: string): Promise<Article>;
+    archive(slug: string): Promise<Article>;
     update(slug: string, doc: ArticleInput): Promise<Article>;
   };
 }

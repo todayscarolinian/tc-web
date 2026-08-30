@@ -400,11 +400,28 @@ does that against real documents.
   despite [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)
   already giving that route a 3600s ISR window. Needs adding whenever
   `domain/author/` and that route are built out.
-- **S3-02's scheduled-publish flip mechanism is underspecified.** The sprint
-  plan says to revalidate reader routes "once `publishAt` passes," but ISR
-  revalidation alone re-renders a page — it doesn't mutate Firestore.
-  Something (most likely a Vercel Cron hitting a Route Handler that queries
-  `status=="Scheduled" AND publishAt<=now` via IDX7) needs to perform that
-  write. IDX7 is predefined above so S3-02 doesn't have to scramble for an
-  index later, but building the cron/mechanism itself is S3-02's job, not
-  this ticket's.
+- **S3-02's scheduled-publish flip mechanism: resolved as lazy write-on-read
+  (no cron/queue/worker).** Every reader-facing and staff-facing
+  `ArticleUseCase` read method (`listPublished`, `getBySlug`, `listTrending`,
+  `search`, `listPublishedBySection`, `listByAuthor`, `staff.listAll`,
+  `staff.getBySlug`) first calls a sweep helper (`sweepDuePublishes` in
+  `article.service.ts`) that queries `status=="Scheduled" AND
+  publishAt<=now` via IDX7 (`ArticleRepository.findDueForPublish`), flips
+  any matches to `Published` via the existing `publishArticle()` factory
+  function (preserving FK-invariant #5 automatically), and only then runs
+  the original query — so a just-flipped article is included in that same
+  response. Deliberate tradeoffs, accepted:
+  - No `revalidatePath()` call as part of the flip. The page currently
+    rendering already reflects this request's fresh data; sibling pages
+    (home/section/author) pick up the change on their own next ISR
+    revalidation window (60s/300s/3600s per
+    [ADR-004](adr/adr-004-isr-as-primary-rendering-strategy-for-reader-routes.md)).
+    This also isn't optional: `revalidatePath()` throws if called during a
+    Server Component's render, and these reads run directly inside Server
+    Component render.
+  - A scheduled article may take up to the slowest relevant route's ISR
+    window (up to 3600s, the article's own page) to actually surface if no
+    other page's read triggers the flip sooner.
+  - A small benign race exists if two near-simultaneous reads both flip the
+    same due article — last write wins, both produce a valid `Published`
+    state; not worth a transaction at MVP traffic.
