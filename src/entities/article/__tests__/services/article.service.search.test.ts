@@ -38,6 +38,7 @@ describe("articleService.search", () => {
       listSections: () => { throw new Error("should not be called"); },
       findSectionBySlug: () => { throw new Error("should not be called"); },
       findSectionByName: () => { throw new Error("should not be called"); },
+      listByTagSlug: () => { throw new Error("should not be called"); },
       saveArticle: () => { throw new Error("should not be called"); }
     };
     const unreachableService = createArticleService(unreachableRepo);

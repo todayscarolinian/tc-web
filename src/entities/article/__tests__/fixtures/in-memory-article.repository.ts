@@ -142,6 +142,14 @@ export class InMemoryArticleRepository implements ArticleRepository {
     return info ? toSection(info) : null;
   }
 
+  async listByTagSlug(tagSlug: string): Promise<Article[]> {
+    return ARTICLES.filter(
+      (article) =>
+        article.status === "Published" &&
+        toArticle(article).tagSlugs?.includes(tagSlug)
+    ).map(toArticle);
+  }
+
   async saveArticle(doc: Article): Promise<Article> {
     const index = ARTICLES.findIndex((article) => article.slug === doc.slug);
     if (index === -1) {
