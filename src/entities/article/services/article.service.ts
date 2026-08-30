@@ -1,30 +1,66 @@
+import { after } from "next/server";
+import { revalidatePath } from "next/cache";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
-import { createArticle, publishArticle, updateArticleContent } from "@/src/entities/article/core/article.factory";
+import {
+  archiveArticle,
+  createArticle,
+  publishArticle,
+  unpublishArticle,
+  updateArticleContent,
+} from "@/src/entities/article/core/article.factory";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { ArticleUseCase } from "@/src/entities/article/usecase/article.usecase";
 import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecase";
 
+async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Promise<void> {
+  const due = await repo.findDueForPublish(now);
+  if (due.length === 0) return;
+
+  await Promise.all(
+    due.map(async (article) => {
+      try {
+        const published = publishArticle(article);
+        await repo.saveArticle(published);
+
+        try {
+          after(() => {
+            revalidatePath(`/article/${published.slug}`);
+          });
+        } catch {
+          // no-op
+        }
+      } catch (err) {
+        console.error(`sweepDuePublishes: failed to publish ${article.slug}`, err);
+      }
+    }),
+  );
+}
+
 export function createArticleService(repo: ArticleRepository): ArticleUseCase {
   return {
-    listPublished(): Promise<Article[]> {
+    async listPublished(): Promise<Article[]> {
+      await sweepDuePublishes(repo);
       return repo.listPublished();
     },
 
     // Public-facing: resolves to null for drafts/scheduled articles, not just
     // unknown slugs. Staff needing any-status lookup should use staff.getBySlug.
-    getBySlug(slug: string): Promise<Article | null> {
-      if (!slug.trim()) return Promise.resolve(null);
+    async getBySlug(slug: string): Promise<Article | null> {
+      if (!slug.trim()) return null;
+      await sweepDuePublishes(repo);
       return repo.findPublishedBySlug(slug);
     },
 
-    listTrending(limit = 4): Promise<Article[]> {
+    async listTrending(limit = 4): Promise<Article[]> {
+      await sweepDuePublishes(repo);
       return repo.listTrending(limit);
     },
 
     // Guards the blank-query case here so every adapter doesn't have to reimplement the same short-circuit.
-    search(query: string): Promise<Article[]> {
-      if (!query.trim()) return Promise.resolve([]);
+    async search(query: string): Promise<Article[]> {
+      if (!query.trim()) return [];
+      await sweepDuePublishes(repo);
       return repo.search(query);
     },
 
@@ -33,6 +69,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       page: number,
     ): Promise<{ articles: Article[]; totalPages: number; page: number }> {
       const safePage = Math.max(1, Math.trunc(page) || 1);
+      await sweepDuePublishes(repo);
       const { articles, totalCount } = await repo.listPublishedBySection(
         sectionSlug,
         { limit: SECTION_PAGE_SIZE, offset: (safePage - 1) * SECTION_PAGE_SIZE },
@@ -45,8 +82,9 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       };
     },
 
-    listByAuthor(authorId: string): Promise<Article[]> {
-      if (!authorId.trim()) return Promise.resolve([]);
+    async listByAuthor(authorId: string): Promise<Article[]> {
+      if (!authorId.trim()) return [];
+      await sweepDuePublishes(repo);
       return repo.findPublishedByAuthorId(authorId);
     },
 
@@ -60,14 +98,16 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
     staff: {
       // Staff-facing: all statuses, unlike the public listPublished.
-      listAll(): Promise<Article[]> {
+      async listAll(): Promise<Article[]> {
+        await sweepDuePublishes(repo);
         return repo.listAll();
       },
 
       // Staff-facing: any status (drafts/scheduled included), unlike the
       // public getBySlug.
-      getBySlug(slug: string): Promise<Article | null> {
-        if (!slug.trim()) return Promise.resolve(null);
+      async getBySlug(slug: string): Promise<Article | null> {
+        if (!slug.trim()) return null;
+        await sweepDuePublishes(repo);
         return repo.findBySlug(slug);
       },
 
@@ -83,6 +123,24 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
         const published = publishArticle(article);
 
         return repo.saveArticle(published);
+      },
+
+      async unpublish(slug: string): Promise<Article> {
+        const article = await repo.findBySlug(slug);
+        if (!article) throw new Error(`Article not found: ${slug}`);
+
+        const unpublished = unpublishArticle(article);
+
+        return repo.saveArticle(unpublished);
+      },
+
+      async archive(slug: string): Promise<Article> {
+        const article = await repo.findBySlug(slug);
+        if (!article) throw new Error(`Article not found: ${slug}`);
+
+        const archived = archiveArticle(article);
+
+        return repo.saveArticle(archived);
       },
 
       async update(slug: string, doc: ArticleInput): Promise<Article> {

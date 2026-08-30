@@ -20,6 +20,8 @@ export interface ArticleRepository {
   ): Promise<{ articles: Article[]; totalCount: number }>;
   /** Published articles by a given author, most recent first. */
   findPublishedByAuthorId(authorId: string): Promise<Article[]>;
+  /** Scheduled articles whose publishAt has already passed `now`. */
+  findDueForPublish(now: Date): Promise<Article[]>;
   /** All statuses. Staff-facing. */
   listAll(): Promise<Article[]>;
   listSections(): Promise<Section[]>;
