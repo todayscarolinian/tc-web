@@ -288,6 +288,7 @@ export function ArticleEditor({
       const { article: updatedArticle } = await response.json();
       toast.success(`Article ${STATUS_TRANSITION_LABEL[action]} successfully!`);
       setStatus(updatedArticle.status);
+      if (action === "unpublish") setPublishAt(null);
     } finally {
       setIsSaving(false);
     }
