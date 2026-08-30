@@ -61,6 +61,23 @@ export type ArticleInput = {
   coverImageAlt?: string;
 };
 
+export type ArticleDTO = Omit<Article, "publishedAt" | "publishAt" | "createdAt" | "updatedAt"> & {
+  publishedAt: string | null;
+  publishAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function toArticleDTO(article: Article): ArticleDTO {
+  return {
+    ...article,
+    publishedAt: article.publishedAt ? article.publishedAt.toISOString() : null,
+    publishAt: article.publishAt ? article.publishAt.toISOString() : null,
+    createdAt: article.createdAt.toISOString(),
+    updatedAt: article.updatedAt.toISOString(),
+  };
+}
+
 export function assertValidArticle(article: Article): Article {
   if (!article.slug.trim()) throw new Error("Article.slug must not be empty");
   if (!article.title.trim()) throw new Error("Article.title must not be empty");
