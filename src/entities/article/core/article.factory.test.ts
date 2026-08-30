@@ -84,6 +84,12 @@ describe("unpublishArticle", () => {
     expect(unpublished.publishedAt).toEqual(originalDate);
   });
 
+  it("clears a leftover publishAt so a later save can't reschedule it", () => {
+    const article = makeArticle({ status: "Published", publishAt: new Date("2026-01-01") });
+    const unpublished = unpublishArticle(article);
+    expect(unpublished.publishAt).toBeNull();
+  });
+
   it.each<ArticleStatus>(["Draft", "Scheduled", "Archived"])(
     "throws when unpublishing a %s article",
     (from) => {

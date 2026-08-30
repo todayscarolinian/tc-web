@@ -71,6 +71,7 @@ export function unpublishArticle(article: Article): Article {
   const unpublished: Article = {
     ...article,
     status: "Draft",
+    publishAt: null,
     updatedAt: new Date(),
   };
   return assertValidArticle(unpublished);
