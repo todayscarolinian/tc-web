@@ -238,7 +238,7 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
-                Tagssasad
+                Tags
               </span>
               <TagInput tags={uploadTags} onChange={setUploadTags} />
             </div>
