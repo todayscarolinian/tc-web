@@ -23,9 +23,7 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
-    publishAt: data.publishAt
-      ? (data.publishAt as Timestamp).toDate()
-      : null,
+    publishAt: data.publishAt ? (data.publishAt as Timestamp).toDate() : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
@@ -114,6 +112,15 @@ export class FirestoreArticleRepository implements ArticleRepository {
       .where("authorId", "==", authorId)
       .where("status", "==", "Published")
       .orderBy("publishedAt", "desc")
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
+  async findDueForPublish(now: Date): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Scheduled")
+      .where("publishAt", "<=", Timestamp.fromDate(now))
       .get();
     return snap.docs.map(toDomainArticle);
   }

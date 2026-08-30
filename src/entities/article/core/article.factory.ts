@@ -31,8 +31,8 @@ export function updateArticleContent(
   input: ArticleInput,
 ): Article {
   const status: ArticleStatus =
-    existing.status === "Published"
-      ? "Published"
+    existing.status === "Published" || existing.status === "Archived"
+      ? existing.status
       : input.publishAt
         ? "Scheduled"
         : "Draft";
@@ -49,6 +49,8 @@ export function updateArticleContent(
   return assertValidArticle(updated);
 }
 
+// Legal from every status, including idempotently from Published and as a
+// republish from Archived — there's no illegal source state for publish.
 export function publishArticle(article: Article): Article {
   const published: Article = {
     ...article,
@@ -57,6 +59,35 @@ export function publishArticle(article: Article): Article {
     updatedAt: new Date(),
   };
   return assertValidArticle(published);
+}
+
+// Only legal from Published — this is the "take it down" action, distinct
+// from the Scheduled->Draft auto-flip that updateArticleContent handles when
+// a publishAt date is cleared.
+export function unpublishArticle(article: Article): Article {
+  if (article.status !== "Published") {
+    throw new Error(`Cannot unpublish an article with status ${article.status}`);
+  }
+  const unpublished: Article = {
+    ...article,
+    status: "Draft",
+    publishAt: null,
+    updatedAt: new Date(),
+  };
+  return assertValidArticle(unpublished);
+}
+
+// Legal from any status except Archived itself.
+export function archiveArticle(article: Article): Article {
+  if (article.status === "Archived") {
+    throw new Error("Article is already archived");
+  }
+  const archived: Article = {
+    ...article,
+    status: "Archived",
+    updatedAt: new Date(),
+  };
+  return assertValidArticle(archived);
 }
 
 export function extractPlainText(content: JSONContent): string {
