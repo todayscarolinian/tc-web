@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { revalidatePath } from "next/cache";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
 import {
@@ -18,7 +20,16 @@ async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Pro
   await Promise.all(
     due.map(async (article) => {
       try {
-        await repo.saveArticle(publishArticle(article));
+        const published = publishArticle(article);
+        await repo.saveArticle(published);
+
+        try {
+          after(() => {
+            revalidatePath(`/article/${published.slug}`);
+          });
+        } catch {
+          // no-op
+        }
       } catch (err) {
         console.error(`sweepDuePublishes: failed to publish ${article.slug}`, err);
       }
