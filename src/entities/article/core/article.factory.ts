@@ -3,22 +3,31 @@ import { generateText } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import Image from "@tiptap/extension-image";
+import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
 import slugify from "slugify";
 import type { Article, ArticleInput } from "./article.domain";
 import { assertValidArticle } from "./article.domain";
 import type { ArticleStatus } from "./article.types";
 
-const extensions = [StarterKit, TextStyleKit, Image];
+const extensions = [StarterKit, TextStyleKit, Image, ImageResize, Figure, Figcaption];
+
+const WORDS_PER_MINUTE = 200;
+
+export function calculateReadTimeMinutes(bodyText: string): number {
+  const wordCount = bodyText.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(wordCount / WORDS_PER_MINUTE));
+}
 
 export function createArticle(input: ArticleInput): Article {
+  const bodyText = extractPlainText(input.body);
   const article: Article = {
     ...input,
     slug: slugify(input.title, { lower: true, strict: true }),
     titleLower: input.title.toLowerCase(),
-    readTimeMinutes: 1, // currently an arbitrary value
+    readTimeMinutes: calculateReadTimeMinutes(bodyText),
     publishedAt: null,
     views: 0,
-    bodyText: extractPlainText(input.body),
+    bodyText,
     status: input.publishAt ? "Scheduled" : "Draft",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -37,12 +46,13 @@ export function updateArticleContent(
         ? "Scheduled"
         : "Draft";
 
+  const bodyText = extractPlainText(input.body);
   const updated: Article = {
     ...existing,
     ...input,
     titleLower: input.title.toLowerCase(),
-    bodyText: extractPlainText(input.body),
-    readTimeMinutes: 1, // currently arbitrary, but will need calculation
+    bodyText,
+    readTimeMinutes: calculateReadTimeMinutes(bodyText),
     status,
     updatedAt: new Date(),
   };

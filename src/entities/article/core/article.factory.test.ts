@@ -4,10 +4,25 @@ import type { ArticleStatus } from "./article.types";
 import {
   archiveArticle,
   articleBodyReferencesUrl,
+  createArticle,
   publishArticle,
   unpublishArticle,
   updateArticleContent,
 } from "./article.factory";
+
+const FIGURE_BODY = {
+  type: "doc",
+  content: [
+    { type: "paragraph", content: [{ type: "text", text: "Intro paragraph with several words in it." }] },
+    {
+      type: "figure",
+      content: [
+        { type: "imageResize", attrs: { src: "https://example.com/a.jpg" } },
+        { type: "figcaption", content: [{ type: "text", text: "A caption" }] },
+      ],
+    },
+  ],
+};
 
 function makeArticle(overrides: Partial<Article> = {}): Article {
   return {
@@ -116,6 +131,28 @@ describe("archiveArticle", () => {
   });
 });
 
+describe("createArticle", () => {
+  it("computes readTimeMinutes from word count at 200 wpm", () => {
+    const words = Array.from({ length: 400 }, (_, i) => `word${i}`).join(" ");
+    const body = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: words }] }] };
+    const article = createArticle(makeInput({ body }));
+    expect(article.readTimeMinutes).toBe(2);
+  });
+
+  it("floors readTimeMinutes at 1 for a very short body", () => {
+    const body = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "hi" }] }] };
+    const article = createArticle(makeInput({ body }));
+    expect(article.readTimeMinutes).toBe(1);
+  });
+
+  it("does not throw and computes sane bodyText/readTimeMinutes for a body with figure/imageResize/figcaption nodes", () => {
+    expect(() => createArticle(makeInput({ body: FIGURE_BODY }))).not.toThrow();
+    const article = createArticle(makeInput({ body: FIGURE_BODY }));
+    expect(article.bodyText).toContain("Intro paragraph");
+    expect(article.readTimeMinutes).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("updateArticleContent", () => {
   it("preserves Published status on a plain content edit", () => {
     const existing = makeArticle({ status: "Published" });
@@ -146,6 +183,14 @@ describe("updateArticleContent", () => {
     const spoofedInput = { ...makeInput(), status: "Archived" } as ArticleInput;
     const updated = updateArticleContent(existing, spoofedInput);
     expect(updated.status).toBe("Published");
+  });
+
+  it("does not throw and computes sane bodyText/readTimeMinutes for a body with figure/imageResize/figcaption nodes", () => {
+    const existing = makeArticle();
+    expect(() => updateArticleContent(existing, makeInput({ body: FIGURE_BODY }))).not.toThrow();
+    const updated = updateArticleContent(existing, makeInput({ body: FIGURE_BODY }));
+    expect(updated.bodyText).toContain("Intro paragraph");
+    expect(updated.readTimeMinutes).toBeGreaterThanOrEqual(1);
   });
 });
 
