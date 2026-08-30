@@ -1,12 +1,12 @@
 import { MediaCard } from "@/components/staff/media-card";
-import type { StaffMediaItem } from "@/src/lib/staff-data";
+import type { MediaAssetDTO } from "@/src/entities/media/core/media.domain";
 
 export function MediaGrid({
   items,
   selectedIds,
   onToggle,
 }: {
-  items: StaffMediaItem[];
+  items: MediaAssetDTO[];
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
 }) {

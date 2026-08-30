@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { requireHeraldAccess, isAccessError } from "@/src/lib/herald/require-access";
-import { mediaStorageService } from "@/src/entities/media/services/media.service.factory";
+import { mediaService, mediaStorageService } from "@/src/entities/media/services/media.service.factory";
+import { toMediaAssetDTO } from "@/src/entities/media/core/media.domain";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
+import { MEDIA_FOLDERS } from "@/src/lib/staff-data";
 
 const ACCESS_ERROR_STATUS = {
   UNAUTHENTICATED: 401,
   FORBIDDEN: 403,
   SERVICE_ERROR: 500,
 } as const;
+
+const LIBRARY_FOLDERS = MEDIA_FOLDERS.filter(
+  (folder): folder is Exclude<(typeof MEDIA_FOLDERS)[number], "All"> => folder !== "All",
+);
 
 function sanitizeSegment(value: string): string {
   return (
@@ -17,6 +23,27 @@ function sanitizeSegment(value: string): string {
       .replace(/[^a-z0-9.-]+/g, "-")
       .replace(/^-+|-+$/g, "") || "file"
   );
+}
+
+function readOptionalInt(value: FormDataEntryValue | null): number {
+  if (typeof value !== "string") return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.trunc(parsed) : 0;
+}
+
+function readTagSlugs(value: FormDataEntryValue | null): string[] {
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0);
+  } catch {
+    return value.split(",").map((tag) => tag.trim()).filter(Boolean);
+  }
+}
+
+function displayName(firstName: string, lastName: string, email: string): string {
+  return [firstName, lastName].filter(Boolean).join(" ").trim() || email;
 }
 
 export async function POST(request: Request) {
@@ -28,7 +55,12 @@ export async function POST(request: Request) {
 
   const formData = await request.formData();
   const file = formData.get("file");
-  const folder = formData.get("folder");
+  const folderValue = formData.get("folder");
+  const folder =
+    typeof folderValue === "string" &&
+    LIBRARY_FOLDERS.includes(folderValue as (typeof LIBRARY_FOLDERS)[number])
+      ? folderValue
+      : "Photos";
 
   if (!(file instanceof File)) {
     return NextResponse.json(
@@ -50,8 +82,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const storagePath = `media/${sanitizeSegment(typeof folder === "string" ? folder : "uploads")}/${crypto.randomUUID()}-${sanitizeSegment(file.name)}`;
-
+  const storagePath = `media/${sanitizeSegment(folder)}/${crypto.randomUUID()}-${sanitizeSegment(file.name)}`;
   const data = Buffer.from(await file.arrayBuffer());
   const { publicUrl } = await mediaStorageService.upload({
     storagePath,
@@ -59,5 +90,27 @@ export async function POST(request: Request) {
     data,
   });
 
-  return NextResponse.json({ publicUrl });
+  try {
+    const altText = typeof formData.get("altText") === "string" ? (formData.get("altText") as string) : "";
+    const asset = await mediaService.create({
+      name: file.name,
+      folder,
+      tagSlugs: readTagSlugs(formData.get("tagSlugs")),
+      storagePath,
+      url: publicUrl,
+      contentType: file.type,
+      sizeBytes: file.size,
+      width: readOptionalInt(formData.get("width")),
+      height: readOptionalInt(formData.get("height")),
+      altText,
+      uploadedBy: access.user.id,
+      uploadedByName: displayName(access.user.firstName, access.user.lastName, access.user.email),
+      iconKey: folder.toLowerCase(),
+    });
+
+    return NextResponse.json({ publicUrl, asset: toMediaAssetDTO(asset) });
+  } catch (error) {
+    await mediaStorageService.delete({ storagePath });
+    throw error;
+  }
 }
