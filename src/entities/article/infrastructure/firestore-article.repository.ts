@@ -151,7 +151,7 @@ export class FirestoreArticleRepository implements ArticleRepository {
       .collection(ARTICLES_COLLECTION)
       .where("status", "==", "Published")
       .where("tagSlugs", "array-contains", tagSlug)
-      // .orderBy("publishedAt", "desc")
+      .orderBy("publishedAt", "desc")
       .get();
     return snap.docs.map(toDomainArticle);
   }
