@@ -209,6 +209,7 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
       listSections: inMemory.listSections.bind(inMemory),
       findSectionBySlug: inMemory.findSectionBySlug.bind(inMemory),
       findSectionByName: inMemory.findSectionByName.bind(inMemory),
+      listByTagSlug: inMemory.listByTagSlug.bind(inMemory), 
       saveArticle: (doc: Article) => {
         if (doc.slug === "due-fails") throw new Error("simulated write failure");
         return inMemory.saveArticle(doc);

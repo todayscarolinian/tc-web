@@ -91,6 +91,10 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
     listSections: () => repo.listSections(),
     findSectionBySlug: (slug: string) => repo.findSectionBySlug(slug),
     findSectionByName: (name: SectionName) => repo.findSectionByName(name),
+    listByTagSlug(tagSlug: string): Promise<Article[]> {
+      if (!tagSlug.trim()) return Promise.resolve([]);
+      return repo.listByTagSlug(tagSlug);
+    },
 
     staff: {
       // Staff-facing: all statuses, unlike the public listPublished.

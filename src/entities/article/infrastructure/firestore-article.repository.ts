@@ -146,6 +146,16 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return info ? toSection(info) : null;
   }
 
+  async listByTagSlug(tagSlug: string): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .where("tagSlugs", "array-contains", tagSlug)
+      .orderBy("publishedAt", "desc")
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
   async saveArticle(article: Article): Promise<Article> {
     await db.collection(ARTICLES_COLLECTION).doc(article.slug).set(article);
     return article;

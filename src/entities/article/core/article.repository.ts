@@ -27,5 +27,7 @@ export interface ArticleRepository {
   listSections(): Promise<Section[]>;
   findSectionBySlug(slug: string): Promise<Section | null>;
   findSectionByName(name: SectionName): Promise<Section | null>;
+  /** Published articles carrying a given tag slug, most recent first. */
+  listByTagSlug(tagSlug: string): Promise<Article[]>;
   saveArticle(doc: Article): Promise<Article>;
 }
