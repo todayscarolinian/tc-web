@@ -18,14 +18,14 @@ import { getSectionName } from "@/src/entities/section/infrastructure/static-sec
 import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
 import { formatDisplayDate } from "@/src/lib/article-format";
 import { useDebouncedValue } from "@/hooks/use-debounce";
-import type { Article } from "@/src/entities/article/core/article.domain";
+import type { ArticleDTO } from "@/src/entities/article/core/article.domain";
 
 
 
 export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Article[]>([]);
+  const [results, setResults] = useState<ArticleDTO[]>([]);
   // The query the current `results` correspond to. While it lags behind
   // `trimmedQuery`, a fetch is pending or queued — derived instead of a
   // separate `loading` state set synchronously in the effect below.
@@ -42,7 +42,7 @@ export function SearchBar() {
     (async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
-        const data: { articles: Article[] } = await res.json();
+        const data: { articles: ArticleDTO[] } = await res.json();
         if (id === requestId.current) setResults(data.articles);
       } finally {
         if (id === requestId.current) setFetchedQuery(debouncedQuery);
@@ -124,7 +124,8 @@ export function SearchBar() {
                           {article.title}
                         </span>
                         <span className="font-utility text-xs font-medium text-muted-foreground">
-                          By {article.authorName} · {formatDisplayDate(article.publishedAt)}
+                          By {article.authorName} ·{" "}
+                          {formatDisplayDate(article.publishedAt ? new Date(article.publishedAt) : null)}
                         </span>
                       </div>
                     </Link>
