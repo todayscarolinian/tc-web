@@ -11,7 +11,8 @@ type Props = {
 };
 
 export default async function TopicPage({ params }: Props) {
-  const { tag: tagSlug } = await params;
+  const { tag: rawTag } = await params;
+  const tagSlug = rawTag.toLocaleLowerCase();
 
   const [allTags, articles] = await Promise.all([
     tagService.listAll(),
