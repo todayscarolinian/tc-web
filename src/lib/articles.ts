@@ -12,7 +12,7 @@ export type ArticleRecord = {
   date: string;
   read: string;
   caption?: string;
-  status: "Published" | "Draft" | "Scheduled";
+  status: "Published" | "Draft" | "Scheduled" | "Archived";
   views: number;
 };
 

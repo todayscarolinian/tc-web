@@ -23,6 +23,7 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
+    publishAt: data.publishAt ? (data.publishAt as Timestamp).toDate() : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
@@ -78,10 +79,10 @@ export class FirestoreArticleRepository implements ArticleRepository {
       const sectionName = getSectionName(article.sectionSlug).toLowerCase();
 
       return (
-        article.titleLower.includes(q) ||
-        article.dek.toLowerCase().includes(q) ||
-        article.authorName.toLowerCase().includes(q) ||
-        sectionName.includes(q)
+        article.titleLower?.includes(q) ||
+        article.dek?.toLowerCase().includes(q) ||
+        article.authorName?.toLowerCase().includes(q) ||
+        sectionName?.includes(q)
       );
     });
   }
@@ -115,6 +116,15 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return snap.docs.map(toDomainArticle);
   }
 
+  async findDueForPublish(now: Date): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Scheduled")
+      .where("publishAt", "<=", Timestamp.fromDate(now))
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
   async listAll(): Promise<Article[]> {
     const snap = await db.collection(ARTICLES_COLLECTION).get();
     return snap.docs.map(toDomainArticle);
@@ -134,6 +144,16 @@ export class FirestoreArticleRepository implements ArticleRepository {
   async findSectionByName(name: SectionName): Promise<Section | null> {
     const info = SECTIONS.find((section) => section.name === name);
     return info ? toSection(info) : null;
+  }
+
+  async listByTagSlug(tagSlug: string): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .where("tagSlugs", "array-contains", tagSlug)
+      .orderBy("publishedAt", "desc")
+      .get();
+    return snap.docs.map(toDomainArticle);
   }
 
   async saveArticle(article: Article): Promise<Article> {

@@ -21,6 +21,7 @@ export interface ArticleUseCase {
   listSections(): Promise<Section[]>;
   findSectionBySlug(slug: string): Promise<Section | null>;
   findSectionByName(name: SectionName): Promise<Section | null>;
+  listByTagSlug(tagSlug: string): Promise<Article[]>;
   staff: {
     /** All statuses, unlike the public listPublished. */
     listAll(): Promise<Article[]>;
@@ -28,6 +29,8 @@ export interface ArticleUseCase {
     getBySlug(slug: string): Promise<Article | null>;
     save(doc: ArticleInput): Promise<Article>;
     publish(slug: string): Promise<Article>;
+    unpublish(slug: string): Promise<Article>;
+    archive(slug: string): Promise<Article>;
     update(slug: string, doc: ArticleInput): Promise<Article>;
   };
 }
