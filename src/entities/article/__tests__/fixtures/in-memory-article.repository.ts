@@ -1,5 +1,8 @@
 import type { JSONContent } from "@tiptap/core";
-import { SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
+import {
+  SECTIONS,
+  type SectionInfo,
+} from "@/src/entities/section/infrastructure/static-section.repository";
 import {
   ARTICLES,
   ARTICLE_BODY,
@@ -28,7 +31,8 @@ const SHARED_BODY_TEXT = ARTICLE_BODY.join("\n\n");
 // fixture (no production adapter consumes this — the real adapter is
 // FirestoreArticleRepository).
 function toArticle(record: ArticleRecord): Article {
-  const sectionSlug = SECTIONS.find((s) => s.name === record.section)?.slug ?? "";
+  const sectionSlug =
+    SECTIONS.find((s) => s.name === record.section)?.slug ?? "";
   const publishedAt =
     record.status === "Published" ? new Date(record.date) : null;
   return {
@@ -74,9 +78,13 @@ export class InMemoryArticleRepository implements ArticleRepository {
   private records: ArticleRecord[] = ARTICLES.map((record) => ({ ...record }));
 
   async listPublished(): Promise<Article[]> {
-    return this.records.filter((article) => article.status === "Published")
+    return this.records
+      .filter((article) => article.status === "Published")
       .map(toArticle)
-      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+      .sort(
+        (a, b) =>
+          (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+      );
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
@@ -99,29 +107,33 @@ export class InMemoryArticleRepository implements ArticleRepository {
   async search(query: string): Promise<Article[]> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return this.records.filter(
-      (article) =>
-        article.status === "Published" &&
-        (article.title.toLowerCase().includes(q) ||
-          article.dek.toLowerCase().includes(q) ||
-          article.author.toLowerCase().includes(q) ||
-          article.section.toLowerCase().includes(q)),
-    ).map(toArticle); // filters ArticleRecord.author (pre-mapping), same value as the mapped Article.authorName
+    return this.records
+      .filter(
+        (article) =>
+          article.status === "Published" &&
+          (article.title.toLowerCase().includes(q) ||
+            article.dek.toLowerCase().includes(q) ||
+            article.author.toLowerCase().includes(q) ||
+            article.section.toLowerCase().includes(q)),
+      )
+      .map(toArticle); // filters ArticleRecord.author (pre-mapping), same value as the mapped Article.authorName
   }
 
   async listPublishedBySection(
     sectionSlug: string,
     { limit, offset }: { limit: number; offset: number },
   ): Promise<{ articles: Article[]; totalCount: number }> {
-    const inSection = this.records.filter(
-      (article) =>
-        article.status === "Published" &&
-        (SECTIONS.find((s) => s.name === article.section)?.slug ?? "") ===
-          sectionSlug,
-    )
+    const inSection = this.records
+      .filter(
+        (article) =>
+          article.status === "Published" &&
+          (SECTIONS.find((s) => s.name === article.section)?.slug ?? "") ===
+            sectionSlug,
+      )
       .map(toArticle)
       .sort((a, b) => {
-        const byDate = (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0);
+        const byDate =
+          (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0);
         return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
       });
 
@@ -131,17 +143,58 @@ export class InMemoryArticleRepository implements ArticleRepository {
     };
   }
 
+  async findRelatedArticles(article: Article, limit = 3): Promise<Article[]> {
+    const tagSlugSet = new Set(article.tagSlugs);
+
+    const published = this.records
+      .filter((r) => r.status === "Published" && r.slug !== article.slug)
+      .map(toArticle);
+
+    const rank = (candidate: Article): number => {
+      const sameSection = candidate.sectionSlug === article.sectionSlug;
+      const sharesTag = candidate.tagSlugs.some((t) => tagSlugSet.has(t));
+      if (sameSection && sharesTag) return 0;
+      if (sameSection) return 1;
+      if (sharesTag) return 2;
+      return 3;
+    };
+
+    return published
+      .filter((c) => rank(c) < 3)
+      .sort((a, b) => {
+        const rankDiff = rank(a) - rank(b);
+        if (rankDiff !== 0) return rankDiff;
+        return (
+          (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0)
+        );
+      })
+      .slice(0, limit);
+  }
+
+  async findRecentArticles(limit = 3): Promise<Article[]> {
+    return this.records
+      .filter((r) => r.status === "Published")
+      .map(toArticle)
+      .sort(
+        (a, b) =>
+          (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+      )
+      .slice(0, limit);
+  }
+
   async findPublishedByAuthorId(authorId: string): Promise<Article[]> {
     const published = await this.listPublished();
     return published.filter((article) => article.authorId === authorId);
   }
 
   async findDueForPublish(now: Date): Promise<Article[]> {
-    return this.records.filter((article) => article.status === "Scheduled")
+    return this.records
+      .filter((article) => article.status === "Scheduled")
       .map(toArticle)
       .filter(
         (article): article is Article & { publishAt: Date } =>
-          article.publishAt != null && article.publishAt.getTime() <= now.getTime(),
+          article.publishAt != null &&
+          article.publishAt.getTime() <= now.getTime(),
       );
   }
 
@@ -164,11 +217,13 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async listByTagSlug(tagSlug: string): Promise<Article[]> {
-    return this.records.filter(
-      (article) =>
-        article.status === "Published" &&
-        toArticle(article).tagSlugs?.includes(tagSlug)
-    ).map(toArticle);
+    return this.records
+      .filter(
+        (article) =>
+          article.status === "Published" &&
+          toArticle(article).tagSlugs?.includes(tagSlug),
+      )
+      .map(toArticle);
   }
 
   async saveArticle(doc: Article): Promise<Article> {
@@ -197,7 +252,9 @@ export class InMemoryArticleRepository implements ArticleRepository {
       publishAt: doc.publishAt?.toISOString() ?? null,
     };
 
-    const index = this.records.findIndex((article) => article.slug === doc.slug);
+    const index = this.records.findIndex(
+      (article) => article.slug === doc.slug,
+    );
     if (index === -1) {
       this.records.push(record);
     } else {

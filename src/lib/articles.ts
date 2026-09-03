@@ -36,7 +36,8 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "tuition",
     section: "News",
-    title: "USC board defers tuition adjustment after three-hour student hearing",
+    title:
+      "USC board defers tuition adjustment after three-hour student hearing",
     dek: "Students packed the Buttenbruch gym as trustees heard testimony on the proposed 9.5% increase. A final vote is now expected before the August term opens.",
     authorId: "maria-santos",
     author: "Maria Santos",
@@ -46,7 +47,7 @@ export const ARTICLES: ArticleRecord[] = [
     read: "4 min read",
     caption:
       "Students fill the Buttenbruch Hall gymnasium during Tuesday's public hearing · Photo by Joshua Mendoza / TC",
-    tagSlugs: [],
+    tagSlugs: ["budget", "student-fees"],
     status: "Published",
     views: 18420,
     createdAt: "2026-06-24T00:00:00.000Z",
@@ -55,14 +56,15 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "engr-complex",
     section: "News",
-    title: "Talamban campus unveils new engineering complex ahead of August term",
+    title:
+      "Talamban campus unveils new engineering complex ahead of August term",
     dek: "The six-story building adds 40 laboratories and a fabrication wing, the largest single expansion USC-TC has seen in a decade.",
     authorId: "noah-lim",
     author: "Noah Lim",
     initials: "NL",
     date: "Jun 23, 2026",
     read: "3 min",
-    tagSlugs: [],
+    tagSlugs: ["budget", "campus"],
     status: "Published",
     views: 9120,
     createdAt: "2026-06-23T00:00:00.000Z",
@@ -78,7 +80,7 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "EB",
     date: "Jun 23, 2026",
     read: "6 min",
-    tagSlugs: [],
+    tagSlugs: ["budget", "student-fees"],
     status: "Published",
     views: 11260,
     createdAt: "2026-06-23T00:00:00.000Z",
@@ -94,7 +96,7 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "LR",
     date: "Jun 23, 2026",
     read: "3 min",
-    tagSlugs: [],
+    tagSlugs: ["cesafi"],
     status: "Published",
     views: 14380,
     createdAt: "2026-06-23T00:00:00.000Z",
@@ -103,14 +105,15 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "zine",
     section: "Arts & Culture",
-    title: "Cebuano zinemakers revive campus print at the Carbon weekend market",
+    title:
+      "Cebuano zinemakers revive campus print at the Carbon weekend market",
     dek: "A small collective is photocopying its way to a movement, one stapled issue at a time.",
     authorId: "aisha-cruz",
     author: "Aisha Cruz",
     initials: "AC",
     date: "Jun 22, 2026",
     read: "5 min",
-    tagSlugs: [],
+    tagSlugs: ["student-work"],
     status: "Published",
     views: 0,
     createdAt: "2026-06-22T00:00:00.000Z",
@@ -126,7 +129,7 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "PG",
     date: "Jun 22, 2026",
     read: "2 min",
-    tagSlugs: [],
+    tagSlugs: ["transportation", "campus"],
     status: "Published",
     views: 0,
     createdAt: "2026-06-22T00:00:00.000Z",
@@ -135,14 +138,15 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "thesis",
     section: "Campus Life",
-    title: "Inside the all-night thesis crunch at the Baumgartner learning center",
+    title:
+      "Inside the all-night thesis crunch at the Baumgartner learning center",
     dek: "When the LRC stays open past midnight during finals, a whole subculture wakes up with it.",
     authorId: "reina-villanueva",
     author: "Reina Villanueva",
     initials: "RV",
     date: "Jun 21, 2026",
     read: "5 min",
-    tagSlugs: [],
+    tagSlugs: ["student-work"],
     status: "Published",
     views: 0,
     createdAt: "2026-06-21T00:00:00.000Z",
@@ -151,14 +155,15 @@ export const ARTICLES: ArticleRecord[] = [
   {
     slug: "jeepney",
     section: "News",
-    title: "Jeepney modernization leaves Carolinian commuters scrambling for routes",
+    title:
+      "Jeepney modernization leaves Carolinian commuters scrambling for routes",
     dek: "The phase-out of traditional units along N. Bacalso has lengthened the morning commute for hundreds of students.",
     authorId: "joshua-mendoza",
     author: "Joshua Mendoza",
     initials: "JM",
     date: "Jun 21, 2026",
     read: "4 min",
-    tagSlugs: [],
+    tagSlugs: ["transportation"],
     status: "Published",
     views: 7640,
     createdAt: "2026-06-21T00:00:00.000Z",
@@ -174,7 +179,7 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "AC",
     date: "Jun 20, 2026",
     read: "7 min",
-    tagSlugs: [],
+    tagSlugs: ["campus"],
     status: "Published",
     views: 21030,
     createdAt: "2026-06-20T00:00:00.000Z",
@@ -190,7 +195,7 @@ export const ARTICLES: ArticleRecord[] = [
     initials: "LR",
     date: "Jun 19, 2026",
     read: "3 min",
-    tagSlugs: [],
+    tagSlugs: ["cesafi"],
     status: "Published",
     views: 0,
     createdAt: "2026-06-19T00:00:00.000Z",
@@ -233,7 +238,12 @@ export const ARTICLES: ArticleRecord[] = [
 // Curated "most read" rail on the home page — an editorial pick, not a
 // live top-N-by-views query (see domain/analytics/README.md for where a
 // real "most read" query would eventually live).
-export const TRENDING_SLUGS = ["warriors-ot", "engr-complex", "activity-fee", "eats"];
+export const TRENDING_SLUGS = [
+  "warriors-ot",
+  "engr-complex",
+  "activity-fee",
+  "eats",
+];
 
 // Every article currently shares this one canned body; a real CMS/DB
 // adapter would store per-article content instead.
