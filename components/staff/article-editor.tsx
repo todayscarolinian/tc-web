@@ -12,11 +12,14 @@ import { TextStyleKit } from "@tiptap/extension-text-style";
 import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
 
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
   Calendar,
   FileText,
+  Images,
   Trash2,
+  Undo2,
   Upload,
 } from "lucide-react";
 
@@ -45,7 +48,9 @@ import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import { toDatetimeLocalValue } from "@/src/lib/utils";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
-import { deleteMediaAsset } from "@/src/entities/media/actions/media.actions";
+import { uploadMediaFile } from "@/src/lib/upload-media";
+import { MediaLibraryPicker } from "@/components/staff/media-library-picker";
+import type { MediaAssetDTO } from "@/src/entities/media/core/media.domain";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { AuthorSelect } from "./author-select";
@@ -90,9 +95,14 @@ export function ArticleEditor({
   const [coverImageUrl, setCoverImageUrl] = useState(
     article?.coverImageUrl ?? "",
   );
+  const [coverImageAssetId, setCoverImageAssetId] = useState(
+    article?.coverImageAssetId ?? "",
+  );
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(
     null,
   );
+  const [pendingCoverFile, setPendingCoverFile] = useState<File | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [coverImageAlt, setCoverImageAlt] = useState(
     article?.coverImageAlt ?? "",
@@ -106,6 +116,8 @@ export function ArticleEditor({
   const selectedSection = SECTIONS.find((s) => s.name === section);
   const displayCoverUrl = previewBlobUrl ?? coverImageUrl;
   const hasCover = Boolean(displayCoverUrl);
+  const hasPendingSchedule =
+    (status === "Draft" || status === "Scheduled") && publishAt !== null;
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   // Guards against two overlapping handleCoverFile calls racing (e.g. a
@@ -138,56 +150,69 @@ export function ArticleEditor({
       return;
     }
 
-    const previousCoverImageUrl = coverImageUrl;
+    setPendingCoverFile(file);
+    setPreviewBlobUrl(URL.createObjectURL(file));
+
+    if (coverImageUrl) {
+      setCoverImageAlt("");
+      toast.error("Add alt text for the new cover before it can be attached.");
+      return;
+    }
+
+    if (!coverImageAlt.trim()) {
+      toast.error("Add alt text before the cover can be attached.");
+      return;
+    }
+
+    await uploadCoverFile(file);
+  };
+
+  const uploadCoverFile = async (file: File) => {
     // Pre-increment claims this call's own id and bumps the shared
     // counter in one step; capturing it in a local means later
     // `coverUploadIdRef.current !== uploadId` checks compare against
     // what this call started with, not whatever the ref holds by then.
     const uploadId = ++coverUploadIdRef.current;
-    setPreviewBlobUrl(URL.createObjectURL(file));
     setIsUploadingCover(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "Covers");
-
-      const response = await fetch("/api/media/upload", {
-        method: "POST",
-        body: formData,
+      const { publicUrl, asset } = await uploadMediaFile({
+        file,
+        folder: "Covers",
+        altText: coverImageAlt.trim(),
       });
       if (coverUploadIdRef.current !== uploadId) return;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        toast.error(errorData?.message ?? "Failed to upload cover image.");
-        setPreviewBlobUrl(null);
-        return;
-      }
-
-      const { publicUrl } = await response.json();
       setCoverImageUrl(publicUrl);
+      setCoverImageAssetId(asset.id);
+      setPendingCoverFile(null);
       setPreviewBlobUrl(null);
-      // Best-effort cleanup of the file this one replaced — a unique path
-      // per upload, so it's never shared with another article.
-      if (previousCoverImageUrl) {
-        void deleteMediaAsset({ publicUrl: previousCoverImageUrl });
-      }
-    } catch {
+    } catch (error) {
       if (coverUploadIdRef.current !== uploadId) return;
-      toast.error("Failed to upload cover image. Check your connection and try again.");
-      setPreviewBlobUrl(null);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to upload cover image. Check your connection and try again.",
+      );
     } finally {
       if (coverUploadIdRef.current === uploadId) setIsUploadingCover(false);
     }
   };
 
+  const attachLibraryAsset = (asset: MediaAssetDTO) => {
+    setCoverImageUrl(asset.url);
+    setCoverImageAssetId(asset.id);
+    setCoverImageAlt(asset.altText);
+    setPendingCoverFile(null);
+    setPreviewBlobUrl(null);
+  };
+
   const removeCoverImage = () => {
-    if (coverImageUrl) {
-      void deleteMediaAsset({ publicUrl: coverImageUrl });
-    }
+    coverUploadIdRef.current += 1;
     setCoverImageUrl("");
+    setCoverImageAssetId("");
     setCoverImageAlt("");
+    setPendingCoverFile(null);
     setPreviewBlobUrl(null);
   };
 
@@ -211,6 +236,7 @@ export function ArticleEditor({
       authorAvatarUrl: selectedAuthor?.profilePictureURL,
       publishAt,
       coverImageUrl,
+      coverImageAssetId: coverImageAssetId || "",
       coverImageAlt,
     });
 
@@ -254,7 +280,15 @@ export function ArticleEditor({
     }
   };
 
-  const publishDraft = async () => {
+  const STATUS_TRANSITION_LABEL: Record<"publish" | "unpublish" | "archive", string> = {
+    publish: "published",
+    unpublish: "unpublished",
+    archive: "archived",
+  };
+
+  const applyStatusTransition = async (
+    action: "publish" | "unpublish" | "archive",
+  ) => {
     if (!editor || isSaving) return;
     setIsSaving(true);
 
@@ -262,7 +296,7 @@ export function ArticleEditor({
       const slug = await persistDraft();
       if (!slug) return;
 
-      const response = await fetch(`/api/articles/${slug}/publish`, {
+      const response = await fetch(`/api/articles/${slug}/${action}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
@@ -271,17 +305,22 @@ export function ArticleEditor({
         const errorData = await response.json().catch(() => null);
         const message = errorData?.error ?? response.statusText;
 
-        toast.error(`Failed to publish article: ${message}`);
+        toast.error(`Failed to ${action} article: ${message}`);
         return;
       }
 
-      const publishedArticle = await response.json();
-      toast.success("Article published successfully!");
-      setStatus(publishedArticle.article.status);
+      const { article: updatedArticle } = await response.json();
+      toast.success(`Article ${STATUS_TRANSITION_LABEL[action]} successfully!`);
+      setStatus(updatedArticle.status);
+      if (action === "unpublish") setPublishAt(null);
     } finally {
       setIsSaving(false);
     }
   };
+
+  const publishDraft = () => applyStatusTransition("publish");
+  const unpublishDraft = () => applyStatusTransition("unpublish");
+  const archiveDraft = () => applyStatusTransition("archive");
 
   useEffect(() => {
     fetch("/api/users")
@@ -317,6 +356,16 @@ export function ArticleEditor({
           <span className="size-1.5 rounded-full bg-success" />
           Saved 2m ago {/*currently arbitrary */}
         </div>
+        {status !== "Archived" && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={archiveDraft}
+            disabled={isSaving}
+          >
+            <Archive /> Archive
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
@@ -326,17 +375,34 @@ export function ArticleEditor({
           <FileText />{" "}
           {isSaving
             ? "Saving…"
-            : status === "Published"
+            : status === "Published" || status === "Archived"
               ? "Save"
               : "Save draft"}
         </Button>
-        <Button
-          type="button"
-          onClick={publishDraft}
-          disabled={status === "Published" || isSaving}
-        >
-          Publish <ArrowRight />
-        </Button>
+        {status === "Published" && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={unpublishDraft}
+            disabled={isSaving}
+          >
+            <Undo2 /> Unpublish
+          </Button>
+        )}
+        {status !== "Published" && (
+          <Button
+            type="button"
+            onClick={hasPendingSchedule ? saveDraft : publishDraft}
+            disabled={isSaving}
+          >
+            {hasPendingSchedule
+              ? "Schedule Publish"
+              : status === "Archived"
+                ? "Republish"
+                : "Publish"}{" "}
+            <ArrowRight />
+          </Button>
+        )}
       </div>
 
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
@@ -448,6 +514,15 @@ export function ArticleEditor({
                   <Button
                     type="button"
                     size="sm"
+                    variant="outline"
+                    disabled={isUploadingCover}
+                    onClick={() => setLibraryOpen(true)}
+                  >
+                    <Images /> Library
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
                     variant="ghost"
                     className="text-destructive hover:text-destructive"
                     aria-label="Remove cover image"
@@ -466,15 +541,52 @@ export function ArticleEditor({
                     onChange={(e) => setCoverImageAlt(e.target.value)}
                     placeholder="Describe the image for accessibility"
                   />
+                  {pendingCoverFile && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="mt-1"
+                      disabled={isUploadingCover || !coverImageAlt.trim()}
+                      onClick={() => void uploadCoverFile(pendingCoverFile)}
+                    >
+                      {isUploadingCover ? "Uploading…" : "Attach cover"}
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : (
-              <CoverDropzone
-                compact
-                onClick={() => coverInputRef.current?.click()}
-                onDrop={handleCoverFile}
-              />
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
+                  <span className="font-utility text-xs font-semibold text-muted-foreground">
+                    Alt text <span className="text-destructive">*</span>
+                  </span>
+                  <Input
+                    value={coverImageAlt}
+                    onChange={(e) => setCoverImageAlt(e.target.value)}
+                    placeholder="Describe the image for accessibility"
+                  />
+                </div>
+                <CoverDropzone
+                  compact
+                  isUploading={isUploadingCover}
+                  onClick={() => coverInputRef.current?.click()}
+                  onDrop={handleCoverFile}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setLibraryOpen(true)}
+                >
+                  <Images /> Choose from library
+                </Button>
+              </div>
             )}
+            <MediaLibraryPicker
+              open={libraryOpen}
+              onOpenChange={setLibraryOpen}
+              onSelect={attachLibraryAsset}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">

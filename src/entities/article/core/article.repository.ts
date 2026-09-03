@@ -23,10 +23,14 @@ export interface ArticleRepository {
   ): Promise<{ articles: Article[]; totalCount: number }>;
   /** Published articles by a given author, most recent first. */
   findPublishedByAuthorId(authorId: string): Promise<Article[]>;
+  /** Scheduled articles whose publishAt has already passed `now`. */
+  findDueForPublish(now: Date): Promise<Article[]>;
   /** All statuses. Staff-facing. */
   listAll(): Promise<Article[]>;
   listSections(): Promise<Section[]>;
   findSectionBySlug(slug: string): Promise<Section | null>;
   findSectionByName(name: SectionName): Promise<Section | null>;
+  /** Published articles carrying a given tag slug, most recent first. */
+  listByTagSlug(tagSlug: string): Promise<Article[]>;
   saveArticle(doc: Article): Promise<Article>;
 }

@@ -34,6 +34,7 @@ export async function PUT(
   const input: ArticleInput = {
     ...rawBody,
     authorId,
+    publishAt: rawBody.publishAt ? new Date(rawBody.publishAt) : null,
   };
 
   try {

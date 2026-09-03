@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json()) as ArticleInput;
+  const rawBody = await request.json();
 
-  const authorId = body.authorId;
+  const authorId = rawBody.authorId;
   if (!authorId) {
     return NextResponse.json({ error: "authorId is required" }, { status: 400 });
   }
@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const input: ArticleInput = { ...body, authorId };
+  const input: ArticleInput = {
+    ...rawBody,
+    authorId,
+    publishAt: rawBody.publishAt ? new Date(rawBody.publishAt) : null,
+  };
 
   const article = await articleService.staff.save(input);
   return NextResponse.json({ article }, { status: 201 });
