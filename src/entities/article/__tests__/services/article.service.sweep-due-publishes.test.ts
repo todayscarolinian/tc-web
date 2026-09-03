@@ -114,19 +114,17 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
   it("listByAuthor() also triggers the sweep", async () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
-    // InMemoryArticleRepository's mock-data mapping round-trips Article.authorId
-    // as the record's display-name field (see toArticle()) — match that here,
-    // same as the existing article.service.list-by-author.test.ts convention.
     await repo.saveArticle(
       fixtureArticle({
         slug: "due-author",
+        authorId: "sweep-author",
         authorName: "Sweep Author",
         status: "Scheduled",
         publishAt: PAST,
       }),
     );
 
-    const articles = await service.listByAuthor("Sweep Author");
+    const articles = await service.listByAuthor("sweep-author");
 
     expect(articles.some((a) => a.slug === "due-author")).toBe(true);
   });

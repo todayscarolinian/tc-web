@@ -7,9 +7,9 @@ describe("articleService.listByAuthor", () => {
   const service = createArticleService(new InMemoryArticleRepository());
 
   it("resolves a known author to only their published articles", async () => {
-    const results = await service.listByAuthor("Aisha Cruz");
+    const results = await service.listByAuthor("aisha-cruz");
     expect(results.length).toBeGreaterThan(0);
-    expect(results.every((a) => a.authorId === "Aisha Cruz")).toBe(true);
+    expect(results.every((a) => a.authorId === "aisha-cruz")).toBe(true);
     expect(results.every((a) => a.status === "Published")).toBe(true);
   });
 
