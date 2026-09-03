@@ -4,13 +4,17 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
 import { db } from "@/src/lib/firebase/admin";
-import { getSectionName, SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
+import {
+  getSectionName,
+  SECTIONS,
+  type SectionInfo,
+} from "@/src/entities/section/infrastructure/static-section.repository";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-
+import { RELATED_ARTICLES_LIMIT } from "../usecase/article.usecase";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
@@ -64,6 +68,86 @@ export class FirestoreArticleRepository implements ArticleRepository {
       TRENDING_SLUGS.slice(0, limit).map((slug) => this.findBySlug(slug)),
     );
     return articles.filter((a): a is Article => a !== null);
+  }
+
+  async findRelatedArticles(
+    article: Article,
+    limit = RELATED_ARTICLES_LIMIT,
+  ): Promise<Article[]> {
+    const candidates = new Map<string, Article>();
+    const tagSlugSet = new Set(article.tagSlugs);
+
+    // Same section
+    const sectionSnap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .where("sectionSlug", "==", article.sectionSlug)
+      .orderBy("publishedAt", "desc")
+      .limit(limit * 3 + 1)
+      .get();
+
+    for (const doc of sectionSnap.docs) {
+      const candidate = toDomainArticle(doc);
+      if (candidate.slug !== article.slug) {
+        candidates.set(candidate.slug, candidate);
+      }
+    }
+
+    // Shared tags — Firestore caps array-contains-any at 10 values
+    const tagSlugsForQuery = article.tagSlugs.slice(0, 10);
+
+    if (tagSlugsForQuery.length > 0) {
+      const tagSnap = await db
+        .collection(ARTICLES_COLLECTION)
+        .where("status", "==", "Published")
+        .where("tagSlugs", "array-contains-any", tagSlugsForQuery)
+        .orderBy("publishedAt", "desc")
+        .limit(limit * 3)
+        .get();
+
+      for (const doc of tagSnap.docs) {
+        const candidate = toDomainArticle(doc);
+        if (
+          candidate.slug !== article.slug &&
+          !candidates.has(candidate.slug)
+        ) {
+          candidates.set(candidate.slug, candidate);
+        }
+      }
+    }
+
+    // Rank: same section + shared tag > same section only > shared tag only
+    const rank = (candidate: Article): number => {
+      const sameSection = candidate.sectionSlug === article.sectionSlug;
+      const sharesTag = candidate.tagSlugs.some((t) => tagSlugSet.has(t));
+
+      if (sameSection && sharesTag) return 0;
+      if (sameSection) return 1;
+      if (sharesTag) return 2;
+      return 3;
+    };
+
+    return Array.from(candidates.values())
+      .sort((a, b) => {
+        const rankDiff = rank(a) - rank(b);
+        if (rankDiff !== 0) return rankDiff;
+        // tie-break within a tier by recency
+        return (
+          (b.publishedAt?.valueOf() ?? 0) - (a.publishedAt?.valueOf() ?? 0)
+        );
+      })
+      .slice(0, limit);
+  }
+
+  async findRecentArticles(limit = RELATED_ARTICLES_LIMIT): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .orderBy("publishedAt", "desc")
+      .limit(limit)
+      .get();
+
+    return snap.docs.map(toDomainArticle);
   }
 
   async search(query: string): Promise<Article[]> {
