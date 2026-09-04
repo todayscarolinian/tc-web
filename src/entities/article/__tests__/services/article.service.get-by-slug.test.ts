@@ -12,7 +12,7 @@ describe("articleService.getBySlug", () => {
   it("resolves a known slug to the matching article", async () => {
     const article = await service.getBySlug("tuition");
     expect(article?.title).toBe(
-      "USC board defers tuition adjustment after three-hour student hearing"
+      "USC board defers tuition adjustment after three-hour student hearing",
     );
   });
 
@@ -26,20 +26,54 @@ describe("articleService.getBySlug", () => {
 
   it("resolves an empty slug to null without calling the repository", async () => {
     const unreachableRepo: ArticleRepository = {
-      listPublished: () => { throw new Error("should not be called"); },
-      findBySlug: () => { throw new Error("should not be called"); },
-      findPublishedBySlug: () => { throw new Error("should not be called"); },
-      listTrending: () => { throw new Error("should not be called"); },
-      search: () => { throw new Error("should not be called"); },
-      listPublishedBySection: () => { throw new Error("should not be called"); },
-      findPublishedByAuthorId: () => { throw new Error("should not be called"); },
-      findDueForPublish: () => { throw new Error("should not be called"); },
-      listAll: () => { throw new Error("should not be called"); },
-      listSections: () => { throw new Error("should not be called"); },
-      findSectionBySlug: () => { throw new Error("should not be called"); },
-      findSectionByName: () => { throw new Error("should not be called"); },
-      listByTagSlug: () => { throw new Error("should not be called"); },
-      saveArticle: () => { throw new Error("should not be called"); },
+      listPublished: () => {
+        throw new Error("should not be called");
+      },
+      findBySlug: () => {
+        throw new Error("should not be called");
+      },
+      findPublishedBySlug: () => {
+        throw new Error("should not be called");
+      },
+      listTrending: () => {
+        throw new Error("should not be called");
+      },
+      search: () => {
+        throw new Error("should not be called");
+      },
+      listPublishedBySection: () => {
+        throw new Error("should not be called");
+      },
+      findRelatedArticles: () => {
+        throw new Error("should not be called");
+      },
+      findRecentArticles: () => {
+        throw new Error("should not be called");
+      },
+      findPublishedByAuthorId: () => {
+        throw new Error("should not be called");
+      },
+      findDueForPublish: () => {
+        throw new Error("should not be called");
+      },
+      listAll: () => {
+        throw new Error("should not be called");
+      },
+      listSections: () => {
+        throw new Error("should not be called");
+      },
+      findSectionBySlug: () => {
+        throw new Error("should not be called");
+      },
+      findSectionByName: () => {
+        throw new Error("should not be called");
+      },
+      listByTagSlug: () => {
+        throw new Error("should not be called");
+      },
+      saveArticle: () => {
+        throw new Error("should not be called");
+      },
     };
     const unreachableService = createArticleService(unreachableRepo);
     expect(await unreachableService.getBySlug("")).toBeNull();

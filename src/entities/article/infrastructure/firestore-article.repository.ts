@@ -14,7 +14,7 @@ import type { ArticleRepository } from "@/src/entities/article/core/article.repo
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-import { RELATED_ARTICLES_LIMIT } from "../usecase/article.usecase";
+import { RELATED_ARTICLES_LIMIT } from "../core/article.types";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
@@ -27,7 +27,6 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
-    publishAt: data.publishAt ? (data.publishAt as Timestamp).toDate() : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
@@ -163,10 +162,10 @@ export class FirestoreArticleRepository implements ArticleRepository {
       const sectionName = getSectionName(article.sectionSlug).toLowerCase();
 
       return (
-        article.titleLower?.includes(q) ||
-        article.dek?.toLowerCase().includes(q) ||
-        article.authorName?.toLowerCase().includes(q) ||
-        sectionName?.includes(q)
+        article.titleLower.includes(q) ||
+        article.dek.toLowerCase().includes(q) ||
+        article.authorName.toLowerCase().includes(q) ||
+        sectionName.includes(q)
       );
     });
   }
