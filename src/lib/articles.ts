@@ -14,6 +14,9 @@ export type ArticleRecord = {
   caption?: string;
   status: "Published" | "Draft" | "Scheduled" | "Archived";
   views: number;
+  featured?: boolean;
+  tagSlugs?: string[];
+  publishAt?: Date | null;
 };
 
 // The single source of truth for articles — one row per article, covering

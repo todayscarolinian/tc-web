@@ -20,6 +20,7 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
   return {
     ...data,
     // slug: doc.id, // or data.slug, depending on whether slug is the doc ID
+    featured: Boolean(data.featured),
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
@@ -121,6 +122,26 @@ export class FirestoreArticleRepository implements ArticleRepository {
       .collection(ARTICLES_COLLECTION)
       .where("status", "==", "Scheduled")
       .where("publishAt", "<=", Timestamp.fromDate(now))
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
+  async findPublishedFeatured(): Promise<Article | null> {
+    // Equality-only on `featured` so this works before IDX6 is deployed.
+    // Exclusive persist keeps the set tiny; filter/sort Published in memory.
+    const featured = await this.listFeatured();
+    return (
+      featured
+        .filter((article) => article.status === "Published")
+        .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0))[0] ??
+      null
+    );
+  }
+
+  async listFeatured(): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("featured", "==", true)
       .get();
     return snap.docs.map(toDomainArticle);
   }

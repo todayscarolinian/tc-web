@@ -151,6 +151,14 @@ describe("createArticle", () => {
     expect(article.bodyText).toContain("Intro paragraph");
     expect(article.readTimeMinutes).toBeGreaterThanOrEqual(1);
   });
+
+  it("defaults featured to false when the input omits it", () => {
+    expect(createArticle(makeInput()).featured).toBe(false);
+  });
+
+  it("sets featured from the input", () => {
+    expect(createArticle(makeInput({ featured: true })).featured).toBe(true);
+  });
 });
 
 describe("updateArticleContent", () => {
@@ -191,6 +199,16 @@ describe("updateArticleContent", () => {
     const updated = updateArticleContent(existing, makeInput({ body: FIGURE_BODY }));
     expect(updated.bodyText).toContain("Intro paragraph");
     expect(updated.readTimeMinutes).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sets featured from the input", () => {
+    const existing = makeArticle({ featured: false });
+    expect(updateArticleContent(existing, makeInput({ featured: true })).featured).toBe(true);
+  });
+
+  it("clears featured when the input omits it", () => {
+    const existing = makeArticle({ featured: true });
+    expect(updateArticleContent(existing, makeInput()).featured).toBe(false);
   });
 });
 

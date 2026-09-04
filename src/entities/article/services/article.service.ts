@@ -13,6 +13,21 @@ import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { ArticleUseCase } from "@/src/entities/article/usecase/article.usecase";
 import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecase";
 
+async function persistExclusiveFeatured(
+  repo: ArticleRepository,
+  article: Article,
+): Promise<Article> {
+  if (article.featured) {
+    const others = (await repo.listFeatured()).filter((item) => item.slug !== article.slug);
+    await Promise.all(
+      others.map((item) =>
+        repo.saveArticle({ ...item, featured: false, updatedAt: new Date() }),
+      ),
+    );
+  }
+  return repo.saveArticle(article);
+}
+
 async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Promise<void> {
   const due = await repo.findDueForPublish(now);
   if (due.length === 0) return;
@@ -42,6 +57,11 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
     async listPublished(): Promise<Article[]> {
       await sweepDuePublishes(repo);
       return repo.listPublished();
+    },
+
+    async getFeatured(): Promise<Article | null> {
+      await sweepDuePublishes(repo);
+      return repo.findPublishedFeatured();
     },
 
     // Public-facing: resolves to null for drafts/scheduled articles, not just
@@ -113,7 +133,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
       async save(doc: ArticleInput): Promise<Article> {
         const article = createArticle(doc);
-        return repo.saveArticle(article);
+        return persistExclusiveFeatured(repo, article);
       },
 
       async publish(slug: string): Promise<Article> {
@@ -122,7 +142,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
         const published = publishArticle(article);
 
-        return repo.saveArticle(published);
+        return persistExclusiveFeatured(repo, published);
       },
 
       async unpublish(slug: string): Promise<Article> {
@@ -149,7 +169,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
         const article = updateArticleContent(existing, doc);
 
-        return repo.saveArticle(article);
+        return persistExclusiveFeatured(repo, article);
       },
     },
   };

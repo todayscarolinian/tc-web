@@ -59,6 +59,7 @@ export type ArticleInput = {
   coverImageUrl?: string;
   coverImageAssetId?: string;
   coverImageAlt?: string;
+  featured?: boolean;
 };
 
 export type ArticleDTO = Omit<Article, "publishedAt" | "publishAt" | "createdAt" | "updatedAt"> & {

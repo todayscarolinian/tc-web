@@ -29,6 +29,7 @@ export function createArticle(input: ArticleInput): Article {
     views: 0,
     bodyText,
     status: input.publishAt ? "Scheduled" : "Draft",
+    featured: Boolean(input.featured),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -54,6 +55,7 @@ export function updateArticleContent(
     bodyText,
     readTimeMinutes: calculateReadTimeMinutes(bodyText),
     status,
+    featured: Boolean(input.featured),
     updatedAt: new Date(),
   };
   return assertValidArticle(updated);
