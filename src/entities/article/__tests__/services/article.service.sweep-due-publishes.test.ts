@@ -205,6 +205,8 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
       listPublishedBySection: inMemory.listPublishedBySection.bind(inMemory),
       findPublishedByAuthorId: inMemory.findPublishedByAuthorId.bind(inMemory),
       findDueForPublish: inMemory.findDueForPublish.bind(inMemory),
+      findPublishedFeatured: inMemory.findPublishedFeatured.bind(inMemory),
+      listFeatured: inMemory.listFeatured.bind(inMemory),
       listAll: inMemory.listAll.bind(inMemory),
       listSections: inMemory.listSections.bind(inMemory),
       findSectionBySlug: inMemory.findSectionBySlug.bind(inMemory),

@@ -22,6 +22,10 @@ export interface ArticleRepository {
   findPublishedByAuthorId(authorId: string): Promise<Article[]>;
   /** Scheduled articles whose publishAt has already passed `now`. */
   findDueForPublish(now: Date): Promise<Article[]>;
+  /** Newest published article marked featured, if any. */
+  findPublishedFeatured(): Promise<Article | null>;
+  /** Any status — used to keep at most one featured flag. */
+  listFeatured(): Promise<Article[]>;
   /** All statuses. Staff-facing. */
   listAll(): Promise<Article[]>;
   listSections(): Promise<Section[]>;

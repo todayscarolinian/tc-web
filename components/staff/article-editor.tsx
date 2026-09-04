@@ -25,6 +25,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -110,6 +111,7 @@ export function ArticleEditor({
   const [publishAt, setPublishAt] = useState<Date | null>(
     article?.publishAt ?? null,
   );
+  const [featured, setFeatured] = useState(Boolean(article?.featured));
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -238,6 +240,7 @@ export function ArticleEditor({
       coverImageUrl,
       coverImageAssetId: coverImageAssetId || "",
       coverImageAlt,
+      featured,
     });
 
     const currentSlug = article?.slug;
@@ -586,6 +589,22 @@ export function ArticleEditor({
               open={libraryOpen}
               onOpenChange={setLibraryOpen}
               onSelect={attachLibraryAsset}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                Featured
+              </span>
+              <p className="font-utility text-[11px] text-muted-foreground">
+                Show as the homepage banner. Replaces any other featured story.
+              </p>
+            </div>
+            <Switch
+              checked={featured}
+              onCheckedChange={setFeatured}
+              aria-label="Feature this story on the homepage"
             />
           </div>
 
