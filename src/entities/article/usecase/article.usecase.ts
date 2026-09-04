@@ -1,4 +1,7 @@
-import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
+import type {
+  Article,
+  ArticleInput,
+} from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
@@ -16,6 +19,7 @@ export interface ArticleUseCase {
     sectionSlug: string,
     page: number,
   ): Promise<{ articles: Article[]; totalPages: number; page: number }>;
+  listRelatedArticles(article: Article, limit?: number): Promise<Article[]>;
   /** Published articles by a given author, most recent first. */
   listByAuthor(authorId: string): Promise<Article[]>;
   listSections(): Promise<Section[]>;
