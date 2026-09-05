@@ -101,7 +101,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
     ): Promise<Article[]> {
       if (!article) return [];
 
-      const related = await repo.findRelatedArticles(article);
+      const related = await repo.findRelatedArticles(article, limit);
 
       if (related.length >= limit) {
         return related.slice(0, limit);

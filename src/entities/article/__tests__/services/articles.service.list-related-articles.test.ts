@@ -133,6 +133,25 @@ describe("articleService.listRelatedArticles", () => {
 
     expect(results.map((a) => a.slug)).toEqual(["b", "c", "d"]);
   });
+
+  it("forwards a custom limit to findRelatedArticles instead of capping at the repo default", async () => {
+    const current = stubArticle("current");
+    let receivedLimit: number | undefined;
+
+    const repo: ArticleRepository = {
+      ...unreachableRepo(),
+      findRelatedArticles: async (_article, limit) => {
+        receivedLimit = limit;
+        return [];
+      },
+      findRecentArticles: async () => [],
+    };
+
+    const service = createArticleService(repo);
+    await service.listRelatedArticles(current, 8);
+
+    expect(receivedLimit).toBe(8);
+  });
 });
 
 function stubArticle(slug: string): Article {

@@ -12,7 +12,7 @@ export interface ArticleRepository {
   findPublishedBySlug(slug: string): Promise<Article | null>;
   listTrending(limit?: number): Promise<Article[]>;
   /** Related articles lookup */
-  findRelatedArticles(article: Article): Promise<Article[]>;
+  findRelatedArticles(article: Article, limit?: number): Promise<Article[]>;
   findRecentArticles(limit?: number): Promise<Article[]>;
   /** Published articles only. */
   search(query: string): Promise<Article[]>;
