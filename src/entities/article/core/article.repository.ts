@@ -11,6 +11,9 @@ export interface ArticleRepository {
   /** Public lookup — resolves to null for anything not Published. */
   findPublishedBySlug(slug: string): Promise<Article | null>;
   listTrending(limit?: number): Promise<Article[]>;
+  /** Related articles lookup */
+  findRelatedArticles(article: Article, limit?: number): Promise<Article[]>;
+  findRecentArticles(limit?: number): Promise<Article[]>;
   /** Published articles only. */
   search(query: string): Promise<Article[]>;
   /** Published articles in one section, newest first, offset-paginated. */
