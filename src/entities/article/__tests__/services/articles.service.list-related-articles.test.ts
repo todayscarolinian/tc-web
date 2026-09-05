@@ -30,6 +30,12 @@ function unreachableRepo(): ArticleRepository {
     findDueForPublish: () => {
       throw new Error("should not be called");
     },
+    findPublishedFeatured: () => {
+      throw new Error("should not be called");
+    },
+    listFeatured: () => {
+      throw new Error("should not be called");
+    },
     listAll: () => {
       throw new Error("should not be called");
     },
@@ -46,6 +52,9 @@ function unreachableRepo(): ArticleRepository {
       throw new Error("should not be called");
     },
     saveArticle: () => {
+      throw new Error("should not be called");
+    },
+    setExclusiveFeatured: () => {
       throw new Error("should not be called");
     },
     findRelatedArticles: () => {

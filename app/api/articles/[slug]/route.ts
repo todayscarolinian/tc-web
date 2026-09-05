@@ -35,6 +35,7 @@ export async function PUT(
     ...rawBody,
     authorId,
     publishAt: rawBody.publishAt ? new Date(rawBody.publishAt) : null,
+    featured: Boolean(rawBody.featured),
   };
 
   try {
@@ -44,6 +45,7 @@ export async function PUT(
     revalidatePath(`/section/${article.sectionSlug}`);
     revalidatePath("/section/[section]/page/[page]", "page");
     revalidatePath(`/author/${article.authorId}`);
+    revalidatePath("/");
 
     return NextResponse.json({ article });
   } catch (err) {

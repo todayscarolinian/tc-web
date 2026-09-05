@@ -25,6 +25,10 @@ export interface ArticleRepository {
   findPublishedByAuthorId(authorId: string): Promise<Article[]>;
   /** Scheduled articles whose publishAt has already passed `now`. */
   findDueForPublish(now: Date): Promise<Article[]>;
+  /** Newest published article marked featured, if any. */
+  findPublishedFeatured(): Promise<Article | null>;
+  /** Any status — used to keep at most one featured flag. */
+  listFeatured(): Promise<Article[]>;
   /** All statuses. Staff-facing. */
   listAll(): Promise<Article[]>;
   listSections(): Promise<Section[]>;
@@ -33,4 +37,10 @@ export interface ArticleRepository {
   /** Published articles carrying a given tag slug, most recent first. */
   listByTagSlug(tagSlug: string): Promise<Article[]>;
   saveArticle(doc: Article): Promise<Article>;
+  /**
+   * Persists `article` (already `featured: true`) and clears `featured` on
+   * every other article, atomically — callers must not read-then-write the
+   * exclusivity invariant themselves (see FirestoreArticleRepository).
+   */
+  setExclusiveFeatured(article: Article): Promise<Article>;
 }

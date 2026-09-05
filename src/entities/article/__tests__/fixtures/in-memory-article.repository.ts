@@ -61,9 +61,27 @@ function toArticle(record: ArticleRecord): Article {
     tagSlugs: record.tagSlugs,
     status: record.status,
     views: record.views,
-    featured: record.featured,
+    featured: Boolean(record.featured),
     createdAt: new Date(record.createdAt),
     updatedAt: new Date(record.updatedAt),
+  };
+}
+
+function toRecord(doc: Article): ArticleRecord {
+  return {
+    ...doc,
+    section: SECTIONS.find((s) => s.slug === doc.sectionSlug)?.name ?? "News",
+    date: doc.publishedAt?.toISOString() ?? new Date().toISOString(),
+    read: doc.readTimeMinutes.toString(),
+    author: doc.authorName,
+    initials: doc.authorInitials,
+    avatarUrl: doc.authorAvatarUrl,
+    status: doc.status,
+    featured: Boolean(doc.featured),
+    tagSlugs: doc.tagSlugs,
+    publishAt: doc.publishAt?.toISOString() ?? null,
+    createdAt: doc.createdAt.toISOString(),
+    updatedAt: doc.updatedAt.toISOString(),
   };
 }
 
@@ -74,11 +92,16 @@ function toSection(info: SectionInfo): Section {
 export class InMemoryArticleRepository implements ArticleRepository {
   // Own copy per instance — tests construct a fresh repository expecting
   // fresh state, so this must not share ARTICLES (or mutations from one
-  // test's saveArticle() would leak into the next).
-  private records: ArticleRecord[] = ARTICLES.map((record) => ({ ...record }));
+  // test's saveArticle() would leak into the next). Accepts a custom seed
+  // for tests that need an isolated starting set.
+  private readonly articles: ArticleRecord[];
+
+  constructor(seed: ArticleRecord[] = ARTICLES) {
+    this.articles = seed.map((article) => ({ ...article }));
+  }
 
   async listPublished(): Promise<Article[]> {
-    return this.records
+    return this.articles
       .filter((article) => article.status === "Published")
       .map(toArticle)
       .sort(
@@ -88,7 +111,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async findBySlug(slug: string): Promise<Article | null> {
-    const record = this.records.find((article) => article.slug === slug);
+    const record = this.articles.find((article) => article.slug === slug);
     return record ? toArticle(record) : null;
   }
 
@@ -99,7 +122,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
 
   async listTrending(limit = 4): Promise<Article[]> {
     return TRENDING_SLUGS.slice(0, limit)
-      .map((slug) => this.records.find((article) => article.slug === slug))
+      .map((slug) => this.articles.find((article) => article.slug === slug))
       .filter((article): article is ArticleRecord => Boolean(article))
       .map(toArticle);
   }
@@ -107,7 +130,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
   async search(query: string): Promise<Article[]> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return this.records
+    return this.articles
       .filter(
         (article) =>
           article.status === "Published" &&
@@ -123,7 +146,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
     sectionSlug: string,
     { limit, offset }: { limit: number; offset: number },
   ): Promise<{ articles: Article[]; totalCount: number }> {
-    const inSection = this.records
+    const inSection = this.articles
       .filter(
         (article) =>
           article.status === "Published" &&
@@ -146,7 +169,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
   async findRelatedArticles(article: Article, limit = 3): Promise<Article[]> {
     const tagSlugSet = new Set(article.tagSlugs);
 
-    const published = this.records
+    const published = this.articles
       .filter((r) => r.status === "Published" && r.slug !== article.slug)
       .map(toArticle);
 
@@ -172,7 +195,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async findRecentArticles(limit = 3): Promise<Article[]> {
-    return this.records
+    return this.articles
       .filter((r) => r.status === "Published")
       .map(toArticle)
       .sort(
@@ -188,7 +211,7 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async findDueForPublish(now: Date): Promise<Article[]> {
-    return this.records
+    return this.articles
       .filter((article) => article.status === "Scheduled")
       .map(toArticle)
       .filter(
@@ -198,8 +221,21 @@ export class InMemoryArticleRepository implements ArticleRepository {
       );
   }
 
+  async findPublishedFeatured(): Promise<Article | null> {
+    const featured = this.articles
+      .filter((article) => article.status === "Published")
+      .map(toArticle)
+      .filter((article) => article.featured)
+      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+    return featured[0] ?? null;
+  }
+
+  async listFeatured(): Promise<Article[]> {
+    return this.articles.filter((article) => Boolean(article.featured)).map(toArticle);
+  }
+
   async listAll(): Promise<Article[]> {
-    return this.records.map(toArticle);
+    return this.articles.map(toArticle);
   }
 
   async listSections(): Promise<Section[]> {
@@ -217,49 +253,32 @@ export class InMemoryArticleRepository implements ArticleRepository {
   }
 
   async listByTagSlug(tagSlug: string): Promise<Article[]> {
-    return this.records
+    return this.articles
       .filter(
         (article) =>
           article.status === "Published" &&
-          toArticle(article).tagSlugs?.includes(tagSlug),
+          toArticle(article).tagSlugs.includes(tagSlug),
       )
       .map(toArticle);
   }
 
   async saveArticle(doc: Article): Promise<Article> {
-    const record: ArticleRecord = {
-      slug: doc.slug,
-      section: SECTIONS.find((s) => s.slug === doc.sectionSlug)?.name ?? "News",
-      title: doc.title,
-      dek: doc.dek,
-      authorId: doc.authorId,
-      author: doc.authorName,
-      initials: doc.authorInitials,
-      role: doc.authorRole,
-      avatarUrl: doc.authorAvatarUrl,
-      date: doc.publishedAt?.toISOString() ?? new Date().toISOString(),
-      read: doc.readTimeMinutes.toString(),
-      caption: doc.caption,
-      coverImageUrl: doc.coverImageUrl,
-      coverImageAssetId: doc.coverImageAssetId,
-      coverImageAlt: doc.coverImageAlt,
-      tagSlugs: doc.tagSlugs,
-      status: doc.status,
-      views: doc.views,
-      featured: doc.featured,
-      createdAt: doc.createdAt.toISOString(),
-      updatedAt: doc.updatedAt.toISOString(),
-      publishAt: doc.publishAt?.toISOString() ?? null,
-    };
-
-    const index = this.records.findIndex(
-      (article) => article.slug === doc.slug,
-    );
+    const record = toRecord(doc);
+    const index = this.articles.findIndex((article) => article.slug === doc.slug);
     if (index === -1) {
-      this.records.push(record);
+      this.articles.push(record);
     } else {
-      this.records[index] = record;
+      this.articles[index] = record;
     }
     return doc;
+  }
+
+  async setExclusiveFeatured(article: Article): Promise<Article> {
+    for (const other of this.articles) {
+      if (other.slug !== article.slug && other.featured) {
+        other.featured = false;
+      }
+    }
+    return this.saveArticle(article);
   }
 }
