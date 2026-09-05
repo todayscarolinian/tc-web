@@ -1,5 +1,6 @@
 "use client";
 
+// Rendered only behind ENABLE_ANALYTICS (src/lib/flags.ts) — dormant by default.
 import { useMemo, useState } from "react";
 import { Eye, Flame, TrendingUp } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
