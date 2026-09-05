@@ -100,6 +100,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       limit = RELATED_ARTICLES_LIMIT,
     ): Promise<Article[]> {
       if (!article) return [];
+      await sweepDuePublishes(repo);
 
       const related = await repo.findRelatedArticles(article, limit);
 

@@ -124,6 +124,7 @@ describe("articleService.listRelatedArticles", () => {
 
     const repo: ArticleRepository = {
       ...unreachableRepo(),
+      findDueForPublish: async () => [],
       findRelatedArticles: async () => related,
       findRecentArticles: async (limit = 3) => recentBySite.slice(0, limit),
     };
@@ -140,6 +141,7 @@ describe("articleService.listRelatedArticles", () => {
 
     const repo: ArticleRepository = {
       ...unreachableRepo(),
+      findDueForPublish: async () => [],
       findRelatedArticles: async (_article, limit) => {
         receivedLimit = limit;
         return [];
@@ -151,6 +153,24 @@ describe("articleService.listRelatedArticles", () => {
     await service.listRelatedArticles(current, 8);
 
     expect(receivedLimit).toBe(8);
+  });
+
+  it("sweeps due publishes before computing related candidates", async () => {
+    const freshRepo = new InMemoryArticleRepository();
+    const service = createArticleService(freshRepo);
+    const tuition = (await freshRepo.findBySlug("tuition")) as Article;
+
+    await freshRepo.saveArticle({
+      ...tuition,
+      slug: "due-related",
+      status: "Scheduled",
+      publishedAt: null,
+      publishAt: new Date(Date.now() - 60_000),
+    });
+
+    const results = await service.listRelatedArticles(tuition, 3);
+
+    expect(results.map((a) => a.slug)).toContain("due-related");
   });
 });
 
