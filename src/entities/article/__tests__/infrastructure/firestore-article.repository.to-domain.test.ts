@@ -25,7 +25,7 @@ const { fakeDb, setDocs } = vi.hoisted(() => {
         return query;
       }),
       get: vi.fn(async () => {
-        let result = [...filtered];
+        const result = [...filtered];
         if (orderField) {
           const field = orderField;
           result.sort((a, b) => {
