@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     ...rawBody,
     authorId,
     publishAt: rawBody.publishAt ? new Date(rawBody.publishAt) : null,
+    featured: Boolean(rawBody.featured),
   };
 
   const article = await articleService.staff.save(input);

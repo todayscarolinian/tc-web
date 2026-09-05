@@ -9,7 +9,14 @@ import type { Article, ArticleInput } from "./article.domain";
 import { assertValidArticle } from "./article.domain";
 import type { ArticleStatus } from "./article.types";
 
-const extensions = [StarterKit, TextStyleKit, Image, ImageResize, Figure, Figcaption];
+const extensions = [
+  StarterKit,
+  TextStyleKit,
+  Image,
+  ImageResize,
+  Figure,
+  Figcaption,
+];
 
 const WORDS_PER_MINUTE = 200;
 
@@ -29,6 +36,7 @@ export function createArticle(input: ArticleInput): Article {
     views: 0,
     bodyText,
     status: input.publishAt ? "Scheduled" : "Draft",
+    featured: Boolean(input.featured),
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -54,6 +62,7 @@ export function updateArticleContent(
     bodyText,
     readTimeMinutes: calculateReadTimeMinutes(bodyText),
     status,
+    featured: Boolean(input.featured),
     updatedAt: new Date(),
   };
   return assertValidArticle(updated);
@@ -76,12 +85,18 @@ export function publishArticle(article: Article): Article {
 // a publishAt date is cleared.
 export function unpublishArticle(article: Article): Article {
   if (article.status !== "Published") {
-    throw new Error(`Cannot unpublish an article with status ${article.status}`);
+    throw new Error(
+      `Cannot unpublish an article with status ${article.status}`,
+    );
   }
   const unpublished: Article = {
     ...article,
     status: "Draft",
     publishAt: null,
+    // A taken-down article can't stay the banner pick — clear rather than
+    // leave a stale featured:true only findPublishedFeatured's status filter
+    // happens to hide.
+    featured: false,
     updatedAt: new Date(),
   };
   return assertValidArticle(unpublished);
@@ -95,6 +110,7 @@ export function archiveArticle(article: Article): Article {
   const archived: Article = {
     ...article,
     status: "Archived",
+    featured: false,
     updatedAt: new Date(),
   };
   return assertValidArticle(archived);
@@ -104,8 +120,13 @@ export function extractPlainText(content: JSONContent): string {
   return generateText(content, extensions);
 }
 
-export function articleBodyReferencesUrl(content: JSONContent, url: string): boolean {
+export function articleBodyReferencesUrl(
+  content: JSONContent,
+  url: string,
+): boolean {
   if (!url) return false;
   if (content.attrs?.src === url) return true;
-  return (content.content ?? []).some((child) => articleBodyReferencesUrl(child, url));
+  return (content.content ?? []).some((child) =>
+    articleBodyReferencesUrl(child, url),
+  );
 }

@@ -2,20 +2,30 @@ import Link from "next/link";
 import { ChevronDown, Newspaper } from "lucide-react";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
-import { kickerClassForSection, sectionIcon } from "@/src/lib/section-style";
-import { formatDisplayDate, formatReadTime } from "@/src/lib/article-format";
-import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
+import { kickerClassForSection } from "@/src/lib/section-style";
+import { FeaturedStoryBanner } from "@/components/site/featured-story-banner";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { EmptyState } from "@/components/site/empty-state";
 import { Button } from "@/components/ui/button";
-import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
+import { ENABLE_SUBSCRIPTION, ENABLE_ANALYTICS } from "@/src/lib/flags";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [lead, ...stories] = await articleService.listPublished();
-  const trending = await articleService.listTrending(4);
+  const [featured, published] = await Promise.all([
+    articleService.getFeatured(),
+    articleService.listPublished(),
+  ]);
+  const lead = featured ?? published[0] ?? null;
+  const stories = published.filter((article) => article.slug !== lead?.slug);
+  const sidebarStories = ENABLE_ANALYTICS
+    ? await articleService.listTrending(4)
+    : stories.slice(0, 4);
+  const sidebarLabel = ENABLE_ANALYTICS ? "Most read" : "Recent stories";
+  const sidebarEmptyMessage = ENABLE_ANALYTICS
+    ? "Nothing trending yet."
+    : "Nothing published yet.";
 
   const campusMix = stories
     .filter((s) =>
@@ -30,35 +40,7 @@ export default async function HomePage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
           {lead ? (
-            <Link href={`/article/${lead.slug}`} className="group block">
-              <PhotoPlaceholder
-                icon={sectionIcon(getSectionName(lead.sectionSlug))}
-                ratio="16 / 9"
-                iconSize={48}
-                src={lead.coverImageUrl}
-                alt={lead.coverImageAlt}
-              />
-              {lead.caption && (
-                <p className="font-utility mt-2 text-xs text-muted-foreground">
-                  {lead.caption}
-                </p>
-              )}
-              <div className="mt-4">
-                <span className="tc-kicker text-brand">
-                  {getSectionName(lead.sectionSlug)}
-                </span>
-                <h1 className="font-display mt-2 text-[2.6rem] leading-[3rem] font-extrabold text-balance text-foreground group-hover:underline">
-                  {lead.title}
-                </h1>
-                <p className="mt-3 max-w-xl text-lg leading-7 text-text-secondary">
-                  {lead.dek}
-                </p>
-                <span className="font-utility mt-3 block text-xs font-medium text-muted-foreground">
-                  By {lead.authorName} · {formatDisplayDate(lead.publishedAt)} ·{" "}
-                  {formatReadTime(lead.readTimeMinutes)}
-                </span>
-              </div>
-            </Link>
+            <FeaturedStoryBanner article={lead} featured={Boolean(featured)} />
           ) : (
             <EmptyState
               icon={Newspaper}
@@ -69,15 +51,15 @@ export default async function HomePage() {
 
           <aside>
             <h2 className="font-utility border-b border-border pb-2 text-xs font-bold tracking-wide text-foreground uppercase">
-              Most read
+              {sidebarLabel}
             </h2>
-            {trending.length === 0 ? (
+            {sidebarStories.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">
-                Nothing trending yet.
+                {sidebarEmptyMessage}
               </p>
             ) : (
               <div className="flex flex-col">
-                {trending.map((t, i) => (
+                {sidebarStories.map((t, i) => (
                   <Link
                     key={t.slug}
                     href={`/article/${t.slug}`}

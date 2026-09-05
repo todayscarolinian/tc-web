@@ -4,13 +4,25 @@ import { articleService } from "@/src/entities/article/services/article.service.
 import { tagService } from "@/src/entities/tag/services/tag.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
-import { formatDisplayDate, formatReadTime, renderArticleBodyHTML } from "@/src/lib/article-format";
+import {
+  formatDisplayDate,
+  formatReadTime,
+  renderArticleBodyHTML,
+} from "@/src/lib/article-format";
 import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { ShareRow } from "@/components/site/share-row";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
 export async function generateStaticParams() {
@@ -29,10 +41,10 @@ export default async function ArticlePage({
   const article = await articleService.getBySlug(slug);
   if (!article) notFound();
 
-  const sectionInfo = await articleService.findSectionBySlug(article.sectionSlug);
-  const related = (await articleService.listPublished())
-    .filter((a) => a.slug !== article.slug)
-    .slice(0, 3);
+  const sectionInfo = await articleService.findSectionBySlug(
+    article.sectionSlug,
+  );
+  const related = await articleService.listRelatedArticles(article);
   const bodyHtml = renderArticleBodyHTML(article.body);
 
   const allTags = article.tagSlugs.length > 0 ? await tagService.listAll() : [];
@@ -50,25 +62,60 @@ export default async function ArticlePage({
         alt={article.coverImageAlt}
       />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            {sectionInfo && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href={`/section/${sectionInfo.slug}`}>
+                    {sectionInfo.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="line-clamp-1">
+                {article.title}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {article.caption && (
-          <p className="font-utility mb-6 text-center text-xs text-muted-foreground">{article.caption}</p>
+          <p className="font-utility mb-6 text-center text-xs text-muted-foreground">
+            {article.caption}
+          </p>
         )}
 
         {sectionInfo && (
-          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>{sectionInfo.name}</span>
+          <span className={`tc-kicker ${accentTextClass(sectionInfo.accent)}`}>
+            {sectionInfo.name}
+          </span>
         )}
         <h1 className="font-display mt-2 text-4xl leading-[44px] font-extrabold text-balance text-foreground">
           {article.title}
         </h1>
-        <p className="mt-3 text-lg leading-7 text-text-secondary">{article.dek}</p>
+        <p className="mt-3 text-lg leading-7 text-text-secondary">
+          {article.dek}
+        </p>
 
         <Link
           href={`/author/${article.authorId}`}
           className="group mt-6 flex items-center gap-3 border-y border-border py-4"
         >
           <Avatar size="lg">
-            <AvatarImage src={article.authorAvatarUrl} alt={article.authorName} />
-            <AvatarFallback className="bg-brand text-white">{article.authorInitials}</AvatarFallback>
+            <AvatarImage
+              src={article.authorAvatarUrl}
+              alt={article.authorName}
+            />
+            <AvatarFallback className="bg-brand text-white">
+              {article.authorInitials}
+            </AvatarFallback>
           </Avatar>
           <div className="grow">
             <p className="font-ui text-sm font-bold text-foreground group-hover:underline">
@@ -76,7 +123,8 @@ export default async function ArticlePage({
             </p>
             <span className="font-utility text-xs text-muted-foreground">
               {article.authorRole ? article.authorRole + " · " : ""}
-              {formatDisplayDate(article.publishedAt)} · {formatReadTime(article.readTimeMinutes)}
+              {formatDisplayDate(article.publishedAt)} ·{" "}
+              {formatReadTime(article.readTimeMinutes)}
             </span>
           </div>
         </Link>

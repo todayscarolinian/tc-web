@@ -425,3 +425,22 @@ does that against real documents.
   - A small benign race exists if two near-simultaneous reads both flip the
     same due article — last write wins, both produce a valid `Published`
     state; not worth a transaction at MVP traffic.
+- **S4-04's featured-banner lookup uses the IDX6 query fallback, not the
+  `config/homepage` singleton-doc approach.** `FirestoreArticleRepository.findPublishedFeatured`/
+  `listFeatured` (`src/entities/article/infrastructure/firestore-article.repository.ts`)
+  query `articles` with `where("featured","==",true)` rather than the
+  `config/homepage → { featuredSlug: string | null }` doc the "Efficiency
+  recommendations" section above prefers for this exact "small pick one/few
+  selections" case. Deferred rather than adopted in S4-04 because it isn't a
+  drop-in swap: making `featuredSlug` genuinely authoritative means every
+  write path that can change an article's `featured` flag or `status` has to
+  keep it in sync — `staff.save`, `staff.update`, `staff.publish`,
+  `staff.unpublish`, `staff.archive`, and the `sweepDuePublishes` lazy-publish
+  flip (a scheduled+featured article flipping to `Published` outside the
+  normal update path) — a real cross-cutting change, not a one-file fix. No
+  action needed at MVP scale: the query is equality-only (no composite index
+  actually required despite IDX6 existing in `firestore.indexes.json`), and
+  the featured set is at most one document per the exclusivity invariant
+  `ArticleRepository.setExclusiveFeatured` already enforces. Flagged for
+  whoever revisits this once traffic or read-cost pressure make the
+  config-doc approach worth the write-path rework.

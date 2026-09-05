@@ -1,4 +1,7 @@
-import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
+import type {
+  Article,
+  ArticleInput,
+} from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 
@@ -7,6 +10,8 @@ export const SECTION_PAGE_SIZE = 12;
 export interface ArticleUseCase {
   /** Published articles only, most recent first. */
   listPublished(): Promise<Article[]>;
+  /** The single published featured/breaking story, or null when none is marked. */
+  getFeatured(): Promise<Article | null>;
   /** Public-facing: resolves to null for drafts/scheduled articles, not just unknown slugs. */
   getBySlug(slug: string): Promise<Article | null>;
   listTrending(limit?: number): Promise<Article[]>;
@@ -16,6 +21,7 @@ export interface ArticleUseCase {
     sectionSlug: string,
     page: number,
   ): Promise<{ articles: Article[]; totalPages: number; page: number }>;
+  listRelatedArticles(article: Article, limit?: number): Promise<Article[]>;
   /** Published articles by a given author, most recent first. */
   listByAuthor(authorId: string): Promise<Article[]>;
   listSections(): Promise<Section[]>;

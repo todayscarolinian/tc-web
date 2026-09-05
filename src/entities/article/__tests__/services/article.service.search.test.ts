@@ -31,16 +31,21 @@ describe("articleService.search", () => {
       findBySlug: () => { throw new Error("should not be called"); },
       findPublishedBySlug: () => { throw new Error("should not be called"); },
       listTrending: () => { throw new Error("should not be called"); },
+      findRelatedArticles: () => { throw new Error("should not be called"); },
+      findRecentArticles: () => { throw new Error("should not be called"); },
       search: () => { throw new Error("should not be called"); },
       listPublishedBySection: () => { throw new Error("should not be called"); },
       findPublishedByAuthorId: () => { throw new Error("should not be called"); },
       findDueForPublish: () => { throw new Error("should not be called"); },
+      findPublishedFeatured: () => { throw new Error("should not be called"); },
+      listFeatured: () => { throw new Error("should not be called"); },
       listAll: () => { throw new Error("should not be called"); },
       listSections: () => { throw new Error("should not be called"); },
       findSectionBySlug: () => { throw new Error("should not be called"); },
       findSectionByName: () => { throw new Error("should not be called"); },
       listByTagSlug: () => { throw new Error("should not be called"); },
-      saveArticle: () => { throw new Error("should not be called"); }
+      saveArticle: () => { throw new Error("should not be called"); },
+      setExclusiveFeatured: () => { throw new Error("should not be called"); },
     };
     const unreachableService = createArticleService(unreachableRepo);
     expect(await unreachableService.search("   ")).toEqual([]);

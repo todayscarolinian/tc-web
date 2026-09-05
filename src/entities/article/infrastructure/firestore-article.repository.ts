@@ -4,13 +4,17 @@ import {
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
 import { db } from "@/src/lib/firebase/admin";
-import { getSectionName, SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
+import {
+  getSectionName,
+  SECTIONS,
+  type SectionInfo,
+} from "@/src/entities/section/infrastructure/static-section.repository";
 import { TRENDING_SLUGS } from "@/src/lib/articles";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-
+import { RELATED_ARTICLES_LIMIT } from "@/src/entities/article/core/article.types";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
@@ -20,6 +24,7 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
   return {
     ...data,
     // slug: doc.id, // or data.slug, depending on whether slug is the doc ID
+    featured: Boolean(data.featured),
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
@@ -67,6 +72,86 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return articles.filter((a): a is Article => a !== null);
   }
 
+  async findRelatedArticles(
+    article: Article,
+    limit = RELATED_ARTICLES_LIMIT,
+  ): Promise<Article[]> {
+    const candidates = new Map<string, Article>();
+    const tagSlugSet = new Set(article.tagSlugs);
+
+    // Same section
+    const sectionSnap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .where("sectionSlug", "==", article.sectionSlug)
+      .orderBy("publishedAt", "desc")
+      .limit(limit * 3 + 1)
+      .get();
+
+    for (const doc of sectionSnap.docs) {
+      const candidate = toDomainArticle(doc);
+      if (candidate.slug !== article.slug) {
+        candidates.set(candidate.slug, candidate);
+      }
+    }
+
+    // Shared tags — Firestore caps array-contains-any at 10 values
+    const tagSlugsForQuery = article.tagSlugs.slice(0, 10);
+
+    if (tagSlugsForQuery.length > 0) {
+      const tagSnap = await db
+        .collection(ARTICLES_COLLECTION)
+        .where("status", "==", "Published")
+        .where("tagSlugs", "array-contains-any", tagSlugsForQuery)
+        .orderBy("publishedAt", "desc")
+        .limit(limit * 3)
+        .get();
+
+      for (const doc of tagSnap.docs) {
+        const candidate = toDomainArticle(doc);
+        if (
+          candidate.slug !== article.slug &&
+          !candidates.has(candidate.slug)
+        ) {
+          candidates.set(candidate.slug, candidate);
+        }
+      }
+    }
+
+    // Rank: same section + shared tag > same section only > shared tag only
+    const rank = (candidate: Article): number => {
+      const sameSection = candidate.sectionSlug === article.sectionSlug;
+      const sharesTag = candidate.tagSlugs.some((t) => tagSlugSet.has(t));
+
+      if (sameSection && sharesTag) return 0;
+      if (sameSection) return 1;
+      if (sharesTag) return 2;
+      return 3;
+    };
+
+    return Array.from(candidates.values())
+      .sort((a, b) => {
+        const rankDiff = rank(a) - rank(b);
+        if (rankDiff !== 0) return rankDiff;
+        // tie-break within a tier by recency
+        return (
+          (b.publishedAt?.valueOf() ?? 0) - (a.publishedAt?.valueOf() ?? 0)
+        );
+      })
+      .slice(0, limit);
+  }
+
+  async findRecentArticles(limit = RELATED_ARTICLES_LIMIT): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("status", "==", "Published")
+      .orderBy("publishedAt", "desc")
+      .limit(limit)
+      .get();
+
+    return snap.docs.map(toDomainArticle);
+  }
+
   async search(query: string): Promise<Article[]> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -82,7 +167,7 @@ export class FirestoreArticleRepository implements ArticleRepository {
         article.titleLower?.includes(q) ||
         article.dek?.toLowerCase().includes(q) ||
         article.authorName?.toLowerCase().includes(q) ||
-        sectionName?.includes(q)
+        sectionName.includes(q)
       );
     });
   }
@@ -125,6 +210,26 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return snap.docs.map(toDomainArticle);
   }
 
+  async findPublishedFeatured(): Promise<Article | null> {
+    // Equality-only on `featured` so this works before IDX6 is deployed.
+    // Exclusive persist keeps the set tiny; filter/sort Published in memory.
+    const featured = await this.listFeatured();
+    return (
+      featured
+        .filter((article) => article.status === "Published")
+        .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0))[0] ??
+      null
+    );
+  }
+
+  async listFeatured(): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("featured", "==", true)
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
   async listAll(): Promise<Article[]> {
     const snap = await db.collection(ARTICLES_COLLECTION).get();
     return snap.docs.map(toDomainArticle);
@@ -158,6 +263,23 @@ export class FirestoreArticleRepository implements ArticleRepository {
 
   async saveArticle(article: Article): Promise<Article> {
     await db.collection(ARTICLES_COLLECTION).doc(article.slug).set(article);
+    return article;
+  }
+
+  async setExclusiveFeatured(article: Article): Promise<Article> {
+    const articles = db.collection(ARTICLES_COLLECTION);
+    await db.runTransaction(async (tx) => {
+      // Read-then-write inside the transaction so a concurrent feature
+      // request on another article is serialized against this one instead
+      // of racing it — Firestore retries the transaction on conflict.
+      const othersSnap = await tx.get(articles.where("featured", "==", true));
+      for (const doc of othersSnap.docs) {
+        if (doc.id !== article.slug) {
+          tx.update(doc.ref, { featured: false, updatedAt: new Date() });
+        }
+      }
+      tx.set(articles.doc(article.slug), article);
+    });
     return article;
   }
 }
