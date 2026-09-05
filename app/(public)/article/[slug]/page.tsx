@@ -15,6 +15,14 @@ import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { ShareRow } from "@/components/site/share-row";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
 
 export async function generateStaticParams() {
@@ -54,6 +62,30 @@ export default async function ArticlePage({
         alt={article.coverImageAlt}
       />
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            {sectionInfo && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href={`/section/${sectionInfo.slug}`}>
+                    {sectionInfo.name}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="line-clamp-1">
+                {article.title}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {article.caption && (
           <p className="font-utility mb-6 text-center text-xs text-muted-foreground">
             {article.caption}
