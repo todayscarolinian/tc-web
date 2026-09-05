@@ -9,13 +9,19 @@ import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { EmptyState } from "@/components/site/empty-state";
 import { Button } from "@/components/ui/button";
-import { ENABLE_SUBSCRIPTION } from "@/src/lib/flags";
+import { ENABLE_SUBSCRIPTION, ENABLE_ANALYTICS } from "@/src/lib/flags";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const [lead, ...stories] = await articleService.listPublished();
-  const trending = await articleService.listTrending(4);
+  const sidebarStories = ENABLE_ANALYTICS
+    ? await articleService.listTrending(4)
+    : stories.slice(0, 4);
+  const sidebarLabel = ENABLE_ANALYTICS ? "Most read" : "Recent stories";
+  const sidebarEmptyMessage = ENABLE_ANALYTICS
+    ? "Nothing trending yet."
+    : "Nothing published yet.";
 
   const campusMix = stories
     .filter((s) =>
@@ -69,15 +75,15 @@ export default async function HomePage() {
 
           <aside>
             <h2 className="font-utility border-b border-border pb-2 text-xs font-bold tracking-wide text-foreground uppercase">
-              Most read
+              {sidebarLabel}
             </h2>
-            {trending.length === 0 ? (
+            {sidebarStories.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">
-                Nothing trending yet.
+                {sidebarEmptyMessage}
               </p>
             ) : (
               <div className="flex flex-col">
-                {trending.map((t, i) => (
+                {sidebarStories.map((t, i) => (
                   <Link
                     key={t.slug}
                     href={`/article/${t.slug}`}

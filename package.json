@@ -9,10 +9,12 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ga4:test-query": "tsx --env-file=.env scripts/ga4-test-query.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@google-analytics/data": "^7.0.0",
     "@tailwindcss/typography": "^0.5.20",
     "@tiptap/core": "^3.27.1",
     "@tiptap/extension-image": "^3.27.1",
@@ -49,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }
