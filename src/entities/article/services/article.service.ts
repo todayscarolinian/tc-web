@@ -1,7 +1,10 @@
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
-import type { Article, ArticleInput } from "@/src/entities/article/core/article.domain";
+import type {
+  Article,
+  ArticleInput,
+} from "@/src/entities/article/core/article.domain";
 import {
   archiveArticle,
   createArticle,
@@ -12,6 +15,7 @@ import {
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { ArticleUseCase } from "@/src/entities/article/usecase/article.usecase";
 import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecase";
+import { RELATED_ARTICLES_LIMIT } from "../core/article.types";
 
 async function persistExclusiveFeatured(
   repo: ArticleRepository,
@@ -41,7 +45,10 @@ async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Pro
           // no-op
         }
       } catch (err) {
-        console.error(`sweepDuePublishes: failed to publish ${article.slug}`, err);
+        console.error(
+          `sweepDuePublishes: failed to publish ${article.slug}`,
+          err,
+        );
       }
     }),
   );
@@ -87,7 +94,10 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       await sweepDuePublishes(repo);
       const { articles, totalCount } = await repo.listPublishedBySection(
         sectionSlug,
-        { limit: SECTION_PAGE_SIZE, offset: (safePage - 1) * SECTION_PAGE_SIZE },
+        {
+          limit: SECTION_PAGE_SIZE,
+          offset: (safePage - 1) * SECTION_PAGE_SIZE,
+        },
       );
 
       return {
@@ -95,6 +105,40 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
         totalPages: Math.max(1, Math.ceil(totalCount / SECTION_PAGE_SIZE)),
         page: safePage,
       };
+    },
+
+    async listRelatedArticles(
+      article: Article,
+      limit = RELATED_ARTICLES_LIMIT,
+    ): Promise<Article[]> {
+      if (!article) return [];
+      await sweepDuePublishes(repo);
+
+      const related = await repo.findRelatedArticles(article, limit);
+
+      if (related.length >= limit) {
+        return related.slice(0, limit);
+      }
+
+      // Over-fetch by `limit`, not the remaining count — recent articles can
+      // overlap with `related`, and dedup below needs slack to still land on `limit`.
+      const recent = await repo.findRecentArticles(limit);
+
+      const combined = new Map<string, Article>();
+
+      for (const candidate of related) {
+        if (candidate.slug !== article.slug) {
+          combined.set(candidate.slug, candidate);
+        }
+      }
+
+      for (const candidate of recent) {
+        if (candidate.slug !== article.slug) {
+          combined.set(candidate.slug, candidate);
+        }
+      }
+
+      return Array.from(combined.values()).slice(0, limit);
     },
 
     async listByAuthor(authorId: string): Promise<Article[]> {

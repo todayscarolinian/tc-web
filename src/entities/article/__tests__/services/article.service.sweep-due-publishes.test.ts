@@ -7,7 +7,9 @@ import { createArticleService } from "@/src/entities/article/services/article.se
 const PAST = new Date(Date.now() - 60_000);
 const FUTURE = new Date(Date.now() + 60 * 60_000);
 
-function fixtureArticle(overrides: Partial<Article> & { slug: string }): Article {
+function fixtureArticle(
+  overrides: Partial<Article> & { slug: string },
+): Article {
   return {
     sectionSlug: "sports",
     title: overrides.slug,
@@ -35,7 +37,11 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "due-listpublished", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-listpublished",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     const articles = await service.listPublished();
@@ -47,7 +53,11 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "due-persisted", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-persisted",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     await service.listPublished();
@@ -61,7 +71,11 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "not-due-yet", status: "Scheduled", publishAt: FUTURE }),
+      fixtureArticle({
+        slug: "not-due-yet",
+        status: "Scheduled",
+        publishAt: FUTURE,
+      }),
     );
 
     const articles = await service.listPublished();
@@ -74,7 +88,9 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
   it("leaves plain Draft articles (no publishAt) untouched", async () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
-    await repo.saveArticle(fixtureArticle({ slug: "plain-draft", status: "Draft" }));
+    await repo.saveArticle(
+      fixtureArticle({ slug: "plain-draft", status: "Draft" }),
+    );
 
     await service.listPublished();
     const staffView = await service.staff.getBySlug("plain-draft");
@@ -86,7 +102,11 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "due-getbyslug", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-getbyslug",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     const article = await service.getBySlug("due-getbyslug");
@@ -114,19 +134,17 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
   it("listByAuthor() also triggers the sweep", async () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
-    // InMemoryArticleRepository's mock-data mapping round-trips Article.authorId
-    // as the record's display-name field (see toArticle()) — match that here,
-    // same as the existing article.service.list-by-author.test.ts convention.
     await repo.saveArticle(
       fixtureArticle({
         slug: "due-author",
+        authorId: "sweep-author",
         authorName: "Sweep Author",
         status: "Scheduled",
         publishAt: PAST,
       }),
     );
 
-    const articles = await service.listByAuthor("Sweep Author");
+    const articles = await service.listByAuthor("sweep-author");
 
     expect(articles.some((a) => a.slug === "due-author")).toBe(true);
   });
@@ -153,7 +171,11 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const service = createArticleService(repo);
     // "warriors-ot" is one of the curated TRENDING_SLUGS in src/lib/articles.ts.
     await repo.saveArticle(
-      fixtureArticle({ slug: "warriors-ot", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "warriors-ot",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     await service.listTrending();
@@ -166,19 +188,29 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "due-staff-listall", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-staff-listall",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     const articles = await service.staff.listAll();
 
-    expect(articles.find((a) => a.slug === "due-staff-listall")?.status).toBe("Published");
+    expect(articles.find((a) => a.slug === "due-staff-listall")?.status).toBe(
+      "Published",
+    );
   });
 
   it("staff.getBySlug() also triggers the sweep", async () => {
     const repo = new InMemoryArticleRepository();
     const service = createArticleService(repo);
     await repo.saveArticle(
-      fixtureArticle({ slug: "due-staff-getbyslug", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-staff-getbyslug",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     const article = await service.staff.getBySlug("due-staff-getbyslug");
@@ -189,10 +221,18 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
   it("a sweep failure on one due article doesn't block the read or other due articles", async () => {
     const inMemory = new InMemoryArticleRepository();
     await inMemory.saveArticle(
-      fixtureArticle({ slug: "due-fails", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-fails",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
     await inMemory.saveArticle(
-      fixtureArticle({ slug: "due-succeeds", status: "Scheduled", publishAt: PAST }),
+      fixtureArticle({
+        slug: "due-succeeds",
+        status: "Scheduled",
+        publishAt: PAST,
+      }),
     );
 
     const flakyRepo: ArticleRepository = {
@@ -203,6 +243,8 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
       listTrending: inMemory.listTrending.bind(inMemory),
       search: inMemory.search.bind(inMemory),
       listPublishedBySection: inMemory.listPublishedBySection.bind(inMemory),
+      findRelatedArticles: inMemory.findRelatedArticles.bind(inMemory),
+      findRecentArticles: inMemory.findRecentArticles.bind(inMemory),
       findPublishedByAuthorId: inMemory.findPublishedByAuthorId.bind(inMemory),
       findDueForPublish: inMemory.findDueForPublish.bind(inMemory),
       findPublishedFeatured: inMemory.findPublishedFeatured.bind(inMemory),
@@ -211,9 +253,10 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
       listSections: inMemory.listSections.bind(inMemory),
       findSectionBySlug: inMemory.findSectionBySlug.bind(inMemory),
       findSectionByName: inMemory.findSectionByName.bind(inMemory),
-      listByTagSlug: inMemory.listByTagSlug.bind(inMemory), 
+      listByTagSlug: inMemory.listByTagSlug.bind(inMemory),
       saveArticle: (doc: Article) => {
-        if (doc.slug === "due-fails") throw new Error("simulated write failure");
+        if (doc.slug === "due-fails")
+          throw new Error("simulated write failure");
         return inMemory.saveArticle(doc);
       },
       setExclusiveFeatured: inMemory.setExclusiveFeatured.bind(inMemory),

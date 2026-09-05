@@ -7,9 +7,9 @@ describe("articleService.listByAuthor", () => {
   const service = createArticleService(new InMemoryArticleRepository());
 
   it("resolves a known author to only their published articles", async () => {
-    const results = await service.listByAuthor("Aisha Cruz");
+    const results = await service.listByAuthor("aisha-cruz");
     expect(results.length).toBeGreaterThan(0);
-    expect(results.every((a) => a.authorId === "Aisha Cruz")).toBe(true);
+    expect(results.every((a) => a.authorId === "aisha-cruz")).toBe(true);
     expect(results.every((a) => a.status === "Published")).toBe(true);
   });
 
@@ -23,6 +23,8 @@ describe("articleService.listByAuthor", () => {
       findBySlug: () => { throw new Error("should not be called"); },
       findPublishedBySlug: () => { throw new Error("should not be called"); },
       listTrending: () => { throw new Error("should not be called"); },
+      findRelatedArticles: () => { throw new Error("should not be called"); },
+      findRecentArticles: () => { throw new Error("should not be called"); },
       search: () => { throw new Error("should not be called"); },
       listPublishedBySection: () => { throw new Error("should not be called"); },
       findPublishedByAuthorId: () => { throw new Error("should not be called"); },

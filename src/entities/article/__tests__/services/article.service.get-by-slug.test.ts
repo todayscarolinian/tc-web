@@ -12,7 +12,7 @@ describe("articleService.getBySlug", () => {
   it("resolves a known slug to the matching article", async () => {
     const article = await service.getBySlug("tuition");
     expect(article?.title).toBe(
-      "USC board defers tuition adjustment after three-hour student hearing"
+      "USC board defers tuition adjustment after three-hour student hearing",
     );
   });
 
@@ -30,6 +30,8 @@ describe("articleService.getBySlug", () => {
       findBySlug: () => { throw new Error("should not be called"); },
       findPublishedBySlug: () => { throw new Error("should not be called"); },
       listTrending: () => { throw new Error("should not be called"); },
+      findRelatedArticles: () => { throw new Error("should not be called"); },
+      findRecentArticles: () => { throw new Error("should not be called"); },
       search: () => { throw new Error("should not be called"); },
       listPublishedBySection: () => { throw new Error("should not be called"); },
       findPublishedByAuthorId: () => { throw new Error("should not be called"); },
