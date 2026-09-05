@@ -14,7 +14,7 @@ import type { ArticleRepository } from "@/src/entities/article/core/article.repo
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-import { RELATED_ARTICLES_LIMIT } from "../core/article.types";
+import { RELATED_ARTICLES_LIMIT } from "@/src/entities/article/core/article.types";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
