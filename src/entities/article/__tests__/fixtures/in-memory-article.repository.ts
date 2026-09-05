@@ -213,4 +213,13 @@ export class InMemoryArticleRepository implements ArticleRepository {
     }
     return doc;
   }
+
+  async setExclusiveFeatured(article: Article): Promise<Article> {
+    for (const other of this.articles) {
+      if (other.slug !== article.slug && other.featured) {
+        other.featured = false;
+      }
+    }
+    return this.saveArticle(article);
+  }
 }

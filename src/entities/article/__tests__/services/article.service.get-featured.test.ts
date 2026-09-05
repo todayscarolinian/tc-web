@@ -39,7 +39,7 @@ function inputFrom(article: Article, overrides: Partial<ArticleInput> = {}): Art
     body: article.body,
     tagSlugs: article.tagSlugs,
     publishAt: article.publishAt ?? null,
-    featured: article.featured,
+    featured: article.featured ?? false,
     ...overrides,
   };
 }
@@ -104,5 +104,38 @@ describe("articleService exclusive featured flag", () => {
 
     expect((await repo.findBySlug("first-banner"))?.featured).toBe(false);
     expect((await service.getFeatured())?.slug).toBe("second-banner");
+  });
+
+  it("does not clear the live banner when a new draft is saved as featured", async () => {
+    const repo = new InMemoryArticleRepository();
+    const service = createArticleService(repo);
+    const live = fixtureArticle({ slug: "live-banner", featured: true });
+    await repo.saveArticle(live);
+
+    const draft = await service.staff.save(
+      inputFrom(fixtureArticle({ slug: "new-draft", featured: true }), {
+        title: "new-draft",
+        publishAt: null,
+      }),
+    );
+
+    expect(draft.status).toBe("Draft");
+    expect((await repo.findBySlug("live-banner"))?.featured).toBe(true);
+    expect((await service.getFeatured())?.slug).toBe("live-banner");
+  });
+
+  it("clears the live banner once a newly featured draft is actually published", async () => {
+    const repo = new InMemoryArticleRepository();
+    const service = createArticleService(repo);
+    const live = fixtureArticle({ slug: "live-banner", featured: true });
+    await repo.saveArticle(live);
+    await repo.saveArticle(
+      fixtureArticle({ slug: "queued-draft", status: "Draft", featured: true, publishedAt: null }),
+    );
+
+    await service.staff.publish("queued-draft");
+
+    expect((await repo.findBySlug("live-banner"))?.featured).toBe(false);
+    expect((await service.getFeatured())?.slug).toBe("queued-draft");
   });
 });

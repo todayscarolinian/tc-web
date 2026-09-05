@@ -35,6 +35,7 @@ describe("articleService.listByAuthor", () => {
       findSectionByName: () => { throw new Error("should not be called"); },
       listByTagSlug: () => { throw new Error("should not be called"); },
       saveArticle: () => { throw new Error("should not be called"); },
+      setExclusiveFeatured: () => { throw new Error("should not be called"); },
     };
     const unreachableService = createArticleService(unreachableRepo);
     expect(await unreachableService.listByAuthor("   ")).toEqual([]);

@@ -17,13 +17,8 @@ async function persistExclusiveFeatured(
   repo: ArticleRepository,
   article: Article,
 ): Promise<Article> {
-  if (article.featured) {
-    const others = (await repo.listFeatured()).filter((item) => item.slug !== article.slug);
-    await Promise.all(
-      others.map((item) =>
-        repo.saveArticle({ ...item, featured: false, updatedAt: new Date() }),
-      ),
-    );
+  if (article.featured && article.status === "Published") {
+    return repo.setExclusiveFeatured(article);
   }
   return repo.saveArticle(article);
 }

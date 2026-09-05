@@ -42,7 +42,8 @@ describe("articleService.search", () => {
       findSectionBySlug: () => { throw new Error("should not be called"); },
       findSectionByName: () => { throw new Error("should not be called"); },
       listByTagSlug: () => { throw new Error("should not be called"); },
-      saveArticle: () => { throw new Error("should not be called"); }
+      saveArticle: () => { throw new Error("should not be called"); },
+      setExclusiveFeatured: () => { throw new Error("should not be called"); },
     };
     const unreachableService = createArticleService(unreachableRepo);
     expect(await unreachableService.search("   ")).toEqual([]);

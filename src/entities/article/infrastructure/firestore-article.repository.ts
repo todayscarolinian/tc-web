@@ -181,4 +181,21 @@ export class FirestoreArticleRepository implements ArticleRepository {
     await db.collection(ARTICLES_COLLECTION).doc(article.slug).set(article);
     return article;
   }
+
+  async setExclusiveFeatured(article: Article): Promise<Article> {
+    const articles = db.collection(ARTICLES_COLLECTION);
+    await db.runTransaction(async (tx) => {
+      // Read-then-write inside the transaction so a concurrent feature
+      // request on another article is serialized against this one instead
+      // of racing it — Firestore retries the transaction on conflict.
+      const othersSnap = await tx.get(articles.where("featured", "==", true));
+      for (const doc of othersSnap.docs) {
+        if (doc.id !== article.slug) {
+          tx.update(doc.ref, { featured: false, updatedAt: new Date() });
+        }
+      }
+      tx.set(articles.doc(article.slug), article);
+    });
+    return article;
+  }
 }

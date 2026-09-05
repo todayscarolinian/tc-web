@@ -59,7 +59,9 @@ export type ArticleInput = {
   coverImageUrl?: string;
   coverImageAssetId?: string;
   coverImageAlt?: string;
-  featured?: boolean;
+  // Required (unlike Article.featured) so a caller can't silently omit it and
+  // have createArticle/updateArticleContent default it to false underneath them.
+  featured: boolean;
 };
 
 export type ArticleDTO = Omit<Article, "publishedAt" | "publishAt" | "createdAt" | "updatedAt"> & {

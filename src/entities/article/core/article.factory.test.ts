@@ -58,6 +58,7 @@ function makeInput(overrides: Partial<ArticleInput> = {}): ArticleInput {
     body: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "paragraph one" }] }] },
     tagSlugs: [],
     publishAt: null,
+    featured: false,
     ...overrides,
   };
 }
@@ -106,6 +107,12 @@ describe("unpublishArticle", () => {
     expect(unpublished.publishAt).toBeNull();
   });
 
+  it("clears featured so a taken-down article can't stay the banner pick", () => {
+    const article = makeArticle({ status: "Published", featured: true });
+    const unpublished = unpublishArticle(article);
+    expect(unpublished.featured).toBe(false);
+  });
+
   it.each<ArticleStatus>(["Draft", "Scheduled", "Archived"])(
     "throws when unpublishing a %s article",
     (from) => {
@@ -128,6 +135,12 @@ describe("archiveArticle", () => {
   it("throws when archiving an already-Archived article", () => {
     const article = makeArticle({ status: "Archived" });
     expect(() => archiveArticle(article)).toThrow();
+  });
+
+  it("clears featured so a taken-down article can't stay the banner pick", () => {
+    const article = makeArticle({ status: "Published", featured: true });
+    const archived = archiveArticle(article);
+    expect(archived.featured).toBe(false);
   });
 });
 
@@ -152,8 +165,8 @@ describe("createArticle", () => {
     expect(article.readTimeMinutes).toBeGreaterThanOrEqual(1);
   });
 
-  it("defaults featured to false when the input omits it", () => {
-    expect(createArticle(makeInput()).featured).toBe(false);
+  it("sets featured to false when the input says so", () => {
+    expect(createArticle(makeInput({ featured: false })).featured).toBe(false);
   });
 
   it("sets featured from the input", () => {
@@ -206,9 +219,9 @@ describe("updateArticleContent", () => {
     expect(updateArticleContent(existing, makeInput({ featured: true })).featured).toBe(true);
   });
 
-  it("clears featured when the input omits it", () => {
+  it("clears featured when the input says false", () => {
     const existing = makeArticle({ featured: true });
-    expect(updateArticleContent(existing, makeInput()).featured).toBe(false);
+    expect(updateArticleContent(existing, makeInput({ featured: false })).featured).toBe(false);
   });
 });
 

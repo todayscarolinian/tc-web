@@ -34,4 +34,10 @@ export interface ArticleRepository {
   /** Published articles carrying a given tag slug, most recent first. */
   listByTagSlug(tagSlug: string): Promise<Article[]>;
   saveArticle(doc: Article): Promise<Article>;
+  /**
+   * Persists `article` (already `featured: true`) and clears `featured` on
+   * every other article, atomically — callers must not read-then-write the
+   * exclusivity invariant themselves (see FirestoreArticleRepository).
+   */
+  setExclusiveFeatured(article: Article): Promise<Article>;
 }

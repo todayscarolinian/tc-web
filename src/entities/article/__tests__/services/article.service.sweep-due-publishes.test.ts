@@ -216,6 +216,7 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
         if (doc.slug === "due-fails") throw new Error("simulated write failure");
         return inMemory.saveArticle(doc);
       },
+      setExclusiveFeatured: inMemory.setExclusiveFeatured.bind(inMemory),
     };
 
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});

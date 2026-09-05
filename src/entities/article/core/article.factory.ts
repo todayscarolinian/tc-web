@@ -84,6 +84,10 @@ export function unpublishArticle(article: Article): Article {
     ...article,
     status: "Draft",
     publishAt: null,
+    // A taken-down article can't stay the banner pick — clear rather than
+    // leave a stale featured:true only findPublishedFeatured's status filter
+    // happens to hide.
+    featured: false,
     updatedAt: new Date(),
   };
   return assertValidArticle(unpublished);
@@ -97,6 +101,7 @@ export function archiveArticle(article: Article): Article {
   const archived: Article = {
     ...article,
     status: "Archived",
+    featured: false,
     updatedAt: new Date(),
   };
   return assertValidArticle(archived);
