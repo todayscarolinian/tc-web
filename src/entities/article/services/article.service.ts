@@ -107,11 +107,9 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
         return related.slice(0, limit);
       }
 
-      // If related articles < 3, fills up the remaining slots with recent articles
-
-      const remaining = limit - related.length;
-
-      const recent = await repo.findRecentArticles(remaining);
+      // Over-fetch by `limit`, not the remaining count — recent articles can
+      // overlap with `related`, and dedup below needs slack to still land on `limit`.
+      const recent = await repo.findRecentArticles(limit);
 
       const combined = new Map<string, Article>();
 

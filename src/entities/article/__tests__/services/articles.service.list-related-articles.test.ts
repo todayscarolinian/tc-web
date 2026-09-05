@@ -115,4 +115,44 @@ describe("articleService.listRelatedArticles", () => {
       ),
     ).toEqual([]);
   });
+
+  it("still fills up to `limit` when the recent backfill overlaps with related candidates", async () => {
+    const current = stubArticle("current");
+    const related = [stubArticle("b"), stubArticle("c")];
+    // "c" doubles as both a related candidate and the most recent article overall.
+    const recentBySite = [stubArticle("c"), stubArticle("d"), stubArticle("e")];
+
+    const repo: ArticleRepository = {
+      ...unreachableRepo(),
+      findRelatedArticles: async () => related,
+      findRecentArticles: async (limit = 3) => recentBySite.slice(0, limit),
+    };
+
+    const service = createArticleService(repo);
+    const results = await service.listRelatedArticles(current, 3);
+
+    expect(results.map((a) => a.slug)).toEqual(["b", "c", "d"]);
+  });
 });
+
+function stubArticle(slug: string): Article {
+  return {
+    slug,
+    sectionSlug: "news",
+    title: slug,
+    titleLower: slug,
+    dek: "",
+    authorId: "author",
+    authorName: "Author",
+    authorInitials: "A",
+    publishedAt: new Date("2026-01-01"),
+    readTimeMinutes: 1,
+    body: { type: "doc", content: [] },
+    bodyText: "",
+    tagSlugs: [],
+    status: "Published",
+    views: 0,
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+  };
+}

@@ -162,9 +162,9 @@ export class FirestoreArticleRepository implements ArticleRepository {
       const sectionName = getSectionName(article.sectionSlug).toLowerCase();
 
       return (
-        article.titleLower.includes(q) ||
-        article.dek.toLowerCase().includes(q) ||
-        article.authorName.toLowerCase().includes(q) ||
+        article.titleLower?.includes(q) ||
+        article.dek?.toLowerCase().includes(q) ||
+        article.authorName?.toLowerCase().includes(q) ||
         sectionName.includes(q)
       );
     });
