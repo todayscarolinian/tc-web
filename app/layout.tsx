@@ -14,9 +14,27 @@ const rajdhani = Rajdhani({
   variable: "--font-utility",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://todayscarolinian.com";
+const SITE_NAME = "Today's Carolinian";
+
 export const metadata: Metadata = {
-  title: "Today's Carolinian",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: PUBLICATION.bio,
+  openGraph: {
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: PUBLICATION.bio,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_NAME,
+    description: PUBLICATION.bio,
+  },
 };
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;

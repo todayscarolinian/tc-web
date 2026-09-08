@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
@@ -17,6 +18,33 @@ export async function generateStaticParams() {
 export const dynamicParams = false;
 
 export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ section: string }>;
+}): Promise<Metadata> {
+  const { section: slug } = await params;
+  const section = await articleService.findSectionBySlug(slug);
+  if (!section) return {};
+
+  return {
+    title: section.name,
+    description: section.blurb,
+    alternates: { canonical: `/section/${section.slug}` },
+    openGraph: {
+      title: section.name,
+      description: section.blurb,
+      url: `/section/${section.slug}`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: section.name,
+      description: section.blurb,
+    },
+  };
+}
 
 export default async function SectionPage({
   params,
