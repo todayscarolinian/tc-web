@@ -16,8 +16,13 @@ function fixtureArticle(overrides: Partial<Article> & { slug: string }): Article
     publishedAt,
     publishAt: null,
     readTimeMinutes: 1,
-    body: { type: "doc", content: [] },
-    bodyText: "",
+    // Non-empty: two of these fixtures round-trip through
+    // save/update, which now reject an empty body (assertValidArticle).
+    body: {
+      type: "doc",
+      content: [{ type: "paragraph", content: [{ type: "text", text: "Body." }] }],
+    },
+    bodyText: "Body.",
     tagSlugs: [],
     status: "Published",
     views: 0,
