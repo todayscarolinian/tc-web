@@ -46,6 +46,8 @@ export async function PUT(
     revalidatePath("/section/[section]/page/[page]", "page");
     revalidatePath(`/author/${article.authorId}`);
     revalidatePath("/");
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/rss.xml");
 
     return NextResponse.json({ article });
   } catch (err) {

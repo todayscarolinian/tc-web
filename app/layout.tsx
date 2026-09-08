@@ -3,6 +3,7 @@ import { Open_Sans, Inter, Rajdhani } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { cn } from "@/src/lib/utils";
+import { SITE_URL, SITE_NAME } from "@/src/lib/site";
 import { PUBLICATION } from "@/src/entities/publication/infrastructure/publication.composition";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -14,8 +15,6 @@ const rajdhani = Rajdhani({
   variable: "--font-utility",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://todayscarolinian.com";
-const SITE_NAME = "Today's Carolinian";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
