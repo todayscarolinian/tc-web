@@ -46,13 +46,16 @@ export async function generateMetadata({
     ? [{ url: article.coverImageUrl, alt: article.coverImageAlt || article.title }]
     : undefined;
 
+  const description =
+    article.dek.trim() || truncate(article.bodyText, 160) || article.title;
+
   return {
     title: article.title,
-    description: article.dek,
+    description,
     alternates: { canonical: `/article/${article.slug}` },
     openGraph: {
       title: article.title,
-      description: article.dek,
+      description,
       url: `/article/${article.slug}`,
       type: "article",
       publishedTime: article.publishedAt?.toISOString(),
@@ -62,10 +65,16 @@ export async function generateMetadata({
     twitter: {
       card: images ? "summary_large_image" : "summary",
       title: article.title,
-      description: article.dek,
+      description,
       images,
     },
   };
+}
+
+function truncate(text: string, maxLength: number): string {
+  const collapsed = text.trim().replace(/\s+/g, " ");
+  if (collapsed.length <= maxLength) return collapsed;
+  return collapsed.slice(0, collapsed.lastIndexOf(" ", maxLength)).trimEnd() + "…";
 }
 
 export default async function ArticlePage({
