@@ -82,7 +82,12 @@ export function toArticleDTO(article: Article): ArticleDTO {
 }
 
 export function assertValidArticle(article: Article): Article {
-  if (!article.slug.trim()) throw new Error("Article.slug must not be empty");
+  // Title checked before slug: slug is derived from title (see
+  // article.factory.ts), so an empty title always also produces an empty
+  // slug — checking title first surfaces the message that matches what's
+  // actually missing, instead of the more confusing slug message.
   if (!article.title.trim()) throw new Error("Article.title must not be empty");
+  if (!article.slug.trim()) throw new Error("Article.slug must not be empty");
+  if (!article.bodyText.trim()) throw new Error("Article.body must not be empty");
   return article;
 }

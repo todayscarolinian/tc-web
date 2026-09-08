@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
@@ -47,7 +47,7 @@ import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 
 import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-import { toDatetimeLocalValue } from "@/src/lib/utils";
+import { cn, toDatetimeLocalValue } from "@/src/lib/utils";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 import { uploadMediaFile } from "@/src/lib/upload-media";
 import { MediaLibraryPicker } from "@/components/staff/media-library-picker";
@@ -65,6 +65,26 @@ const extensions = [
   Figure,
   Figcaption,
 ];
+
+// Fixed interval, not a trailing debounce: continuous typing would keep
+// resetting a debounce timer forever, which wouldn't actually bound loss.
+const AUTOSAVE_INTERVAL_MS = 5000;
+
+type AutosaveStatus = "idle" | "saving" | "saved" | "error";
+
+type FieldErrors = Partial<Record<"title" | "body" | "authorId", string>>;
+
+function getFieldErrors(input: {
+  title: string;
+  isBodyEmpty: boolean;
+  authorId: string | null;
+}): FieldErrors {
+  const errors: FieldErrors = {};
+  if (!input.title.trim()) errors.title = "Title is required.";
+  if (input.isBodyEmpty) errors.body = "Body can't be empty.";
+  if (!input.authorId) errors.authorId = "Choose an author.";
+  return errors;
+}
 
 export function ArticleEditor({
   article,
@@ -114,6 +134,18 @@ export function ArticleEditor({
   const [featured, setFeatured] = useState(Boolean(article?.featured));
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutosaving, setIsAutosaving] = useState(false);
+  const isBusy = isSaving || isAutosaving;
+
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(
+    article?.updatedAt ?? null,
+  );
+  // Slug of a new article created by a background autosave. Kept out of the
+  // URL (see runAutosave) so an in-flight autosave can't remount this
+  // component out from under the user the way router.push/refresh would.
+  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const selectedSection = SECTIONS.find((s) => s.name === section);
   const displayCoverUrl = previewBlobUrl ?? coverImageUrl;
@@ -131,15 +163,53 @@ export function ArticleEditor({
   // actual correctness guard.
   const coverUploadIdRef = useRef(0);
 
+  // Set by the aggregating effect below (and by Tiptap's onUpdate) whenever
+  // saved content changes; cleared after every successful save. A ref, not
+  // state, since it's read from timers/event listeners, not rendered.
+  const isDirtyRef = useRef(false);
+  const isFirstDirtyEffectRun = useRef(true);
+
   useEffect(() => {
     if (!previewBlobUrl) return;
     return () => URL.revokeObjectURL(previewBlobUrl);
   }, [previewBlobUrl]);
 
+  useEffect(() => {
+    if (isFirstDirtyEffectRun.current) {
+      isFirstDirtyEffectRun.current = false;
+      return;
+    }
+    isDirtyRef.current = true;
+  }, [
+    title,
+    section,
+    authorId,
+    dek,
+    tags,
+    coverImageUrl,
+    coverImageAssetId,
+    coverImageAlt,
+    publishAt,
+    featured,
+  ]);
+
   // FUNCTIONS
   const editor = useEditor({
     extensions,
     content: article?.body ?? "Write your news content here…",
+    onUpdate: () => {
+      isDirtyRef.current = true;
+    },
+  });
+
+  // editor.isEmpty read directly wouldn't re-render as the user types (the
+  // onUpdate above only touches a ref, deliberately, to avoid a re-render on
+  // every keystroke) — the inline body error needs to react to content
+  // changing, so it subscribes via useEditorState instead, same pattern as
+  // editor-toolbar-state.tsx.
+  const isBodyEmpty = useEditorState({
+    editor,
+    selector: ({ editor }) => !editor || editor.isEmpty,
   });
 
   const handleCoverFile = async (file: File) => {
@@ -218,7 +288,16 @@ export function ArticleEditor({
     setPreviewBlobUrl(null);
   };
 
-  const persistDraft = async (): Promise<string | null> => {
+  const persistDraft = async (opts?: {
+    // Autosave must never navigate: a router.push/refresh on a new
+    // article's first save would unmount this component under
+    // .../articles/new and remount a fresh one under .../articles/[id],
+    // discarding whatever the user typed since the save started.
+    redirectOnCreate?: boolean;
+    // Autosave shouldn't toast on every tick (success or failure) — the
+    // status indicator carries that feedback instead.
+    silent?: boolean;
+  }): Promise<string | null> => {
     if (!editor) return null;
 
     const selectedAuthor = authors.find((a) => a.id === authorId);
@@ -243,7 +322,7 @@ export function ArticleEditor({
       featured,
     });
 
-    const currentSlug = article?.slug;
+    const currentSlug = article?.slug ?? createdSlug;
     const url = currentSlug ? `/api/articles/${currentSlug}` : "/api/articles";
     const method = currentSlug ? "PUT" : "POST";
 
@@ -257,23 +336,50 @@ export function ArticleEditor({
       const errorData = await response.json().catch(() => null);
       const message = errorData?.error ?? response.statusText;
 
-      toast.error(`Failed to save draft: ${message}`);
+      if (!opts?.silent) toast.error(`Failed to save draft: ${message}`);
+      setAutosaveStatus("error");
       return null;
     }
 
     const { article: savedArticle } = await response.json();
-    toast.success("Article saved successfully!");
+    if (!opts?.silent) toast.success("Article saved successfully!");
 
-    if (!currentSlug) {
-      router.push(`/staff/articles/${savedArticle.slug}`);
-      router.refresh();
+    // Keyed on `article` (the server-fetched prop), not `currentSlug`: once
+    // a background autosave has created the doc, `currentSlug` is already
+    // truthy on every later call (including manual ones), but the browser
+    // is still sitting on .../articles/new until a redirect actually runs.
+    // A manual save/publish after that point must still redirect — it's
+    // just no longer the call that creates the doc (autosave already did).
+    if (!article) {
+      if (opts?.redirectOnCreate ?? true) {
+        router.push(`/staff/articles/${savedArticle.slug}`);
+        router.refresh();
+      } else if (!createdSlug) {
+        setCreatedSlug(savedArticle.slug);
+      }
     }
+
+    isDirtyRef.current = false;
+    setAutosaveStatus("saved");
+    setLastSavedAt(new Date());
 
     return savedArticle.slug;
   };
 
   const saveDraft = async () => {
-    if (!editor || isSaving) return;
+    if (!editor || isBusy) return;
+
+    // Read editor.isEmpty directly here, not the isBodyEmpty snapshot below:
+    // useEditorState's snapshot only recomputes on a transaction, so an
+    // already-published article opened and acted on without ever being
+    // edited (no transaction fires) would still read its stale initial
+    // value. editor.isEmpty is a live getter — always correct at click time.
+    const errors = getFieldErrors({ title, isBodyEmpty: editor.isEmpty, authorId });
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error("Fix the highlighted fields before saving.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -282,6 +388,29 @@ export function ArticleEditor({
       setIsSaving(false);
     }
   };
+
+  const runAutosave = async () => {
+    if (!editor || isBusy || !isDirtyRef.current) return;
+
+    setIsAutosaving(true);
+    setAutosaveStatus("saving");
+    try {
+      await persistDraft({ redirectOnCreate: false, silent: true });
+    } finally {
+      setIsAutosaving(false);
+    }
+  };
+
+  // persistDraft/runAutosave read state (title, dek, ...) via closure, so
+  // the interval/visibilitychange effects below can't capture them once and
+  // depend on `[]` — they'd keep calling a stale version between whatever
+  // renders their own dep array happens to re-run on. Routing every tick
+  // through this ref (kept current on every render) means the effects
+  // themselves can mount once and still always invoke the latest closure.
+  const runAutosaveRef = useRef(runAutosave);
+  useEffect(() => {
+    runAutosaveRef.current = runAutosave;
+  });
 
   const STATUS_TRANSITION_LABEL: Record<"publish" | "unpublish" | "archive", string> = {
     publish: "published",
@@ -292,7 +421,20 @@ export function ArticleEditor({
   const applyStatusTransition = async (
     action: "publish" | "unpublish" | "archive",
   ) => {
-    if (!editor || isSaving) return;
+    if (!editor || isBusy) return;
+
+    // Read editor.isEmpty directly here, not the isBodyEmpty snapshot below:
+    // useEditorState's snapshot only recomputes on a transaction, so an
+    // already-published article opened and acted on without ever being
+    // edited (no transaction fires) would still read its stale initial
+    // value. editor.isEmpty is a live getter — always correct at click time.
+    const errors = getFieldErrors({ title, isBodyEmpty: editor.isEmpty, authorId });
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error("Fix the highlighted fields before saving.");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -336,10 +478,40 @@ export function ArticleEditor({
       });
   }, [article]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      void runAutosaveRef.current();
+    }, AUTOSAVE_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const flush = () => {
+      if (document.hidden) void runAutosaveRef.current();
+    };
+    document.addEventListener("visibilitychange", flush);
+    return () => document.removeEventListener("visibilitychange", flush);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-6">
-        <Link href="/staff/articles">
+        <Link
+          href="/staff/articles"
+          onClick={() => {
+            if (isDirtyRef.current && !isBusy) void runAutosave();
+          }}
+        >
           <Button
             type="button"
             variant="ghost"
@@ -356,15 +528,28 @@ export function ArticleEditor({
           className="font-display min-w-0 flex-1 border-0 bg-transparent text-xl font-extrabold tracking-tight text-foreground outline-none placeholder:text-muted-foreground sm:text-2xl"
         />
         <div className="hidden items-center gap-1.5 font-utility text-xs font-semibold tracking-wide text-muted-foreground uppercase md:flex">
-          <span className="size-1.5 rounded-full bg-success" />
-          Saved 2m ago {/*currently arbitrary */}
+          <span
+            className={cn("size-1.5 rounded-full", {
+              "bg-success": autosaveStatus === "saved",
+              "bg-muted-foreground": autosaveStatus === "idle",
+              "bg-warning animate-pulse": autosaveStatus === "saving",
+              "bg-destructive": autosaveStatus === "error",
+            })}
+          />
+          {autosaveStatus === "saving" && "Saving…"}
+          {autosaveStatus === "saved" &&
+            (lastSavedAt
+              ? `Saved at ${lastSavedAt.toLocaleTimeString()}`
+              : "Saved")}
+          {autosaveStatus === "error" && "Autosave failed"}
+          {autosaveStatus === "idle" && "Not saved yet"}
         </div>
         {status !== "Archived" && (
           <Button
             type="button"
             variant="destructive"
             onClick={archiveDraft}
-            disabled={isSaving}
+            disabled={isBusy}
           >
             <Archive /> Archive
           </Button>
@@ -373,7 +558,7 @@ export function ArticleEditor({
           type="button"
           variant="outline"
           onClick={saveDraft}
-          disabled={isSaving}
+          disabled={isBusy}
         >
           <FileText />{" "}
           {isSaving
@@ -387,7 +572,7 @@ export function ArticleEditor({
             type="button"
             variant="secondary"
             onClick={unpublishDraft}
-            disabled={isSaving}
+            disabled={isBusy}
           >
             <Undo2 /> Unpublish
           </Button>
@@ -396,7 +581,7 @@ export function ArticleEditor({
           <Button
             type="button"
             onClick={hasPendingSchedule ? saveDraft : publishDraft}
-            disabled={isSaving}
+            disabled={isBusy}
           >
             {hasPendingSchedule
               ? "Schedule Publish"
@@ -417,10 +602,16 @@ export function ArticleEditor({
               contentEditable
               suppressContentEditableWarning
               onBlur={(e) => setTitle(e.currentTarget.textContent ?? "")}
-              className="font-display mb-5 text-3xl leading-tight font-extrabold tracking-tight text-foreground outline-none sm:text-4xl"
+              className={cn(
+                "font-display mb-1 text-3xl leading-tight font-extrabold tracking-tight text-foreground outline-none sm:text-4xl",
+                fieldErrors.title && !title.trim() && "ring-1 ring-destructive",
+              )}
             >
               {title || "Sample Title"}
             </h1>
+            <p className="mb-4 h-4 text-xs text-destructive">
+              {fieldErrors.title && !title.trim() ? fieldErrors.title : ""}
+            </p>
 
             <textarea
               value={dek}
@@ -431,6 +622,9 @@ export function ArticleEditor({
             />
 
             <EditorContent editor={editor} />
+            {fieldErrors.body && isBodyEmpty && (
+              <p className="mt-2 text-xs text-destructive">{fieldErrors.body}</p>
+            )}
           </div>
         </div>
 
@@ -471,6 +665,9 @@ export function ArticleEditor({
               value={authorId}
               onChange={setAuthorId}
             />
+            {fieldErrors.authorId && !authorId && (
+              <p className="text-xs text-destructive">{fieldErrors.authorId}</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
