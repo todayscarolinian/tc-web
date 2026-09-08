@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
@@ -31,6 +32,50 @@ export async function generateStaticParams() {
 }
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await articleService.getBySlug(slug);
+  if (!article) return {};
+
+  const images = article.coverImageUrl
+    ? [{ url: article.coverImageUrl, alt: article.coverImageAlt || article.title }]
+    : undefined;
+
+  const description =
+    article.dek.trim() || truncate(article.bodyText, 160) || article.title;
+
+  return {
+    title: article.title,
+    description,
+    alternates: { canonical: `/article/${article.slug}` },
+    openGraph: {
+      title: article.title,
+      description,
+      url: `/article/${article.slug}`,
+      type: "article",
+      publishedTime: article.publishedAt?.toISOString(),
+      authors: [article.authorName],
+      images,
+    },
+    twitter: {
+      card: images ? "summary_large_image" : "summary",
+      title: article.title,
+      description,
+      images,
+    },
+  };
+}
+
+function truncate(text: string, maxLength: number): string {
+  const collapsed = text.trim().replace(/\s+/g, " ");
+  if (collapsed.length <= maxLength) return collapsed;
+  return collapsed.slice(0, collapsed.lastIndexOf(" ", maxLength)).trimEnd() + "…";
+}
 
 export default async function ArticlePage({
   params,
