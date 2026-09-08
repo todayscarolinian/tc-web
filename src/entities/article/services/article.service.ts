@@ -1,5 +1,3 @@
-import { after } from "next/server";
-import { revalidatePath } from "next/cache";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type {
   Article,
@@ -38,11 +36,24 @@ async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Pro
         await repo.saveArticle(published);
 
         try {
-          after(() => {
-            revalidatePath(`/article/${published.slug}`);
-          });
-        } catch {
-          // no-op
+          // revalidate after sweep
+          // implemented for now, but could be replaced with a more robust pub/sub or webhook system in the future
+          await fetch(
+            `${process.env.NEXT_PUBLIC_SITE_URL}/api/articles/${published.slug}/sweep`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sectionSlug: published.sectionSlug,
+                authorId: published.authorId,
+              }),
+            },
+          );
+        } catch (err) {
+          console.error(
+            `sweepDuePublishes: revalidation request failed for ${published.slug}`,
+            err,
+          );
         }
       } catch (err) {
         console.error(
