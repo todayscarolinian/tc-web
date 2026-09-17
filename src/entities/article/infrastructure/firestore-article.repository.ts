@@ -14,7 +14,7 @@ import type { ArticleRepository } from "@/src/entities/article/core/article.repo
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
-import { RELATED_ARTICLES_LIMIT } from "../core/article.types";
+import { RELATED_ARTICLES_LIMIT } from "@/src/entities/article/core/article.types";
 const ARTICLES_COLLECTION = "articles";
 
 // Converts a Firestore doc into the domain Article shape. Handles Firestore-
@@ -24,6 +24,7 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
   return {
     ...data,
     // slug: doc.id, // or data.slug, depending on whether slug is the doc ID
+    featured: Boolean(data.featured),
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
@@ -162,9 +163,9 @@ export class FirestoreArticleRepository implements ArticleRepository {
       const sectionName = getSectionName(article.sectionSlug).toLowerCase();
 
       return (
-        article.titleLower.includes(q) ||
-        article.dek.toLowerCase().includes(q) ||
-        article.authorName.toLowerCase().includes(q) ||
+        article.titleLower?.includes(q) ||
+        article.dek?.toLowerCase().includes(q) ||
+        article.authorName?.toLowerCase().includes(q) ||
         sectionName.includes(q)
       );
     });
@@ -208,6 +209,28 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return snap.docs.map(toDomainArticle);
   }
 
+  async findPublishedFeatured(): Promise<Article | null> {
+    // Equality-only on `featured` so this works before IDX6 is deployed.
+    // Exclusive persist keeps the set tiny; filter/sort Published in memory.
+    const featured = await this.listFeatured();
+    return (
+      featured
+        .filter((article) => article.status === "Published")
+        .sort(
+          (a, b) =>
+            (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+        )[0] ?? null
+    );
+  }
+
+  async listFeatured(): Promise<Article[]> {
+    const snap = await db
+      .collection(ARTICLES_COLLECTION)
+      .where("featured", "==", true)
+      .get();
+    return snap.docs.map(toDomainArticle);
+  }
+
   async listAll(): Promise<Article[]> {
     const snap = await db.collection(ARTICLES_COLLECTION).get();
     return snap.docs.map(toDomainArticle);
@@ -241,6 +264,23 @@ export class FirestoreArticleRepository implements ArticleRepository {
 
   async saveArticle(article: Article): Promise<Article> {
     await db.collection(ARTICLES_COLLECTION).doc(article.slug).set(article);
+    return article;
+  }
+
+  async setExclusiveFeatured(article: Article): Promise<Article> {
+    const articles = db.collection(ARTICLES_COLLECTION);
+    await db.runTransaction(async (tx) => {
+      // Read-then-write inside the transaction so a concurrent feature
+      // request on another article is serialized against this one instead
+      // of racing it — Firestore retries the transaction on conflict.
+      const othersSnap = await tx.get(articles.where("featured", "==", true));
+      for (const doc of othersSnap.docs) {
+        if (doc.id !== article.slug) {
+          tx.update(doc.ref, { featured: false, updatedAt: new Date() });
+        }
+      }
+      tx.set(articles.doc(article.slug), article);
+    });
     return article;
   }
 }

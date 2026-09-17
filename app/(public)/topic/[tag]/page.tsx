@@ -1,14 +1,42 @@
+import type { Metadata } from "next";
 import { Newspaper } from "lucide-react";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { tagService } from "@/src/entities/tag/services/tag.service.factory";
 import { StoryCard } from "@/components/site/story-card";
 import { EmptyState } from "@/components/site/empty-state";
 
-export const revalidate = 300; 
+export const revalidate = 300;
 
 type Props = {
   params: Promise<{ tag: string }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { tag: rawTag } = await params;
+  const tagSlug = rawTag.toLocaleLowerCase();
+  const allTags = await tagService.listAll();
+  const tag = allTags.find((t) => t.slug === tagSlug);
+
+  const title = tag?.name ?? tagSlug;
+  const description = tag?.description || `Stories tagged "${title}" from Today's Carolinian.`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/topic/${tagSlug}` },
+    openGraph: {
+      title,
+      description,
+      url: `/topic/${tagSlug}`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function TopicPage({ params }: Props) {
   const { tag: rawTag } = await params;

@@ -35,8 +35,16 @@ export async function POST(request: NextRequest) {
     ...rawBody,
     authorId,
     publishAt: rawBody.publishAt ? new Date(rawBody.publishAt) : null,
+    featured: Boolean(rawBody.featured),
   };
 
-  const article = await articleService.staff.save(input);
-  return NextResponse.json({ article }, { status: 201 });
+  try {
+    const article = await articleService.staff.save(input);
+    return NextResponse.json({ article }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 400 },
+    );
+  }
 }

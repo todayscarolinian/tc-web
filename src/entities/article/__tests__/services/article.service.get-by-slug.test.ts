@@ -38,22 +38,28 @@ describe("articleService.getBySlug", () => {
       listTrending: () => {
         throw new Error("should not be called");
       },
-      search: () => {
-        throw new Error("should not be called");
-      },
-      listPublishedBySection: () => {
-        throw new Error("should not be called");
-      },
       findRelatedArticles: () => {
         throw new Error("should not be called");
       },
       findRecentArticles: () => {
         throw new Error("should not be called");
       },
+      search: () => {
+        throw new Error("should not be called");
+      },
+      listPublishedBySection: () => {
+        throw new Error("should not be called");
+      },
       findPublishedByAuthorId: () => {
         throw new Error("should not be called");
       },
       findDueForPublish: () => {
+        throw new Error("should not be called");
+      },
+      findPublishedFeatured: () => {
+        throw new Error("should not be called");
+      },
+      listFeatured: () => {
         throw new Error("should not be called");
       },
       listAll: () => {
@@ -72,6 +78,9 @@ describe("articleService.getBySlug", () => {
         throw new Error("should not be called");
       },
       saveArticle: () => {
+        throw new Error("should not be called");
+      },
+      setExclusiveFeatured: () => {
         throw new Error("should not be called");
       },
     };

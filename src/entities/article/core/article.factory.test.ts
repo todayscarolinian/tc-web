@@ -58,6 +58,7 @@ function makeInput(overrides: Partial<ArticleInput> = {}): ArticleInput {
     body: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "paragraph one" }] }] },
     tagSlugs: [],
     publishAt: null,
+    featured: false,
     ...overrides,
   };
 }
@@ -106,6 +107,12 @@ describe("unpublishArticle", () => {
     expect(unpublished.publishAt).toBeNull();
   });
 
+  it("clears featured so a taken-down article can't stay the banner pick", () => {
+    const article = makeArticle({ status: "Published", featured: true });
+    const unpublished = unpublishArticle(article);
+    expect(unpublished.featured).toBe(false);
+  });
+
   it.each<ArticleStatus>(["Draft", "Scheduled", "Archived"])(
     "throws when unpublishing a %s article",
     (from) => {
@@ -129,6 +136,12 @@ describe("archiveArticle", () => {
     const article = makeArticle({ status: "Archived" });
     expect(() => archiveArticle(article)).toThrow();
   });
+
+  it("clears featured so a taken-down article can't stay the banner pick", () => {
+    const article = makeArticle({ status: "Published", featured: true });
+    const archived = archiveArticle(article);
+    expect(archived.featured).toBe(false);
+  });
 });
 
 describe("createArticle", () => {
@@ -150,6 +163,14 @@ describe("createArticle", () => {
     const article = createArticle(makeInput({ body: FIGURE_BODY }));
     expect(article.bodyText).toContain("Intro paragraph");
     expect(article.readTimeMinutes).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sets featured to false when the input says so", () => {
+    expect(createArticle(makeInput({ featured: false })).featured).toBe(false);
+  });
+
+  it("sets featured from the input", () => {
+    expect(createArticle(makeInput({ featured: true })).featured).toBe(true);
   });
 });
 
@@ -191,6 +212,16 @@ describe("updateArticleContent", () => {
     const updated = updateArticleContent(existing, makeInput({ body: FIGURE_BODY }));
     expect(updated.bodyText).toContain("Intro paragraph");
     expect(updated.readTimeMinutes).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sets featured from the input", () => {
+    const existing = makeArticle({ featured: false });
+    expect(updateArticleContent(existing, makeInput({ featured: true })).featured).toBe(true);
+  });
+
+  it("clears featured when the input says false", () => {
+    const existing = makeArticle({ featured: true });
+    expect(updateArticleContent(existing, makeInput({ featured: false })).featured).toBe(false);
   });
 });
 

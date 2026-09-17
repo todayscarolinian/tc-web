@@ -10,6 +10,8 @@ export const SECTION_PAGE_SIZE = 12;
 export interface ArticleUseCase {
   /** Published articles only, most recent first. */
   listPublished(): Promise<Article[]>;
+  /** The single published featured/breaking story, or null when none is marked. */
+  getFeatured(): Promise<Article | null>;
   /** Public-facing: resolves to null for drafts/scheduled articles, not just unknown slugs. */
   getBySlug(slug: string): Promise<Article | null>;
   listTrending(limit?: number): Promise<Article[]>;

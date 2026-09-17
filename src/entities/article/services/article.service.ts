@@ -1,5 +1,3 @@
-import { after } from "next/server";
-import { revalidatePath } from "next/cache";
 import type { ArticleRepository } from "@/src/entities/article/core/article.repository";
 import type {
   Article,
@@ -17,6 +15,16 @@ import type { ArticleUseCase } from "@/src/entities/article/usecase/article.usec
 import { SECTION_PAGE_SIZE } from "@/src/entities/article/usecase/article.usecase";
 import { RELATED_ARTICLES_LIMIT } from "../core/article.types";
 
+async function persistExclusiveFeatured(
+  repo: ArticleRepository,
+  article: Article,
+): Promise<Article> {
+  if (article.featured && article.status === "Published") {
+    return repo.setExclusiveFeatured(article);
+  }
+  return repo.saveArticle(article);
+}
+
 async function sweepDuePublishes(
   repo: ArticleRepository,
   now = new Date(),
@@ -31,11 +39,24 @@ async function sweepDuePublishes(
         await repo.saveArticle(published);
 
         try {
-          after(() => {
-            revalidatePath(`/article/${published.slug}`);
-          });
-        } catch {
-          // no-op
+          // revalidate after sweep
+          // implemented for now, but could be replaced with a more robust pub/sub or webhook system in the future
+          await fetch(
+            `${process.env.NEXT_PUBLIC_SITE_URL}/api/articles/${published.slug}/sweep`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                sectionSlug: published.sectionSlug,
+                authorId: published.authorId,
+              }),
+            },
+          );
+        } catch (err) {
+          console.error(
+            `sweepDuePublishes: revalidation request failed for ${published.slug}`,
+            err,
+          );
         }
       } catch (err) {
         console.error(
@@ -52,6 +73,11 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
     async listPublished(): Promise<Article[]> {
       await sweepDuePublishes(repo);
       return repo.listPublished();
+    },
+
+    async getFeatured(): Promise<Article | null> {
+      await sweepDuePublishes(repo);
+      return repo.findPublishedFeatured();
     },
 
     // Public-facing: resolves to null for drafts/scheduled articles, not just
@@ -100,18 +126,17 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
       limit = RELATED_ARTICLES_LIMIT,
     ): Promise<Article[]> {
       if (!article) return [];
+      await sweepDuePublishes(repo);
 
-      const related = await repo.findRelatedArticles(article);
+      const related = await repo.findRelatedArticles(article, limit);
 
       if (related.length >= limit) {
         return related.slice(0, limit);
       }
 
-      // If related articles < 3, fills up the remaining slots with recent articles
-
-      const remaining = limit - related.length;
-
-      const recent = await repo.findRecentArticles(remaining);
+      // Over-fetch by `limit`, not the remaining count — recent articles can
+      // overlap with `related`, and dedup below needs slack to still land on `limit`.
+      const recent = await repo.findRecentArticles(limit);
 
       const combined = new Map<string, Article>();
 
@@ -161,7 +186,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
       async save(doc: ArticleInput): Promise<Article> {
         const article = createArticle(doc);
-        return repo.saveArticle(article);
+        return persistExclusiveFeatured(repo, article);
       },
 
       async publish(slug: string): Promise<Article> {
@@ -170,7 +195,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
         const published = publishArticle(article);
 
-        return repo.saveArticle(published);
+        return persistExclusiveFeatured(repo, published);
       },
 
       async unpublish(slug: string): Promise<Article> {
@@ -197,7 +222,7 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
         const article = updateArticleContent(existing, doc);
 
-        return repo.saveArticle(article);
+        return persistExclusiveFeatured(repo, article);
       },
     },
   };

@@ -247,6 +247,8 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
       findRecentArticles: inMemory.findRecentArticles.bind(inMemory),
       findPublishedByAuthorId: inMemory.findPublishedByAuthorId.bind(inMemory),
       findDueForPublish: inMemory.findDueForPublish.bind(inMemory),
+      findPublishedFeatured: inMemory.findPublishedFeatured.bind(inMemory),
+      listFeatured: inMemory.listFeatured.bind(inMemory),
       listAll: inMemory.listAll.bind(inMemory),
       listSections: inMemory.listSections.bind(inMemory),
       findSectionBySlug: inMemory.findSectionBySlug.bind(inMemory),
@@ -257,6 +259,7 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
           throw new Error("simulated write failure");
         return inMemory.saveArticle(doc);
       },
+      setExclusiveFeatured: inMemory.setExclusiveFeatured.bind(inMemory),
     };
 
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
