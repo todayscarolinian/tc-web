@@ -29,7 +29,7 @@ export default async function StaffDashboardPage() {
     <>
       <PageHeader
         title="Dashboard"
-        subtitle={`${getTodayFormatted()} · Cebu City`}
+        subtitle={`${getTodayFormatted()}`}
         actions={
           <Link href="/staff/articles/new">
             <Button type="button">
