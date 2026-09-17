@@ -3,6 +3,7 @@
 // the entity/repository pattern used elsewhere (see docs/architecture.md).
 export type Publication = {
   bio: string;
+  location: string;
   email: string;
   social: {
     facebook: string;
