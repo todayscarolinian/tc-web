@@ -47,7 +47,10 @@ export function Footer() {
               <ul className="flex flex-col gap-2">
                 {SECTIONS.map((s) => (
                   <li key={s.slug}>
-                    <Link href={`/section/${s.slug}`} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <Link
+                      href={`/section/${s.slug}`}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                    >
                       {s.name}
                     </Link>
                   </li>
@@ -61,7 +64,10 @@ export function Footer() {
               <ul className="flex flex-col gap-2">
                 {PAPER_LINKS.map((l) => (
                   <li key={l.name}>
-                    <Link href={l.href} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <Link
+                      href={l.href}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                    >
                       {l.name}
                     </Link>
                   </li>
@@ -82,7 +88,11 @@ export function Footer() {
               <ul className="flex flex-col gap-2">
                 {Object.entries(PUBLICATION.social).map(([platform, url]) => (
                   <li key={platform}>
-                    <a href={url} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <a
+                      href={url}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                      target="_blank"
+                    >
                       {platform.charAt(0).toUpperCase() + platform.slice(1)}
                     </a>
                   </li>
@@ -100,7 +110,8 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t border-white/10 pt-6">
           <span className="text-xs text-white/50">
-            © 2026 Today&apos;s Carolinian · University of San Carlos. All rights reserved.
+            © 2026 Today&apos;s Carolinian · University of San Carlos. All
+            rights reserved.
           </span>
         </div>
       </div>
