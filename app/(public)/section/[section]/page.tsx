@@ -120,9 +120,9 @@ export default async function SectionPage({
                   More in {section.name}
                 </h2>
                 <span className="grow" />
-                <Badge className="rounded-full">{grid.length} stories</Badge>
+                <Badge className="rounded-full">{grid.length} {grid.length === 1 ? 'story' : 'stories'}</Badge>
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
+              {/* <div className="mt-4 flex flex-wrap gap-2">
                 <Badge className="rounded-full" variant="default">
                   Latest
                 </Badge>
@@ -132,7 +132,7 @@ export default async function SectionPage({
                 <Badge className="rounded-full" variant="outline">
                   Editors&apos; picks
                 </Badge>
-              </div>
+              </div> */}
 
               <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {grid.map((s) => (
