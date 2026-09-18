@@ -11,10 +11,14 @@ import { AnalyticsComingSoon } from "@/components/staff/analytics-coming-soon";
 import { DashboardArticlesPanel } from "@/components/staff/dashboard-articles-panel";
 import { TopStoriesRail } from "@/components/staff/top-stories-rail";
 import { RecentStoriesRail } from "@/components/staff/recent-stories-rail";
-import { DASHBOARD_STATS, PAGEVIEWS_30D, TOP_STORIES } from "@/src/lib/staff-data";
+import {
+  DASHBOARD_STATS,
+  PAGEVIEWS_30D,
+  TOP_STORIES,
+} from "@/src/lib/staff-data";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { ENABLE_ANALYTICS } from "@/src/lib/flags";
-
+import { getTodayFormatted } from "@/src/lib/utils";
 export default async function StaffDashboardPage() {
   const [articles, published] = await Promise.all([
     articleService.staff.listAll(),
@@ -25,7 +29,7 @@ export default async function StaffDashboardPage() {
     <>
       <PageHeader
         title="Dashboard"
-        subtitle="Wednesday, June 24, 2026"
+        subtitle={`${getTodayFormatted()}`}
         actions={
           <Link href="/staff/articles/new">
             <Button type="button">
@@ -55,7 +59,10 @@ export default async function StaffDashboardPage() {
               title="Daily pageviews"
               subtitle="Last 30 days · all sections"
               actions={
-                <Badge variant="secondary" className="whitespace-nowrap bg-success/15 text-success-strong">
+                <Badge
+                  variant="secondary"
+                  className="whitespace-nowrap bg-success/15 text-success-strong"
+                >
                   +18.2% vs. prior month
                 </Badge>
               }
