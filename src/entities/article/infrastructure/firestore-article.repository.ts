@@ -28,7 +28,6 @@ function toDomainArticle(doc: QueryDocumentSnapshot<DocumentData>): Article {
     publishedAt: data.publishedAt
       ? (data.publishedAt as Timestamp).toDate()
       : null,
-    publishAt: data.publishAt ? (data.publishAt as Timestamp).toDate() : null,
     createdAt: (data.createdAt as Timestamp).toDate(),
     updatedAt: (data.updatedAt as Timestamp).toDate(),
   } as Article;
@@ -217,8 +216,10 @@ export class FirestoreArticleRepository implements ArticleRepository {
     return (
       featured
         .filter((article) => article.status === "Published")
-        .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0))[0] ??
-      null
+        .sort(
+          (a, b) =>
+            (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+        )[0] ?? null
     );
   }
 

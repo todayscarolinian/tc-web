@@ -25,7 +25,10 @@ async function persistExclusiveFeatured(
   return repo.saveArticle(article);
 }
 
-async function sweepDuePublishes(repo: ArticleRepository, now = new Date()): Promise<void> {
+async function sweepDuePublishes(
+  repo: ArticleRepository,
+  now = new Date(),
+): Promise<void> {
   const due = await repo.findDueForPublish(now);
   if (due.length === 0) return;
 
