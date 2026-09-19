@@ -226,12 +226,17 @@ export class InMemoryArticleRepository implements ArticleRepository {
       .filter((article) => article.status === "Published")
       .map(toArticle)
       .filter((article) => article.featured)
-      .sort((a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0));
+      .sort(
+        (a, b) =>
+          (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0),
+      );
     return featured[0] ?? null;
   }
 
   async listFeatured(): Promise<Article[]> {
-    return this.articles.filter((article) => Boolean(article.featured)).map(toArticle);
+    return this.articles
+      .filter((article) => Boolean(article.featured))
+      .map(toArticle);
   }
 
   async listAll(): Promise<Article[]> {
@@ -264,7 +269,9 @@ export class InMemoryArticleRepository implements ArticleRepository {
 
   async saveArticle(doc: Article): Promise<Article> {
     const record = toRecord(doc);
-    const index = this.articles.findIndex((article) => article.slug === doc.slug);
+    const index = this.articles.findIndex(
+      (article) => article.slug === doc.slug,
+    );
     if (index === -1) {
       this.articles.push(record);
     } else {
