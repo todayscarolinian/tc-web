@@ -84,7 +84,7 @@ export function StaffSidebar() {
                 render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent" />}
               >
                 <Avatar size="sm">
-                  <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                  {user?.avatarUrl && <AvatarImage src={user?.avatarUrl} alt={user?.name} />}
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                     {isPending ? "" : user?.initials}
                   </AvatarFallback>
