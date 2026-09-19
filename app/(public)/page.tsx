@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ChevronDown, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { kickerClassForSection } from "@/src/lib/section-style";
 import { FeaturedStoryBanner } from "@/components/site/featured-story-banner";
+import { LatestStories } from "@/components/site/latest-stories";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { EmptyState } from "@/components/site/empty-state";
@@ -93,19 +94,7 @@ export default async function HomePage() {
             Latest stories
           </h2>
         </div>
-        {stories.length === 0 ? (
-          <EmptyState
-            icon={Newspaper}
-            title="No stories yet"
-            description="New stories will show up here as soon as they're published."
-          />
-        ) : (
-          <div className="mt-6 grid auto-rows-fr gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {stories.slice(0, 6).map((s) => (
-              <StoryCard key={s.slug} story={s} />
-            ))}
-          </div>
-        )}
+        <LatestStories stories={stories} />
 
         <div className="mt-12 flex items-center gap-4 border-b border-border pb-3">
           <h2 className="font-display text-2xl font-bold text-foreground">
@@ -131,13 +120,6 @@ export default async function HomePage() {
             ))}
           </div>
         )}
-
-        <div className="flex justify-center py-10">
-          <Button variant="outline" size="lg">
-            Load more stories
-            <ChevronDown />
-          </Button>
-        </div>
       </div>
       {ENABLE_SUBSCRIPTION && <SubscribeStrip />}
     </>
