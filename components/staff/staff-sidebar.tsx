@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Settings as SettingsIcon, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
