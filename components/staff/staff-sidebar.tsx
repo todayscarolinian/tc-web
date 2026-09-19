@@ -20,14 +20,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { STAFF_NAV_ITEMS, CURRENT_STAFF_USER } from "@/src/lib/staff-data";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { STAFF_NAV_ITEMS } from "@/src/lib/staff-data";
+import { useCurrentStaffUser } from "@/src/lib/herald/use-current-staff-user";
 
 const ACTIVE_CLASS =
   "data-active:bg-sidebar-primary data-active:text-sidebar-primary-foreground data-active:hover:bg-sidebar-primary";
 
 export function StaffSidebar() {
   const pathname = usePathname();
+  const { user, isPending } = useCurrentStaffUser();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -81,25 +84,32 @@ export function StaffSidebar() {
                 render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent" />}
               >
                 <Avatar size="sm">
+                  <AvatarImage src={user?.avatarUrl} alt={user?.name} />
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                    {CURRENT_STAFF_USER.initials}
+                    {isPending ? "" : user?.initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-                  <span className="truncate text-sm font-bold text-sidebar-foreground">
-                    {CURRENT_STAFF_USER.name}
-                  </span>
-                  <span className="font-utility text-[11px] font-semibold tracking-wide text-sidebar-foreground/50 uppercase">
-                    {CURRENT_STAFF_USER.role}
-                  </span>
+                <div className="flex min-w-0 flex-col gap-1 leading-tight group-data-[collapsible=icon]:hidden">
+                  {isPending ? (
+                    <>
+                      <Skeleton className="h-3.5 w-24" />
+                      <Skeleton className="h-2.5 w-16" />
+                    </>
+                  ) : (
+                    <>
+                      <span className="truncate text-sm font-bold text-sidebar-foreground">
+                        {user?.name}
+                      </span>
+                      <span className="font-utility text-[11px] font-semibold tracking-wide text-sidebar-foreground/50 uppercase">
+                        {user?.role}
+                      </span>
+                    </>
+                  )}
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-56">
                 <DropdownMenuItem render={<Link href="/staff/settings" />}>
                   <User /> Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/staff/settings" />}>
-                  <SettingsIcon /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem render={<Link href="/" />}>
