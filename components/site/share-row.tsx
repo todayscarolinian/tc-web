@@ -29,7 +29,7 @@ export function ShareRow({ url }: ShareRowProps) {
       <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
         Share this story
       </span>
-      <Tooltip>
+      {/* <Tooltip>
         <TooltipTrigger
           render={
             <button type="button" className={disabledBtn} aria-disabled="true">
@@ -48,7 +48,7 @@ export function ShareRow({ url }: ShareRowProps) {
           }
         />
         <TooltipContent>Coming soon</TooltipContent>
-      </Tooltip>
+      </Tooltip> */}
       <button type="button" className={cn(btn, copied && "border-brand text-brand")} onClick={copyLink}>
         {copied ? <Check size={16} /> : <Link2 size={16} />}
         {copied ? "Link copied" : "Copy link"}
