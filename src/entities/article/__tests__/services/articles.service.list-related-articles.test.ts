@@ -57,6 +57,9 @@ function unreachableRepo(): ArticleRepository {
     setExclusiveFeatured: () => {
       throw new Error("should not be called");
     },
+    deleteArticle: () => {
+      throw new Error("should not be called");
+    },
     findRelatedArticles: () => {
       throw new Error("should not be called");
     },

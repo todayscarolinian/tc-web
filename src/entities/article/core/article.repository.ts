@@ -43,4 +43,6 @@ export interface ArticleRepository {
    * exclusivity invariant themselves (see FirestoreArticleRepository).
    */
   setExclusiveFeatured(article: Article): Promise<Article>;
+  /** Hard delete — permanently removes the article. Staff bulk-delete only. */
+  deleteArticle(slug: string): Promise<void>;
 }
