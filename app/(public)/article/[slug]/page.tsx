@@ -5,6 +5,7 @@ import { articleService } from "@/src/entities/article/services/article.service.
 import { tagService } from "@/src/entities/tag/services/tag.service.factory";
 import { getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import { accentTextClass, sectionIcon } from "@/src/lib/section-style";
+import { SITE_URL } from "@/src/lib/site";
 import {
   formatDisplayDate,
   formatReadTime,
@@ -191,7 +192,7 @@ export default async function ArticlePage({
           </div>
         )}
 
-        <ShareRow />
+        <ShareRow url={`${SITE_URL}/article/${article.slug}`} />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 pb-12 sm:px-6 lg:px-8">
