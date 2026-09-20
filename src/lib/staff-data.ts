@@ -35,7 +35,7 @@ export const STAFF_NAV_ITEMS: StaffNavItem[] = [
   { id: "articles", label: "Articles", href: "/staff/articles", icon: FileText },
   { id: "media", label: "Media", href: "/staff/media", icon: Images },
   { id: "analytics", label: "Analytics", href: "/staff/analytics", icon: LineChart },
-  { id: "settings", label: "Settings", href: "/staff/settings", icon: Settings },
+  { id: "settings", label: "Settings", href: "https://herald.todayscarolinian.com/profile", icon: Settings },
 ];
 
 // Article/status types and mock article rows used to live here as

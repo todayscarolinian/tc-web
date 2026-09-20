@@ -108,7 +108,7 @@ export function StaffSidebar() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="top" className="w-56">
-                <DropdownMenuItem render={<Link href="/staff/settings" />}>
+                <DropdownMenuItem render={<Link href="https://herald.todayscarolinian.com/profile" />}>
                   <User /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
