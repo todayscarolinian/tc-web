@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Link2, Check } from "lucide-react";
-import { FacebookIcon, XIcon } from "@/components/site/social-icons";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+// import { FacebookIcon, XIcon } from "@/components/site/social-icons";
+// import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/src/lib/utils";
 
 interface ShareRowProps {
@@ -22,7 +22,7 @@ export function ShareRow({ url }: ShareRowProps) {
   };
 
   const btn = "flex items-center gap-2 border border-border px-3 py-2 text-sm font-bold text-foreground hover:bg-muted";
-  const disabledBtn = "flex items-center gap-2 border border-border px-3 py-2 text-sm font-bold text-muted-foreground opacity-60 cursor-not-allowed";
+  // const disabledBtn = "flex items-center gap-2 border border-border px-3 py-2 text-sm font-bold text-muted-foreground opacity-60 cursor-not-allowed";
 
   return (
     <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-border pt-6">
