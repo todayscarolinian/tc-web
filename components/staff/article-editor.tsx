@@ -372,14 +372,30 @@ export function ArticleEditor({
               {fieldErrors.title && !title.trim() ? fieldErrors.title : ""}
             </p>
 
+            <div className="mb-1 flex flex-col gap-0.5">
+              <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                Description
+              </span>
+              <p className="font-utility text-[11px] text-muted-foreground">
+                A short excerpt shown on previews
+              </p>
+            </div>
             <textarea
               value={dek}
               onChange={(e) => setDek(e.target.value)}
               placeholder="Write a one- or two-sentence excerpt…"
               rows={2}
-              className="mb-5 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
+              className="mb-6 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
             />
 
+            <div className="mb-1 flex flex-col gap-0.5 border-t border-border pt-5">
+              <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                Article body
+              </span>
+              <p className="font-utility text-[11px] text-muted-foreground">
+                The full article story
+              </p>
+            </div>
             <EditorContent editor={editor} />
             {fieldErrors.body && isBodyEmpty && (
               <p className="mt-2 text-xs text-destructive">
