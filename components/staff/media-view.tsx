@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { Download, Images, Trash2, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,19 +31,20 @@ import { EmptyState } from "@/components/site/empty-state";
 import { MEDIA_FOLDERS } from "@/src/lib/staff-data";
 import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
 import { downloadMediaFile } from "@/src/lib/media-format";
-import { uploadMediaFile } from "@/src/lib/upload-media";
-import { deleteMediaAsset } from "@/src/entities/media/actions/media.actions";
-import type { MediaAssetDTO } from "@/src/entities/media/core/media.domain";
-import { getTagsAction } from "@/src/entities/tag/actions/tag.action";
-import type { Tag } from "@/src/entities/tag/core/tag.domain";
+import { useMediaAssets } from "@/src/entities/media/hooks/use-media-assets";
+import { useUploadMediaMutation } from "@/src/entities/media/hooks/use-upload-media";
+import { useBulkDeleteMediaMutation } from "@/src/entities/media/hooks/use-delete-media";
+import { useTags } from "@/src/entities/tag/hooks/use-tags";
 import { cn } from "@/src/lib/utils";
 
 const UPLOAD_FOLDERS = MEDIA_FOLDERS.filter((folder) => folder !== "All");
 
-export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] }) {
-  const router = useRouter();
+export function MediaView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [items, setItems] = useState(initialAssets);
+  const { data: items = [] } = useMediaAssets();
+  const { data: allTags = [] } = useTags();
+  const upload = useUploadMediaMutation();
+  const bulkDelete = useBulkDeleteMediaMutation();
   const [folder, setFolder] = useState<(typeof MEDIA_FOLDERS)[number]>("All");
   const [tag, setTag] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -52,16 +52,7 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
   const [altText, setAltText] = useState("");
   const [uploadFolder, setUploadFolder] = useState<(typeof UPLOAD_FOLDERS)[number]>("Photos");
   const [uploadTags, setUploadTags] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-
-  useEffect(() => {
-    getTagsAction()
-      .then(setAllTags)
-      .catch(() => setAllTags([]));
-  }, []);
 
   const availableTags = useMemo(() => {
     const usedSlugs = new Set(items.flatMap((item) => item.tagSlugs));
@@ -115,22 +106,17 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
       return;
     }
 
-    setIsUploading(true);
     try {
-      const { asset } = await uploadMediaFile({
+      await upload.mutateAsync({
         file: pendingFile,
         folder: uploadFolder,
         altText: altText.trim(),
         tagSlugs: uploadTags,
       });
-      setItems((current) => [asset, ...current.filter((item) => item.id !== asset.id)]);
       resetUploadForm();
       toast.success("Uploaded to the media library.");
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to upload image.");
-    } finally {
-      setIsUploading(false);
     }
   }
 
@@ -142,24 +128,13 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
 
   async function handleDelete() {
     if (selectedItems.length === 0) return;
-    setIsDeleting(true);
-    try {
-      const remaining = new Set(selected);
-      for (const item of selectedItems) {
-        const result = await deleteMediaAsset({ id: item.id });
-        if ("ok" in result) {
-          remaining.delete(item.id);
-          setItems((current) => current.filter((asset) => asset.id !== item.id));
-        } else {
-          toast.error(result.message);
-        }
-      }
-      setSelected(remaining);
-      setConfirmDelete(false);
-      router.refresh();
-    } finally {
-      setIsDeleting(false);
-    }
+    const { deletedIds, errors } = await bulkDelete.mutateAsync(
+      selectedItems.map((item) => item.id),
+    );
+    const deletedSet = new Set(deletedIds);
+    setSelected((current) => new Set(Array.from(current).filter((id) => !deletedSet.has(id))));
+    errors.forEach((error) => toast.error(error.message));
+    setConfirmDelete(false);
   }
 
   return (
@@ -190,7 +165,7 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
         <CoverDropzone
           title="Drag photos here to upload"
           description="or click to browse · JPG, PNG, WebP, GIF up to 2 MB"
-          isUploading={isUploading}
+          isUploading={upload.isPending}
           onClick={() => fileInputRef.current?.click()}
           onDrop={acceptFile}
         />
@@ -243,10 +218,10 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
               <TagInput tags={uploadTags} onChange={setUploadTags} />
             </div>
             <div className="flex gap-2">
-              <Button type="button" onClick={() => void handleUpload()} disabled={isUploading}>
-                {isUploading ? "Uploading…" : "Upload to library"}
+              <Button type="button" onClick={() => void handleUpload()} disabled={upload.isPending}>
+                {upload.isPending ? "Uploading…" : "Upload to library"}
               </Button>
-              <Button type="button" variant="ghost" onClick={resetUploadForm} disabled={isUploading}>
+              <Button type="button" variant="ghost" onClick={resetUploadForm} disabled={upload.isPending}>
                 Cancel
               </Button>
             </div>
@@ -362,16 +337,16 @@ export function MediaView({ initialAssets }: { initialAssets: MediaAssetDTO[] })
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={bulkDelete.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={isDeleting}
+              disabled={bulkDelete.isPending}
               onClick={(event) => {
                 event.preventDefault();
                 void handleDelete();
               }}
             >
-              {isDeleting ? "Deleting…" : "Delete"}
+              {bulkDelete.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

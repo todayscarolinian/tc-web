@@ -30,6 +30,11 @@ import { PageHeader } from "@/components/staff/page-header";
 import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
 import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 import type { Article } from "@/src/entities/article/core/article.domain";
+import { useStaffArticles } from "@/src/entities/article/hooks/use-staff-articles";
+import {
+  useBulkArticleAction,
+  type BulkArticleActionType,
+} from "@/src/entities/article/hooks/use-bulk-article-action";
 
 // ArticleSortKey's "author"/"date" don't map 1:1 onto Article's field names
 // (authorName/publishedAt) — this resolves a sortable value for each key
@@ -49,19 +54,26 @@ function sortValue(article: Article, key: ArticleSortKey): string | number {
 
 const STATUS_OPTIONS: ("All" | ArticleStatus)[] = ["All", "Published", "Draft", "Scheduled", "Archived"];
 
-export function ArticlesView({ initialArticles }: { initialArticles: Article[] }) {
-  const [articles, setArticles] = useState(initialArticles);
+const BULK_ACTION_COPY: Record<BulkArticleActionType, { verb: string; pastTense: string }> = {
+  publish: { verb: "publish", pastTense: "Published" },
+  archive: { verb: "archive", pastTense: "Archived" },
+  delete: { verb: "delete", pastTense: "Deleted" },
+};
+
+export function ArticlesView() {
+  const { data: articles = [] } = useStaffArticles();
+  const bulkAction = useBulkArticleAction();
+
   const [query, setQuery] = useState("");
   const [section, setSection] = useState("All");
   const [status, setStatus] = useState<"All" | ArticleStatus>("All");
   const [author, setAuthor] = useState("All");
   const [sort, setSort] = useState<ArticleSort>({ key: "date", dir: "desc" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [isBulkActionPending, setIsBulkActionPending] = useState(false);
 
   const authors = useMemo(
-    () => ["All", ...Array.from(new Set(initialArticles.map((a) => a.authorName)))],
-    [initialArticles]
+    () => ["All", ...Array.from(new Set(articles.map((a) => a.authorName)))],
+    [articles]
   );
 
   const filtered = useMemo(() => {
@@ -102,63 +114,17 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
     });
   }
 
-  type BulkAction = "publish" | "archive" | "delete";
-
-  const BULK_ACTION: Record<BulkAction, { verb: string; pastTense: string; nextStatus?: ArticleStatus; request: (slug: string) => Promise<Response> }> = {
-    publish: {
-      verb: "publish",
-      pastTense: "Published",
-      nextStatus: "Published",
-      request: (slug) => fetch(`/api/articles/${slug}/publish`, { method: "PUT" }),
-    },
-    archive: {
-      verb: "archive",
-      pastTense: "Archived",
-      nextStatus: "Archived",
-      request: (slug) => fetch(`/api/articles/${slug}/archive`, { method: "PUT" }),
-    },
-    delete: {
-      verb: "delete",
-      pastTense: "Deleted",
-      request: (slug) => fetch(`/api/articles/${slug}`, { method: "DELETE" }),
-    },
-  };
-
-  async function runBulkAction(action: BulkAction) {
-    const { verb, pastTense, nextStatus, request } = BULK_ACTION[action];
+  async function runBulkAction(action: BulkArticleActionType) {
+    const { verb, pastTense } = BULK_ACTION_COPY[action];
     const slugs = Array.from(selected);
-    setIsBulkActionPending(true);
-    try {
-      const results = await Promise.allSettled(
-        slugs.map(async (slug) => {
-          const response = await request(slug);
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.error ?? response.statusText);
-          }
-          return slug;
-        }),
-      );
+    const { succeeded, failedCount } = await bulkAction.mutateAsync({ slugs, action });
 
-      const succeeded = new Set(
-        results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value),
-      );
-      const failedCount = results.length - succeeded.size;
-
-      if (succeeded.size > 0) {
-        setArticles((rows) =>
-          nextStatus
-            ? rows.map((r) => (succeeded.has(r.slug) ? { ...r, status: nextStatus } : r))
-            : rows.filter((r) => !succeeded.has(r.slug)),
-        );
-        setSelected((s) => new Set(Array.from(s).filter((slug) => !succeeded.has(slug))));
-        toast.success(`${pastTense} ${succeeded.size} article${succeeded.size === 1 ? "" : "s"}.`);
-      }
-      if (failedCount > 0) {
-        toast.error(`Failed to ${verb} ${failedCount} article${failedCount === 1 ? "" : "s"}.`);
-      }
-    } finally {
-      setIsBulkActionPending(false);
+    if (succeeded.length > 0) {
+      setSelected((s) => new Set(Array.from(s).filter((slug) => !succeeded.includes(slug))));
+      toast.success(`${pastTense} ${succeeded.length} article${succeeded.length === 1 ? "" : "s"}.`);
+    }
+    if (failedCount > 0) {
+      toast.error(`Failed to ${verb} ${failedCount} article${failedCount === 1 ? "" : "s"}.`);
     }
   }
 
@@ -235,8 +201,8 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
               size="sm"
               variant="outline"
               className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
-              onClick={() => runBulkAction("publish")}
-              disabled={isBulkActionPending}
+              onClick={() => void runBulkAction("publish")}
+              disabled={bulkAction.isPending}
             >
               <CheckCircle2 /> Publish
             </Button>
@@ -245,8 +211,8 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
               size="sm"
               variant="outline"
               className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
-              onClick={() => runBulkAction("archive")}
-              disabled={isBulkActionPending}
+              onClick={() => void runBulkAction("archive")}
+              disabled={bulkAction.isPending}
             >
               <Archive /> Archive
             </Button>
@@ -258,7 +224,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
                     size="sm"
                     variant="outline"
                     className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
-                    disabled={isBulkActionPending}
+                    disabled={bulkAction.isPending}
                   />
                 }
               >
@@ -273,7 +239,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction variant="destructive" onClick={() => runBulkAction("delete")} disabled={isBulkActionPending}>
+                  <AlertDialogAction variant="destructive" onClick={() => void runBulkAction("delete")} disabled={bulkAction.isPending}>
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -285,7 +251,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
               variant="ghost"
               className="text-background hover:bg-background/10 hover:text-background"
               onClick={() => setSelected(new Set())}
-              disabled={isBulkActionPending}
+              disabled={bulkAction.isPending}
             >
               Clear
             </Button>

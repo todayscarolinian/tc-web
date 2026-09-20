@@ -12,8 +12,6 @@ import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
 
 import { toast } from "sonner";
 
-import type { UserProfile } from "@/src/lib/herald/types";
-
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 
@@ -29,6 +27,12 @@ import { ArticleEditorHeader } from "./article-editor/header";
 import { ArticleEditorSidebar } from "./article-editor/sidebar";
 import { useAutosave } from "./article-editor/use-autosave";
 import { useCoverImage } from "./article-editor/use-cover-image";
+import { useStaffAuthors } from "@/src/entities/user/hooks/use-staff-authors";
+import {
+  useCreateArticleMutation,
+  useUpdateArticleMutation,
+} from "@/src/entities/article/hooks/use-save-article";
+import { useArticleStatusTransition } from "@/src/entities/article/hooks/use-article-status-transition";
 
 const extensions = [
   StarterKit,
@@ -68,7 +72,10 @@ export function ArticleEditor({
     article ? getSectionName(article.sectionSlug) : "News",
   );
 
-  const [authors, setAuthors] = useState<UserProfile[]>([]);
+  const { data: authors = [], isError: authorsFetchFailed } = useStaffAuthors();
+  const createArticle = useCreateArticleMutation();
+  const updateArticle = useUpdateArticleMutation();
+  const statusTransition = useArticleStatusTransition();
   const [authorId, setAuthorId] = useState<string | null>(
     article?.authorId ?? currentUserId,
   );
@@ -174,25 +181,19 @@ export function ArticleEditor({
     });
 
     const currentSlug = article?.slug ?? createdSlug;
-    const url = currentSlug ? `/api/articles/${currentSlug}` : "/api/articles";
-    const method = currentSlug ? "PUT" : "POST";
 
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const message = errorData?.error ?? response.statusText;
-
+    let savedArticle: Article;
+    try {
+      savedArticle = currentSlug
+        ? await updateArticle.mutateAsync({ slug: currentSlug, body })
+        : await createArticle.mutateAsync(body);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       if (!opts?.silent) toast.error(`Failed to save draft: ${message}`);
       autosave.setAutosaveStatus("error");
       return null;
     }
 
-    const { article: savedArticle } = await response.json();
     if (!opts?.silent) toast.success("Article saved successfully!");
 
     // Keyed on `article` (the server-fetched prop), not `currentSlug`: once
@@ -295,20 +296,15 @@ export function ArticleEditor({
       const slug = await persistDraft();
       if (!slug) return;
 
-      const response = await fetch(`/api/articles/${slug}/${action}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const message = errorData?.error ?? response.statusText;
-
+      let updatedArticle: Article;
+      try {
+        updatedArticle = await statusTransition.mutateAsync({ slug, action });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
         toast.error(`Failed to ${action} article: ${message}`);
         return;
       }
 
-      const { article: updatedArticle } = await response.json();
       toast.success(`Article ${STATUS_TRANSITION_LABEL[action]} successfully!`);
       setStatus(updatedArticle.status);
       if (action === "unpublish") setPublishAt(null);
@@ -322,15 +318,8 @@ export function ArticleEditor({
   const archiveDraft = () => applyStatusTransition("archive");
 
   useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) => {
-        setAuthors(data.users);
-      })
-      .catch(() => {
-        toast.error("Failed to load authors");
-      });
-  }, [article]);
+    if (authorsFetchFailed) toast.error("Failed to load authors");
+  }, [authorsFetchFailed]);
 
   return (
     <div className="flex flex-1 flex-col">

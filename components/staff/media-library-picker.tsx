@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Images } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/site/empty-state";
 import type { MediaAssetDTO } from "@/src/entities/media/core/media.domain";
 import { canAttachMedia } from "@/src/entities/media/core/media.domain";
+import { useMediaAssets } from "@/src/entities/media/hooks/use-media-assets";
 import { cn } from "@/src/lib/utils";
 
 export function MediaLibraryPicker({
@@ -26,31 +27,11 @@ export function MediaLibraryPicker({
   onOpenChange: (open: boolean) => void;
   onSelect: (asset: MediaAssetDTO) => void;
 }) {
-  const [assets, setAssets] = useState<MediaAssetDTO[] | null>(null);
+  const { data: assets, isLoading, isError } = useMediaAssets({ enabled: open });
 
   useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    fetch("/api/media")
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to load media library.");
-        return response.json() as Promise<{ assets: MediaAssetDTO[] }>;
-      })
-      .then((data) => {
-        if (!cancelled) setAssets(data.assets);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAssets([]);
-          toast.error("Failed to load the media library.");
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
-
-  const isLoading = open && assets === null;
+    if (isError) toast.error("Failed to load the media library.");
+  }, [isError]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

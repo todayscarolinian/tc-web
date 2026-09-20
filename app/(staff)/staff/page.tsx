@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/staff/page-header";
@@ -17,16 +18,34 @@ import {
   TOP_STORIES,
 } from "@/src/lib/staff-data";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
+import { articleKeys } from "@/src/entities/article/query-keys";
 import { ENABLE_ANALYTICS } from "@/src/lib/flags";
 import { getTodayFormatted } from "@/src/lib/utils";
+
 export default async function StaffDashboardPage() {
-  const [articles, published] = await Promise.all([
-    articleService.staff.listAll(),
-    ENABLE_ANALYTICS ? Promise.resolve([]) : articleService.listPublished(),
+  const queryClient = new QueryClient();
+
+  await Promise.all([
+    queryClient
+      .query({
+        queryKey: articleKeys.staffList(),
+        queryFn: () => articleService.staff.listAll(),
+      })
+      .catch(() => {}),
+    ENABLE_ANALYTICS
+      ? Promise.resolve()
+      : queryClient
+          .query({
+            queryKey: articleKeys.publicList(),
+            queryFn: () => articleService.listPublished(),
+          })
+          .catch(() => {}),
   ]);
 
+  const dehydratedState = dehydrate(queryClient);
+
   return (
-    <>
+    <HydrationBoundary state={dehydratedState}>
       <PageHeader
         title="Dashboard"
         subtitle={`${getTodayFormatted()}`}
@@ -78,14 +97,14 @@ export default async function StaffDashboardPage() {
         )}
 
         <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-          <DashboardArticlesPanel articles={articles} />
+          <DashboardArticlesPanel />
           {ENABLE_ANALYTICS ? (
             <TopStoriesRail stories={TOP_STORIES} />
           ) : (
-            <RecentStoriesRail articles={published.slice(0, 5)} />
+            <RecentStoriesRail />
           )}
         </div>
       </div>
-    </>
+    </HydrationBoundary>
   );
 }

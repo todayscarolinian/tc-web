@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireHeraldAccess, isAccessError } from "@/src/lib/herald/require-access";
 import { StaffShell } from "@/components/staff/staff-shell";
+import { StaffQueryProvider } from "@/components/staff/staff-query-provider";
 import { ErrorState } from "@/components/site/error-state";
 
 export default async function StaffLayout({ children }: { children: React.ReactNode }) {
@@ -20,5 +21,9 @@ export default async function StaffLayout({ children }: { children: React.ReactN
     );
   }
 
-  return <StaffShell>{children}</StaffShell>;
+  return (
+    <StaffQueryProvider>
+      <StaffShell>{children}</StaffShell>
+    </StaffQueryProvider>
+  );
 }

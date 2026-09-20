@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, Fragment } from "react";
+import { useMemo, useState, Fragment } from "react";
 import { toast } from "sonner";
 import {
   Combobox,
@@ -15,20 +15,20 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 import type { Tag } from "@/src/entities/tag/core/tag.domain";
-import { findOrCreateTagAction, getTagsAction } from "@/src/entities/tag/actions/tag.action";
+import { useTags } from "@/src/entities/tag/hooks/use-tags";
+import { useCreateTagMutation } from "@/src/entities/tag/hooks/use-create-tag";
 
 export function TagInput({
-  tags,      
-  onChange,  
+  tags,
+  onChange,
 }: {
   tags: string[];
   onChange: (tags: string[]) => void;
 }) {
   const anchor = useComboboxAnchor();
-  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const { data: allTags = [], isLoading: loading } = useTags();
+  const createTag = useCreateTagMutation();
   const [inputValue, setInputValue] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
 
   const selectedTags = useMemo(
     () => allTags.filter((t) => tags.includes(t.slug)),
@@ -56,28 +56,16 @@ export function TagInput({
 
   async function handleCreate() {
     const name = inputValue.trim();
-    if (!name || creating) return;
-    setCreating(true);
+    if (!name || createTag.isPending) return;
     try {
-      const tag = await findOrCreateTagAction(name);
-      setAllTags((prev) =>
-        prev.some((t) => t.slug === tag.slug) ? prev : [...prev, tag]
-      );
+      const tag = await createTag.mutateAsync(name);
       onChange(tags.includes(tag.slug) ? tags : [...tags, tag.slug]);
       setInputValue("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create tag";
       toast.error(message);
-    } finally {
-      setCreating(false);
     }
   }
-
-  useEffect(() => {
-    getTagsAction()
-      .then(setAllTags)
-      .finally(() => setLoading(false));
-  }, []);
 
   return (
     <Combobox
@@ -120,10 +108,10 @@ export function TagInput({
           <button
             type="button"
             onClick={handleCreate}
-            disabled={creating}
+            disabled={createTag.isPending}
             className="w-full flex items-center gap-1.5 px-2 py-1.5 text-left text-sm font-medium text-brand hover:bg-brand/10 rounded-sm transition-colors"
           >
-            {creating ? "Creating…" : `Create tag "${inputValue.trim()}"`}
+            {createTag.isPending ? "Creating…" : `Create tag "${inputValue.trim()}"`}
           </button>
         )}
       </ComboboxContent>

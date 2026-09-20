@@ -6,6 +6,25 @@ import { sessionService } from "@/src/entities/auth/services/auth.service.factor
 import { getEligibleHeraldUsers, isEligibleAuthor } from "@/src/lib/herald/fetch-users";
 import type { ArticleInput } from "@/src/entities/article/core/article.domain";
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  const session = await sessionService.getCurrentStaffSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { slug } = await params;
+  const article = await articleService.staff.getBySlug(slug);
+
+  if (!article) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ article });
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },

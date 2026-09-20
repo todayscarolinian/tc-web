@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArticlesTable } from "@/components/staff/articles-table";
 import { EmptyState } from "@/components/site/empty-state";
 import type { ArticleStatus } from "@/src/entities/article/core/article.types";
-import type { Article } from "@/src/entities/article/core/article.domain";
+import { useStaffArticles } from "@/src/entities/article/hooks/use-staff-articles";
 
 const FILTERS = ["All", "Published", "Draft", "Scheduled"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -19,7 +19,8 @@ const FILTER_LABEL: Record<Filter, string> = {
   Scheduled: "Scheduled",
 };
 
-export function DashboardArticlesPanel({ articles }: { articles: Article[] }) {
+export function DashboardArticlesPanel() {
+  const { data: articles = [] } = useStaffArticles();
   const [filter, setFilter] = useState<Filter>("All");
   const rows =
     filter === "All" ? articles : articles.filter((a) => a.status === (filter as ArticleStatus));
