@@ -260,6 +260,7 @@ describe("articleService sweepDuePublishes (S3-02 lazy write-on-read)", () => {
         return inMemory.saveArticle(doc);
       },
       setExclusiveFeatured: inMemory.setExclusiveFeatured.bind(inMemory),
+      deleteArticle: inMemory.deleteArticle.bind(inMemory),
     };
 
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});

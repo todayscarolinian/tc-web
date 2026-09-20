@@ -5,7 +5,8 @@ import type { Publication } from "@/src/entities/publication/core/publication.ty
 // directly instead of going through a service object.
 export const PUBLICATION: Publication = {
   bio: "The official student publication of the University of San Carlos, Cebu City. Our commitment. Your paper.",
-  email: "contact@todayscarolinian.com",
+  location: "Cebu City",
+  email: "todayscarolinianusc@gmail.com",
   social: {
     facebook: "https://www.facebook.com/todayscarolinian",
     instagram: "https://www.instagram.com/todaysusc/",

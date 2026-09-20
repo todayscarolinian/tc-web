@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { FileText, Plus, Search, CheckCircle2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { FileText, Plus, Search, CheckCircle2, Archive, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,6 +57,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
   const [author, setAuthor] = useState("All");
   const [sort, setSort] = useState<ArticleSort>({ key: "date", dir: "desc" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [isBulkActionPending, setIsBulkActionPending] = useState(false);
 
   const authors = useMemo(
     () => ["All", ...Array.from(new Set(initialArticles.map((a) => a.authorName)))],
@@ -100,14 +102,64 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
     });
   }
 
-  function bulkPublish() {
-    setArticles((rows) => rows.map((r) => (selected.has(r.slug) ? { ...r, status: "Published" } : r)));
-    setSelected(new Set());
-  }
+  type BulkAction = "publish" | "archive" | "delete";
 
-  function bulkDelete() {
-    setArticles((rows) => rows.filter((r) => !selected.has(r.slug)));
-    setSelected(new Set());
+  const BULK_ACTION: Record<BulkAction, { verb: string; pastTense: string; nextStatus?: ArticleStatus; request: (slug: string) => Promise<Response> }> = {
+    publish: {
+      verb: "publish",
+      pastTense: "Published",
+      nextStatus: "Published",
+      request: (slug) => fetch(`/api/articles/${slug}/publish`, { method: "PUT" }),
+    },
+    archive: {
+      verb: "archive",
+      pastTense: "Archived",
+      nextStatus: "Archived",
+      request: (slug) => fetch(`/api/articles/${slug}/archive`, { method: "PUT" }),
+    },
+    delete: {
+      verb: "delete",
+      pastTense: "Deleted",
+      request: (slug) => fetch(`/api/articles/${slug}`, { method: "DELETE" }),
+    },
+  };
+
+  async function runBulkAction(action: BulkAction) {
+    const { verb, pastTense, nextStatus, request } = BULK_ACTION[action];
+    const slugs = Array.from(selected);
+    setIsBulkActionPending(true);
+    try {
+      const results = await Promise.allSettled(
+        slugs.map(async (slug) => {
+          const response = await request(slug);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.error ?? response.statusText);
+          }
+          return slug;
+        }),
+      );
+
+      const succeeded = new Set(
+        results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value),
+      );
+      const failedCount = results.length - succeeded.size;
+
+      if (succeeded.size > 0) {
+        setArticles((rows) =>
+          nextStatus
+            ? rows.map((r) => (succeeded.has(r.slug) ? { ...r, status: nextStatus } : r))
+            : rows.filter((r) => !succeeded.has(r.slug)),
+        );
+        setSelected((s) => new Set(Array.from(s).filter((slug) => !succeeded.has(slug))));
+        toast.success(`${pastTense} ${succeeded.size} article${succeeded.size === 1 ? "" : "s"}.`);
+      }
+      if (failedCount > 0) {
+        toast.error(`Failed to ${verb} ${failedCount} article${failedCount === 1 ? "" : "s"}.`);
+      }
+    } finally {
+      setIsBulkActionPending(false);
+    }
   }
 
   return (
@@ -178,8 +230,25 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
           <div className="flex items-center gap-3 rounded-sm bg-foreground px-4 py-2.5 text-background">
             <span className="font-ui text-sm font-bold">{selected.size} selected</span>
             <span className="grow" />
-            <Button type="button" size="sm" variant="outline" className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background" onClick={bulkPublish}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
+              onClick={() => runBulkAction("publish")}
+              disabled={isBulkActionPending}
+            >
               <CheckCircle2 /> Publish
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
+              onClick={() => runBulkAction("archive")}
+              disabled={isBulkActionPending}
+            >
+              <Archive /> Archive
             </Button>
             <AlertDialog>
               <AlertDialogTrigger
@@ -189,6 +258,7 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
                     size="sm"
                     variant="outline"
                     className="border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background"
+                    disabled={isBulkActionPending}
                   />
                 }
               >
@@ -203,13 +273,20 @@ export function ArticlesView({ initialArticles }: { initialArticles: Article[] }
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction variant="destructive" onClick={bulkDelete}>
+                  <AlertDialogAction variant="destructive" onClick={() => runBulkAction("delete")} disabled={isBulkActionPending}>
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button type="button" size="sm" variant="ghost" className="text-background hover:bg-background/10 hover:text-background" onClick={() => setSelected(new Set())}>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="text-background hover:bg-background/10 hover:text-background"
+              onClick={() => setSelected(new Set())}
+              disabled={isBulkActionPending}
+            >
               Clear
             </Button>
           </div>

@@ -38,5 +38,7 @@ export interface ArticleUseCase {
     unpublish(slug: string): Promise<Article>;
     archive(slug: string): Promise<Article>;
     update(slug: string, doc: ArticleInput): Promise<Article>;
+    /** Hard delete — permanently removes the article. */
+    remove(slug: string): Promise<void>;
   };
 }

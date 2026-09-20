@@ -57,3 +57,37 @@ export async function PUT(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  const session = await sessionService.getCurrentStaffSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { slug } = await params;
+
+  try {
+    const existing = await articleService.staff.getBySlug(slug);
+    await articleService.staff.remove(slug);
+
+    if (existing) {
+      revalidatePath(`/article/${existing.slug}`);
+      revalidatePath(`/section/${existing.sectionSlug}`);
+      revalidatePath("/section/[section]/page/[page]", "page");
+      revalidatePath(`/author/${existing.authorId}`);
+      revalidatePath("/");
+      revalidatePath("/sitemap.xml");
+      revalidatePath("/rss.xml");
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 404 },
+    );
+  }
+}

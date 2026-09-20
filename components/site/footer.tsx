@@ -6,19 +6,30 @@ import { PUBLICATION } from "@/src/entities/publication/infrastructure/publicati
 const PAPER_LINKS = [
   {
     name: "About Us",
-    href: "/about",
+    href: "/coming-soon",
   },
   {
     name: "Masthead",
-    href: "/masthead",
+    href: "/coming-soon",
   },
   {
     name: "Join the staff",
-    href: "/join-the-staff",
+    href: "/coming-soon",
   },
   {
     name: "Contact",
     href: `mailto:${PUBLICATION.email}`,
+  },
+];
+
+const TC_APPS = [
+  {
+    name: "USC Days",
+    href: "https://uscdays.todayscarolinian.com/",
+  },
+  {
+    name: "TC Digital Archives",
+    href: "https://archives.todayscarolinian.com/",
   },
 ];
 
@@ -39,7 +50,7 @@ export function Footer() {
               {PUBLICATION.bio}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             <div>
               <h5 className="font-utility mb-3 text-xs font-semibold tracking-wide text-white/50 uppercase">
                 Sections
@@ -47,7 +58,10 @@ export function Footer() {
               <ul className="flex flex-col gap-2">
                 {SECTIONS.map((s) => (
                   <li key={s.slug}>
-                    <Link href={`/section/${s.slug}`} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <Link
+                      href={`/section/${s.slug}`}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                    >
                       {s.name}
                     </Link>
                   </li>
@@ -61,7 +75,10 @@ export function Footer() {
               <ul className="flex flex-col gap-2">
                 {PAPER_LINKS.map((l) => (
                   <li key={l.name}>
-                    <Link href={l.href} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <Link
+                      href={l.href}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                    >
                       {l.name}
                     </Link>
                   </li>
@@ -77,12 +94,35 @@ export function Footer() {
             </div>
             <div>
               <h5 className="font-utility mb-3 text-xs font-semibold tracking-wide text-white/50 uppercase">
+                Also See
+              </h5>
+              <ul className="flex flex-col gap-2">
+                {TC_APPS.map((l) => (
+                  <li key={l.name}>
+                    <a
+                      href={l.href}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {l.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h5 className="font-utility mb-3 text-xs font-semibold tracking-wide text-white/50 uppercase">
                 Follow
               </h5>
               <ul className="flex flex-col gap-2">
                 {Object.entries(PUBLICATION.social).map(([platform, url]) => (
                   <li key={platform}>
-                    <a href={url} className="text-sm text-white/80 hover:text-white hover:underline">
+                    <a
+                      href={url}
+                      className="text-sm text-white/80 hover:text-white hover:underline"
+                      target="_blank"
+                    >
                       {platform.charAt(0).toUpperCase() + platform.slice(1)}
                     </a>
                   </li>
@@ -100,7 +140,8 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t border-white/10 pt-6">
           <span className="text-xs text-white/50">
-            © 2026 Today&apos;s Carolinian · University of San Carlos. All rights reserved.
+            © 2026 Today&apos;s Carolinian · University of San Carlos. All
+            rights reserved.
           </span>
         </div>
       </div>

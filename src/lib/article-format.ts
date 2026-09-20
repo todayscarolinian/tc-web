@@ -1,7 +1,9 @@
 import type { JSONContent } from "@tiptap/core";
 import { generateHTML } from "@tiptap/html";
 import StarterKit from "@tiptap/starter-kit";
+import { TextStyleKit } from "@tiptap/extension-text-style";
 import Image from "@tiptap/extension-image";
+import { Figure, Figcaption, ImageResize } from "tiptap-extension-resize-image";
 import { TableKit } from "@tiptap/extension-table";
 
 // Article.date/read (display strings) were replaced by publishedAt/
@@ -17,13 +19,20 @@ export function formatReadTime(minutes: number): string {
   return `${minutes} min read`;
 }
 
-// Must match (or be a superset of) whatever the CMS editor (S2-01)
-// registers — a node/mark Tiptap doesn't recognize renders as nothing, not
-// an error. StarterKit already bundles Link and Blockquote; Image and
-// tables are separate installs. Per ADR-002, the pull-quote and inline
-// -image-with-caption extensions are still to be built (S2-01) — add them
-// here once they exist so already-published bodies keep rendering.
-const ARTICLE_BODY_EXTENSIONS = [StarterKit, Image, TableKit];
+// Must match (or be a superset of) the extensions registered by the CMS
+// editor (article-editor.tsx) and article.factory.ts's extractPlainText —
+// an *unrecognized* mark just renders as nothing, but an unrecognized node
+// type makes ProseMirror throw (Schema.nodeType), which crashes this page's
+// render. Keep this list in sync whenever those two change.
+const ARTICLE_BODY_EXTENSIONS = [
+  StarterKit,
+  TextStyleKit,
+  Image,
+  ImageResize,
+  Figure,
+  Figcaption,
+  TableKit,
+];
 
 // Server-side render of Article.body (ProseMirror JSON) to HTML, per
 // ADR-002's `renderTiptapJSON()` — resolves to @tiptap/html's Node-safe

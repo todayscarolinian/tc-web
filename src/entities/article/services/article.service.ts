@@ -221,6 +221,13 @@ export function createArticleService(repo: ArticleRepository): ArticleUseCase {
 
         return persistExclusiveFeatured(repo, article);
       },
+
+      async remove(slug: string): Promise<void> {
+        const article = await repo.findBySlug(slug);
+        if (!article) throw new Error(`Article not found: ${slug}`);
+
+        await repo.deleteArticle(slug);
+      },
     },
   };
 }

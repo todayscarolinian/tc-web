@@ -17,7 +17,10 @@ import type { UserProfile } from "@/src/lib/herald/types";
 import type { Article } from "@/src/entities/article/core/article.domain";
 import type { ArticleStatus } from "@/src/entities/article/core/article.types";
 
-import { SECTIONS, getSectionName } from "@/src/entities/section/infrastructure/static-section.repository";
+import {
+  SECTIONS,
+  getSectionName,
+} from "@/src/entities/section/infrastructure/static-section.repository";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import { cn } from "@/src/lib/utils";
 
@@ -217,17 +220,17 @@ export function ArticleEditor({
   const saveDraft = async () => {
     if (!editor || isBusy) return;
 
-    // Read editor.isEmpty directly here, not the isBodyEmpty snapshot below:
-    // useEditorState's snapshot only recomputes on a transaction, so an
-    // already-published article opened and acted on without ever being
-    // edited (no transaction fires) would still read its stale initial
-    // value. editor.isEmpty is a live getter — always correct at click time.
-    const errors = getFieldErrors({ title, isBodyEmpty: editor.isEmpty, authorId });
+    const errors = getFieldErrors({
+      title,
+      isBodyEmpty: editor.isEmpty,
+      authorId,
+    });
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       toast.error("Fix the highlighted fields before saving.");
       return;
     }
+    setFieldErrors({});
 
     setIsSaving(true);
     try {
@@ -240,6 +243,13 @@ export function ArticleEditor({
   const runAutosave = async () => {
     if (!editor || isBusy || !autosave.isDirty()) return;
 
+    const errors = getFieldErrors({
+      title,
+      isBodyEmpty: editor.isEmpty,
+      authorId,
+    });
+    if (Object.keys(errors).length > 0) return;
+
     setIsAutosaving(true);
     autosave.setAutosaveStatus("saving");
     try {
@@ -249,14 +259,14 @@ export function ArticleEditor({
     }
   };
 
-  // runAutosave must stay here (it closes over all sidebar state), so it's
-  // handed to the autosave hook via setRunAutosave on every render — see
-  // use-autosave.ts for why.
   useEffect(() => {
     autosave.setRunAutosave(runAutosave);
   });
 
-  const STATUS_TRANSITION_LABEL: Record<"publish" | "unpublish" | "archive", string> = {
+  const STATUS_TRANSITION_LABEL: Record<
+    "publish" | "unpublish" | "archive",
+    string
+  > = {
     publish: "published",
     unpublish: "unpublished",
     archive: "archived",
@@ -268,7 +278,11 @@ export function ArticleEditor({
     if (!editor || isBusy) return;
 
     // Read editor.isEmpty directly, not the isBodyEmpty snapshot — see saveDraft.
-    const errors = getFieldErrors({ title, isBodyEmpty: editor.isEmpty, authorId });
+    const errors = getFieldErrors({
+      title,
+      isBodyEmpty: editor.isEmpty,
+      authorId,
+    });
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       toast.error("Fix the highlighted fields before saving.");
@@ -358,17 +372,35 @@ export function ArticleEditor({
               {fieldErrors.title && !title.trim() ? fieldErrors.title : ""}
             </p>
 
+            <div className="mb-1 flex flex-col gap-0.5">
+              <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                Description
+              </span>
+              <p className="font-utility text-[11px] text-muted-foreground">
+                A short excerpt shown on previews
+              </p>
+            </div>
             <textarea
               value={dek}
               onChange={(e) => setDek(e.target.value)}
               placeholder="Write a one- or two-sentence excerpt…"
               rows={2}
-              className="mb-5 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
+              className="mb-6 w-full resize-none border-0 bg-transparent text-lg leading-7 text-text-secondary outline-none placeholder:text-muted-foreground"
             />
 
+            <div className="mb-1 flex flex-col gap-0.5 border-t border-border pt-5">
+              <span className="font-utility text-xs font-bold tracking-wide text-muted-foreground uppercase">
+                Article body
+              </span>
+              <p className="font-utility text-[11px] text-muted-foreground">
+                The full article story
+              </p>
+            </div>
             <EditorContent editor={editor} />
             {fieldErrors.body && isBodyEmpty && (
-              <p className="mt-2 text-xs text-destructive">{fieldErrors.body}</p>
+              <p className="mt-2 text-xs text-destructive">
+                {fieldErrors.body}
+              </p>
             )}
           </div>
         </div>
