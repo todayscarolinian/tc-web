@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
+
+import { toast } from "sonner";
 
 import {
   Bold,
@@ -15,6 +18,9 @@ import {
   Redo2,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
+
+import { ALLOWED_IMAGE_CONTENT_TYPES, MAX_IMAGE_SIZE_BYTES } from "@/src/lib/media-constraints";
+import { uploadMediaFile } from "@/src/lib/upload-media";
 
 import {
   EditorToolbarStateSelector,
@@ -48,26 +54,49 @@ const setLink = (editor: Editor) => {
   editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 };
 
-const handleImageUpload = (editor: Editor) => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
+const makeHandleImageUpload = (setUploading: (uploading: boolean) => void) =>
+  (editor: Editor) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
 
-  input.onchange = () => {
-    const file = input.files?.[0];
-    if (!file) return;
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      input.value = "";
+      if (!file) return;
 
-    const src = URL.createObjectURL(file);
+      if (!ALLOWED_IMAGE_CONTENT_TYPES.has(file.type)) {
+        toast.error(`Unsupported file type: ${file.type || "unknown"}`);
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        toast.error("File exceeds the 2MB upload limit.");
+        return;
+      }
 
-    editor.chain().focus().setImage({ src }).run();
+      setUploading(true);
+      try {
+        const { publicUrl } = await uploadMediaFile({
+          file,
+          folder: "Photos",
+          altText: "",
+        });
 
-    editor.commands.addCaption();
+        editor.chain().focus().setImage({ src: publicUrl }).run();
+        editor.commands.addCaption();
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to upload image. Check your connection and try again.",
+        );
+      } finally {
+        setUploading(false);
+      }
+    };
 
-    input.value = "";
+    input.click();
   };
-
-  input.click();
-};
 
 const TOGGLES: Config[] = [
   {
@@ -138,7 +167,7 @@ const ACTIONS: Config[] = [
     label: null,
     icon: ImageIcon,
     title: "Insert image",
-    action: (editor) => handleImageUpload(editor),
+    action: () => {},
   },
 ];
 
@@ -167,6 +196,9 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       editor,
       selector: EditorToolbarStateSelector,
     }) ?? emptyMenuBarState;
+
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const handleImageUpload = makeHandleImageUpload(setIsUploadingImage);
 
   if (!editor) {
     return null;
@@ -209,16 +241,23 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       {ACTIONS.map((a) => {
         const isActive = a.isActiveKey ? editorState[a.isActiveKey] : false;
 
-        const isDisabled = a.canKey ? !editorState[a.canKey] : false;
+        const isDisabled =
+          a.key === "image"
+            ? isUploadingImage
+            : a.canKey
+              ? !editorState[a.canKey]
+              : false;
 
         return (
           <button
             key={a.key}
             type="button"
-            title={a.title}
+            title={a.key === "image" && isUploadingImage ? "Uploading…" : a.title}
             aria-pressed={isActive}
             disabled={isDisabled}
-            onClick={() => a.action(editor)}
+            onClick={() =>
+              a.key === "image" ? handleImageUpload(editor) : a.action(editor)
+            }
             className={cn(
               "flex size-8 items-center justify-center rounded-xs text-text-secondary hover:bg-muted hover:text-foreground",
               isActive && "bg-foreground text-background",
