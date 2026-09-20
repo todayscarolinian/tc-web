@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentStaffUser } from "@/src/lib/herald/use-current-staff-user";
@@ -46,6 +46,9 @@ export function PageHeader({
           </div>
         )}
         <Avatar size="sm">
+          {user?.avatarUrl && (
+            <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+          )}
           <AvatarFallback className="bg-brand text-primary-foreground">
             {isPending ? "" : user?.initials}
           </AvatarFallback>
