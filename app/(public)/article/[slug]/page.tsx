@@ -175,7 +175,7 @@ export default async function ArticlePage({
         </Link>
 
         <div
-          className="prose prose-tc mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_li]:my-1 [&>blockquote]:font-display [&>blockquote]:border-l-4 [&>blockquote]:border-brand [&>blockquote]:py-1 [&>blockquote]:pl-5 [&>blockquote]:text-2xl [&>blockquote]:leading-8 [&>blockquote]:font-semibold [&>blockquote]:italic [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:pr-3 [&>p:first-of-type]:first-letter:pt-1 [&>p:first-of-type]:first-letter:font-display [&>p:first-of-type]:first-letter:text-6xl [&>p:first-of-type]:first-letter:leading-13 [&>p:first-of-type]:first-letter:font-extrabold [&>p:first-of-type]:first-letter:text-brand-strong"
+          className="prose mt-8 flex flex-col gap-5 text-[17px] leading-[28px] text-foreground [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_li]:my-1 [&_li]:marker:text-black [&>blockquote]:font-display [&>blockquote]:border-l-4 [&>blockquote]:border-brand [&>blockquote]:py-1 [&>blockquote]:pl-5 [&>blockquote]:text-2xl [&>blockquote]:leading-8 [&>blockquote]:font-semibold [&>blockquote]:italic [&>p:first-of-type]:first-letter:float-left [&>p:first-of-type]:first-letter:pr-3 [&>p:first-of-type]:first-letter:pt-1 [&>p:first-of-type]:first-letter:font-display [&>p:first-of-type]:first-letter:text-6xl [&>p:first-of-type]:first-letter:leading-13 [&>p:first-of-type]:first-letter:font-extrabold [&>p:first-of-type]:first-letter:text-brand-strong"
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
 
