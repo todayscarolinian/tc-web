@@ -45,6 +45,7 @@ describe("articleService.getBySlug", () => {
       listByTagSlug: () => { throw new Error("should not be called"); },
       saveArticle: () => { throw new Error("should not be called"); },
       setExclusiveFeatured: () => { throw new Error("should not be called"); },
+      deleteArticle: () => { throw new Error("should not be called"); },
     };
     const unreachableService = createArticleService(unreachableRepo);
     expect(await unreachableService.getBySlug("")).toBeNull();

@@ -282,4 +282,8 @@ export class FirestoreArticleRepository implements ArticleRepository {
     });
     return article;
   }
+
+  async deleteArticle(slug: string): Promise<void> {
+    await db.collection(ARTICLES_COLLECTION).doc(slug).delete();
+  }
 }

@@ -281,4 +281,9 @@ export class InMemoryArticleRepository implements ArticleRepository {
     }
     return this.saveArticle(article);
   }
+
+  async deleteArticle(slug: string): Promise<void> {
+    const index = this.articles.findIndex((article) => article.slug === slug);
+    if (index !== -1) this.articles.splice(index, 1);
+  }
 }
