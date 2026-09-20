@@ -6,7 +6,7 @@ import type { Publication } from "@/src/entities/publication/core/publication.ty
 export const PUBLICATION: Publication = {
   bio: "The official student publication of the University of San Carlos, Cebu City. Our commitment. Your paper.",
   location: "Cebu City",
-  email: "contact@todayscarolinian.com",
+  email: "todayscarolinianusc@gmail.com",
   social: {
     facebook: "https://www.facebook.com/todayscarolinian",
     instagram: "https://www.instagram.com/todaysusc/",
