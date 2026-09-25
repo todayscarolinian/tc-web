@@ -192,7 +192,7 @@ export default async function ArticlePage({
           <div className="mt-8 flex flex-wrap gap-2">
             {articleTags.map((tag) => (
               <Link href={`/topic/${tag.slug}`} key={tag.slug}>
-                  <Badge className="bg-destructive text-white rounded-full">
+                  <Badge className="bg-brand text-white rounded-full">
                     {tag.name}
                   </Badge>
               </Link>
