@@ -12,10 +12,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-display);
-  --font-heading: var(--font-display);
-  --font-ui: var(--font-ui);
-  --font-utility: var(--font-utility);
+  --font-sans: var(--font-roboto);
+  --font-heading: var(--font-roboto);
+  --font-display: var(--font-roboto);
+  --font-ui: var(--font-roboto);
+  --font-utility: var(--font-roboto);
   --color-brand: var(--color-brand);
   --color-brand-strong: var(--color-brand-strong);
   --color-brand-ink: var(--color-brand-ink);
@@ -187,9 +188,9 @@
 }
 
 @layer components {
-  /* Kicker / section label — Rajdhani, uppercase, tracked out */
+  /* Kicker / section label — uppercase, tracked out */
   .tc-kicker {
-    font-family: var(--font-utility);
+    font-family: var(--font-roboto);
     font-weight: 700;
     font-size: 0.8125rem;
     line-height: 1rem;
