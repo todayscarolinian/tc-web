@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Form from "next/form";
 import { Search, SearchX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,11 @@ export function SearchBar() {
   const trimmedQuery = query.trim();
   const debouncedQuery = useDebouncedValue(trimmedQuery);
   const loading = trimmedQuery !== "" && trimmedQuery !== fetchedQuery;
+
+  const close = () => {
+    setOpen(false);
+    setQuery("");
+  };
 
   useEffect(() => {
     if (!debouncedQuery) return;
@@ -71,17 +77,18 @@ export function SearchBar() {
           <SheetDescription className="sr-only">
             Search articles by title, author, or section.
           </SheetDescription>
-          <div className="relative mt-1">
+          <Form action="/search" onSubmit={close} className="relative mt-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
               type="search"
+              name="q"
               placeholder="Search articles, authors, sections…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="h-11 pl-9"
             />
-          </div>
+          </Form>
         </SheetHeader>
 
         <div className="max-h-[60vh] overflow-y-auto px-4 pb-4">
@@ -109,7 +116,7 @@ export function SearchBar() {
                   <li key={article.slug}>
                     <Link
                       href={`/article/${article.slug}`}
-                      onClick={() => setOpen(false)}
+                      onClick={close}
                       className="group flex items-start gap-3 py-3"
                     >
                       <Icon
@@ -133,6 +140,16 @@ export function SearchBar() {
                 );
               })}
             </ul>
+          )}
+
+          {!loading && trimmedQuery && results.length > 0 && (
+            <Link
+              href={`/search?q=${encodeURIComponent(trimmedQuery)}`}
+              onClick={close}
+              className="font-utility mt-2 inline-block text-sm font-medium text-brand hover:underline"
+            >
+              See all results for &quot;{trimmedQuery}&quot;
+            </Link>
           )}
         </div>
       </SheetContent>
