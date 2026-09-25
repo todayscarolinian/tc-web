@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Newspaper } from "lucide-react";
 import { articleService } from "@/src/entities/article/services/article.service.factory";
 import { tagService } from "@/src/entities/tag/services/tag.service.factory";
@@ -16,9 +17,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tagSlug = rawTag.toLocaleLowerCase();
   const allTags = await tagService.listAll();
   const tag = allTags.find((t) => t.slug === tagSlug);
+  if (!tag) notFound();
 
-  const title = tag?.name ?? tagSlug;
-  const description = tag?.description || `Stories tagged "${title}" from Today's Carolinian.`;
+  const title = tag.name;
+  const description = tag.description || `Stories tagged "${title}" from Today's Carolinian.`;
 
   return {
     title,
@@ -48,15 +50,16 @@ export default async function TopicPage({ params }: Props) {
   ]);
 
   const tag = allTags.find((t) => t.slug === tagSlug);
+  if (!tag) notFound();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="border-b border-border pb-8">
         <span className="tc-kicker text-brand">Topic</span>
         <h1 className="font-display mt-2 text-4xl font-extrabold text-foreground">
-          {tag?.name ?? tagSlug}
+          {tag.name}
         </h1>
-        {tag?.description && (
+        {tag.description && (
           <p className="mt-2 max-w-2xl text-base leading-6 text-text-secondary">
             {tag.description}
           </p>
@@ -67,7 +70,7 @@ export default async function TopicPage({ params }: Props) {
         <div className="py-8">
           <EmptyState
             icon={Newspaper}
-            title={`No stories tagged "${tag?.name ?? tagSlug}" yet`}
+            title={`No stories tagged "${tag.name}" yet`}
             description="Check back soon, or browse another topic."
           />
         </div>
