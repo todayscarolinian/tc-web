@@ -28,6 +28,7 @@
   --color-section-sports: var(--section-sports);
   --color-section-culture: var(--section-culture);
   --color-section-opinion: var(--section-opinion);
+  --color-section-research: var(--section-research);
   --color-success: var(--success);
   --color-success-strong: var(--success-strong);
   --color-warning: var(--warning);
@@ -102,6 +103,7 @@
   --section-sports: rgb(6, 23, 94);
   --section-culture: rgb(0, 148, 68);
   --section-opinion: rgb(145, 136, 121);
+  --section-research: rgb(94, 53, 177);
   --success: rgb(0, 148, 68);
   --success-strong: rgb(0, 89, 41);
   --warning: rgb(255, 147, 30);

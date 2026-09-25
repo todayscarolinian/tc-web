@@ -4,6 +4,7 @@ import {
   TrendingUp,
   Image as ImageIcon,
   FileText,
+  BookSearch,
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS, type SectionInfo } from "@/src/entities/section/infrastructure/static-section.repository";
@@ -16,6 +17,7 @@ const ACCENT_TEXT_CLASS: Record<SectionInfo["accent"], string> = {
   sports: "text-section-sports",
   culture: "text-section-culture",
   opinion: "text-section-opinion",
+  research: "text-section-research",
 };
 
 export function accentTextClass(accent: SectionInfo["accent"]) {
@@ -28,6 +30,7 @@ const ACCENT_BG_CLASS: Record<SectionInfo["accent"], string> = {
   sports: "bg-section-sports",
   culture: "bg-section-culture",
   opinion: "bg-section-opinion",
+  research: "bg-section-research",
 };
 
 export function accentBgClass(accent: SectionInfo["accent"]) {
@@ -45,6 +48,7 @@ const SECTION_ICON: Record<SectionName, LucideIcon> = {
   Sports: TrendingUp,
   "Arts & Culture": ImageIcon,
   Opinion: FileText,
+  Research: BookSearch,
 };
 
 export function sectionIcon(section: SectionName) {
