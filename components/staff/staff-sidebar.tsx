@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STAFF_NAV_ITEMS } from "@/src/lib/staff-data";
 import { useCurrentStaffUser } from "@/src/lib/herald/use-current-staff-user";
@@ -84,7 +84,6 @@ export function StaffSidebar() {
                 render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent" />}
               >
                 <Avatar size="sm">
-                  {user?.avatarUrl && <AvatarImage src={user?.avatarUrl} alt={user?.name} />}
                   <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
                     {isPending ? "" : user?.initials}
                   </AvatarFallback>

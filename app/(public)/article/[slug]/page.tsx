@@ -15,7 +15,7 @@ import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { ShareRow } from "@/components/site/share-row";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -161,10 +161,6 @@ export default async function ArticlePage({
           className="group mt-6 flex items-center gap-3 border-y border-border py-4"
         >
           <Avatar size="lg">
-            <AvatarImage
-              src={article.authorAvatarUrl}
-              alt={article.authorName}
-            />
             <AvatarFallback className="bg-brand text-white">
               {article.authorInitials}
             </AvatarFallback>
