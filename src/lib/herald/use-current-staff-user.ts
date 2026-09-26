@@ -6,7 +6,6 @@ export type CurrentStaffUser = {
   name: string;
   role: string;
   initials: string;
-  avatarUrl?: string;
 };
 
 export function useCurrentStaffUser(): {
@@ -23,7 +22,6 @@ export function useCurrentStaffUser(): {
   const name = profile.name || [profile.firstName, profile.lastName].filter(Boolean).join(" ");
   const role = profile.positions[0]?.name ?? "Staff";
   const initials = `${profile.firstName[0] ?? ""}${profile.lastName[0] ?? ""}`.toUpperCase();
-  const avatarUrl = profile.profilePictureURL;
 
-  return { user: { name, role, initials, avatarUrl }, isPending };
+  return { user: { name, role, initials }, isPending };
 }

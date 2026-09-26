@@ -2,15 +2,8 @@ import type { Section } from "@/src/entities/section/core/section.domain";
 import type { SectionName } from "@/src/entities/section/core/section.types";
 import type { SectionRepository } from "@/src/entities/section/core/section.repository";
 
-// Retained for callers that just want the plain array/lookup rather than
-// going through the SectionRepository port — mirrors the pre-move
-// lib/content.ts public surface (SECTIONS, getSectionName, SectionInfo) so
-// this move is a pure relocation, not a rename of what call sites consume.
 export type SectionInfo = Section;
 
-// The `name`<->`slug` mapping is a static, in-memory lookup over 5 fixed
-// entries — not a Firestore join — so Article stores only `sectionSlug` and
-// derives the display name here wherever it's needed. See firestore-schema.md.
 export const SECTIONS: SectionInfo[] = [
   {
     name: "News",
@@ -29,7 +22,7 @@ export const SECTIONS: SectionInfo[] = [
   {
     name: "Sports",
     slug: "sports",
-    blurb: "The Warriors, the CESAFI grind, and every Carolinian chasing a podium.",
+    blurb: "The Warriors, the CESAFI and USC Days grind, and every Carolinian chasing a podium.",
     accent: "sports",
   },
   {
@@ -45,6 +38,13 @@ export const SECTIONS: SectionInfo[] = [
     blurb:
       "Where Carolinians argue, persuade, and hold the institution to account. Clearly flagged, never neutral.",
     accent: "opinion",
+  },
+  {
+    name: "Research",
+    slug: "research",
+    blurb:
+      "The latest findings and discoveries from the publication's research initiatives.",
+    accent: "research",
   },
 ];
 

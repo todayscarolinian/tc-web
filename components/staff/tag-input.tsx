@@ -84,7 +84,7 @@ export function TagInput({
           {(values: Tag[]) => (
             <Fragment>
               {values.map((tag) => (
-                <ComboboxChip key={tag.slug} className="bg-destructive text-white rounded-full">
+                <ComboboxChip key={tag.slug} className="bg-brand text-white rounded-full">
                   {tag.name}
                 </ComboboxChip>
               ))}

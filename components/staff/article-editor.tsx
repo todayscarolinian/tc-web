@@ -172,7 +172,6 @@ export function ArticleEditor({
         ? `${selectedAuthor.firstName[0] ?? ""}${selectedAuthor.lastName[0] ?? ""}`.toUpperCase()
         : "",
       authorRole: selectedAuthor?.positions[0]?.name,
-      authorAvatarUrl: selectedAuthor?.profilePictureURL,
       publishAt,
       coverImageUrl: coverImage.coverImageUrl,
       coverImageAssetId: coverImage.coverImageAssetId || "",

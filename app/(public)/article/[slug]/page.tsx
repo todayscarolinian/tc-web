@@ -15,7 +15,7 @@ import { PhotoPlaceholder } from "@/components/site/photo-placeholder";
 import { StoryCard } from "@/components/site/story-card";
 import { SubscribeStrip } from "@/components/site/subscribe-strip";
 import { ShareRow } from "@/components/site/share-row";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -155,16 +155,23 @@ export default async function ArticlePage({
         <p className="mt-3 text-lg leading-7 text-text-secondary">
           {article.dek}
         </p>
+        {articleTags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {articleTags.map((tag) => (
+              <Link href={`/topic/${tag.slug}`} key={tag.slug}>
+                  <Badge className="bg-brand text-white rounded-full">
+                    {tag.name}
+                  </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
 
         <Link
           href={`/author/${article.authorId}`}
           className="group mt-6 flex items-center gap-3 border-y border-border py-4"
         >
           <Avatar size="lg">
-            <AvatarImage
-              src={article.authorAvatarUrl}
-              alt={article.authorName}
-            />
             <AvatarFallback className="bg-brand text-white">
               {article.authorInitials}
             </AvatarFallback>
@@ -190,18 +197,6 @@ export default async function ArticlePage({
           <p className="prose mt-8 text-[17px] leading-[28px] text-muted-foreground italic">
             We&apos;re having trouble displaying this article&apos;s content. Please try again shortly.
           </p>
-        )}
-
-        {articleTags.length > 0 && (
-          <div className="mt-8 flex flex-wrap gap-2">
-            {articleTags.map((tag) => (
-              <Link href={`/topic/${tag.slug}`} key={tag.slug}>
-                  <Badge className="bg-destructive text-white rounded-full">
-                    {tag.name}
-                  </Badge>
-              </Link>
-            ))}
-          </div>
         )}
 
         <ShareRow url={`${SITE_URL}/article/${article.slug}`} />

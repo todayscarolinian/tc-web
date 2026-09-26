@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Open_Sans, Inter, Rajdhani } from "next/font/google";
+import { Roboto } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { cn } from "@/src/lib/utils";
@@ -7,12 +7,10 @@ import { SITE_URL, SITE_NAME } from "@/src/lib/site";
 import { PUBLICATION } from "@/src/entities/publication/infrastructure/publication.composition";
 import { Toaster } from "@/components/ui/sonner";
 
-const openSans = Open_Sans({ subsets: ["latin"], variable: "--font-display" });
-const inter = Inter({ subsets: ["latin"], variable: "--font-ui" });
-const rajdhani = Rajdhani({
+const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-utility",
+  style: ["normal", "italic"],
+  variable: "--font-roboto",
 });
 
 
@@ -49,9 +47,7 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        openSans.variable,
-        inter.variable,
-        rajdhani.variable,
+        roboto.variable,
         "font-sans",
       )}
     >

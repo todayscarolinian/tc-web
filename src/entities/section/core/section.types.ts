@@ -3,6 +3,7 @@ export type SectionName =
   | "Campus Life"
   | "Sports"
   | "Arts & Culture"
-  | "Opinion";
+  | "Opinion"
+  | "Research";
 
-export type SectionAccent = "news" | "campus" | "sports" | "culture" | "opinion";
+export type SectionAccent = "news" | "campus" | "sports" | "culture" | "opinion" | "research";
